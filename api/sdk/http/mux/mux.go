@@ -1,0 +1,26 @@
+package mux
+
+import (
+	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/web"
+	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/sdk/trace"
+)
+
+type RouteAdder interface {
+	Add(app *web.App, cfg Config)
+}
+type Config struct {
+	Build string
+	Log   *logger.CustomLogger
+	// Auth       *auth.Auth
+	// AuthClient *authclient.Client
+	DB     *sqlx.DB
+	Tracer *trace.TracerProvider
+}
+
+func WebAPI(cfg Config, routeAdder RouteAdder) *web.App {
+	app := web.NewApp(cfg.Log, cfg.Build)
+	routeAdder.Add(app, cfg)
+	return app
+}
