@@ -9,8 +9,14 @@ import (
 )
 
 type Config struct {
+	MaxIdleConns    int
+	MaxOpenConns    int
+	ShutdownTimeout int
+	ResponseTimeOut int
+	RequestTimeOut  int
 	BookAPIPort     string
 	AuthAPIPort     string
+	BrokerAPIPort   string
 	DebugPort       string
 	DBDSN           string
 	DBName          string
@@ -18,11 +24,13 @@ type Config struct {
 	Password        string
 	Host            string
 	Environment     string
-	MaxIdleConns    int
-	MaxOpenConns    int
-	ShutdownTimeout int
-	ResponseTimeOut int
-	RequestTimeOut  int
+	MongoHost       string
+	MongoPort       string
+	MongoUser       string
+	MongoPassword   string
+	MongoAuth       string
+	MongoDbName     string
+	AllowDirect     bool
 }
 
 // LoadConfig loads configuration from environment variables and optional .env file
@@ -33,22 +41,31 @@ func LoadConfig() (*Config, error) {
 	}
 
 	config := &Config{
-		BookAPIPort: getEnv("BOOKAPI_PORT", ":8000"),
-		AuthAPIPort: getEnv("AUTHAPI_PORT", ":8001"),
-		DebugPort:   getEnv("DEBUG_PORT", ":8002"),
-		DBDSN:       getEnv("DBDSN", "postgres://user:password@localhost:5432"),
-		User:        getEnv("DBUSER", "postgres"),
-		Password:    getEnv("DBPASSWORD", "root"),
-		Host:        getEnv("HOST", "localhost"),
-		DBName:      getEnv("DBNAME", "library"),
-		Environment: getEnv("ENV", "devlopment"),
+		BookAPIPort:   getEnv("BOOKAPI_PORT", ":8000"),
+		AuthAPIPort:   getEnv("AUTHAPI_PORT", ":8001"),
+		BrokerAPIPort: getEnv("BROKER_PORT", ":8003"),
+		DebugPort:     getEnv("DEBUG_PORT", ":8002"),
+		DBDSN:         getEnv("DBDSN", "postgres://user:password@localhost:5432"),
+		User:          getEnv("DBUSER", "postgres"),
+		Password:      getEnv("DBPASSWORD", "root"),
+		Host:          getEnv("HOST", "localhost"),
+		DBName:        getEnv("DBNAME", "library"),
+		Environment:   getEnv("ENV", "devlopment"),
+		MongoHost:     getEnv("MONGO_HOST", "10.2.10.48"),
+		MongoPort:     getEnv("MONGO_PORT", "27017"),
+		MongoUser:     getEnv("MONGO_USER", "admin"),
+		MongoPassword: getEnv("MONGI_PASS", "admin#123"),
+		MongoAuth:     getEnv("MONGO_AUTH", "admin"),
+		MongoDbName:   getEnv("MONGO_DBNAME", "EXECUTOR"),
+		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}
 	idleConns, _ := strconv.Atoi(getEnv("MAXIDLECONNS", "10"))
 	openConns, _ := strconv.Atoi(getEnv("MAXOPENCONNS", "10"))
 	shutdownTimeout, _ := strconv.Atoi(getEnv("SHUTDOWN_TIMEOUT", "5"))
 	requestTimeout, _ := strconv.Atoi(getEnv("REQUESTTIMEOUT_SEC", "1"))
 	responseTimeout, _ := strconv.Atoi(getEnv("RESPONSETIMEOUT_SEC", "1"))
-
+	allowDirect, _ := strconv.ParseBool(getEnv("ALLOW_DIRECT", "devlopment"))
+	config.AllowDirect = allowDirect
 	config.MaxIdleConns = idleConns
 	config.MaxOpenConns = openConns
 	config.ResponseTimeOut = responseTimeout

@@ -14,3 +14,19 @@ CREATE TABLE languages (
 -- Indexes for optimization (if needed)
 CREATE INDEX idx_languages_code ON languages(code);
 CREATE INDEX idx_languages_name ON languages(name);
+
+-- Seed data for the languages table
+INSERT INTO languages (code, name, container_id, container_name, version, documentation_url, is_active)
+VALUES
+  ('PY', 'Python', 'python_3_9', 'python:3.9', '3.9', 'https://docs.python.org/3/', TRUE),
+  ('JAVA', 'Java', 'openjdk_11', 'openjdk:11', '11', 'https://docs.oracle.com/en/java/javase/11/', TRUE),
+  ('CPP', 'C++', 'gcc_10', 'gcc:10', '10', 'https://gcc.gnu.org/onlinedocs/', TRUE),
+  ('JS', 'JavaScript', 'node_14', 'node:14', '14', 'https://nodejs.org/en/docs/', TRUE),
+  ('GO', 'Go', 'golang_1_17', 'golang:1.17', '1.17', 'https://golang.org/doc/', TRUE),
+  ('RUBY', 'Ruby', 'ruby_3_0', 'ruby:3.0', '3.0', 'https://www.ruby-lang.org/en/documentation/', TRUE),
+  ('PHP', 'PHP', 'php_7_4', 'php:7.4', '7.4', 'https://www.php.net/docs.php', TRUE),
+  ('RUST', 'Rust', 'rust_1_55', 'rust:1.55', '1.55', 'https://doc.rust-lang.org/', TRUE),
+  ('CS', 'C#', 'dotnet_5', 'mcr.microsoft.com/dotnet/sdk:5.0', '5.0', 'https://docs.microsoft.com/en-us/dotnet/csharp/', TRUE);
+
+-- Optional: Insert more languages as needed
+

@@ -1,6 +1,8 @@
 package mid
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -11,7 +13,9 @@ func TraceIdMiddleware() gin.HandlerFunc {
 		if correlationID == "" {
 			correlationID = uuid.NewString()
 		}
-		c.Set(traceKey, correlationID)
+		ctx := context.WithValue(c.Request.Context(), traceKey, correlationID)
+		c.Request = c.Request.WithContext(ctx)
+		// c.Set(traceKey, correlationID)
 		c.Next()
 	}
 }

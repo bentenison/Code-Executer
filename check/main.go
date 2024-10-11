@@ -7,38 +7,44 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand/v2"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/gin-gonic/gin"
 )
 
-const containerName = "nervous_lewin" // Change this to your container name
+const containerName = "hopeful_liskov" // Change this to your container name
 
 func runPythonCode(code string) (string, error) {
+	suffix := rand.IntN(4000)
+	suff := strconv.Itoa(suffix)
 	// Create a Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return "", err
 	}
-	containers, err := cli.ContainerList(context.Background(), container.ListOptions{})
-	if err != nil {
-		log.Fatalf("Error listing containers: %v", err)
-	}
-
-	// Print container names and IDs
-	for _, container := range containers {
-		for _, name := range container.Names {
-			fmt.Printf("Container ID: %s, Name: %s\n", container.ID, name)
-		}
-	}
+	// containers, err := cli.ContainerList(context.Background(), container.ListOptions{})
+	// if err != nil {
+	// 	log.Fatalf("Error listing containers: %v", err)
+	// }
+	// // var containerName string
+	// // Print container names and IDs
+	// for _, container := range containers {
+	// 	for _, name := range container.Names {
+	// 		fmt.Printf("Container ID: %s, Name: %s\n", container.ID, name)
+	// 	}
+	// }
 	// Create a temporary file for the Python code
-	tmpFile, err := os.Create("temp.py")
+	tmpFile, err := os.Create(fmt.Sprintf("%s.py", suff))
 	if err != nil {
 		return "", err
 	}
-	// defer os.Remove(tmpFile.Name())
+	defer os.Remove(tmpFile.Name())
 
 	// Write the Python code to the file
 	if err := os.WriteFile(tmpFile.Name(), []byte(code), 0644); err != nil {
@@ -46,7 +52,7 @@ func runPythonCode(code string) (string, error) {
 	}
 	buf, err := tarFile(tmpFile.Name())
 	if err != nil {
-		log.Fatal("error in tarfile", err)
+		log.Println("error in tarfile", err)
 	}
 	// Copy the file to the existing container
 	err = cli.CopyToContainer(context.Background(), containerName, "app/", &buf, container.CopyToContainerOptions{})
@@ -84,16 +90,43 @@ func runPythonCode(code string) (string, error) {
 }
 
 func main() {
-	pythonCode := `
-print("Hello from Python in an existing container!"
-`
+	r := gin.Default()
+	r.GET("/execute", ExecutionHandler)
 
+	// test := 100
+	// start := time.Now()
+	// for i := 0; i < test; i++ {
+	// }
+	if err := r.Run(":8000"); err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println("time required for 100 executions is", time.Since(start))
+
+}
+func ExecutionHandler(c *gin.Context) {
+
+	pythonCode := `
+def main(input):
+		# User's main logic starts here
+		cleaned_input = input.lower().replace(" ", "")
+		return cleaned_input == cleaned_input[::-1]
+		# User's main logic ends here
+	
+if __name__ == "__main__":
+		test_input = "A man a plan a canal Panama"  # User input for the test case
+		expected_output = "True"  # Expected output
+		
+		result = str(main(test_input))
+		print("Pass" if result == expected_output else "Fail")`
 	output, err := runPythonCode(pythonCode)
 	if err != nil {
-		log.Fatalf("Error running Python code: %v", err)
+		log.Fatalf("Error running python code: %v", err)
 	}
 
 	fmt.Printf("%s", output)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "execution success!",
+	})
 }
 func tarFile(filePath string) (bytes.Buffer, error) {
 	var buf bytes.Buffer
@@ -104,7 +137,6 @@ func tarFile(filePath string) (bytes.Buffer, error) {
 	if err != nil {
 		return buf, err
 	}
-
 	// Create a tar header
 	header, err := tar.FileInfoHeader(fi, "")
 	if err != nil {

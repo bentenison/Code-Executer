@@ -24,7 +24,7 @@ func (a *api) query(c *gin.Context) {
 	// if err != nil {
 	// 	apperrors.NewError(err
 	// }
-	id, _ := mid.GetTraceId(c)
+	id := mid.GetTraceId(c.Request.Context())
 	log.Println("TraceID is ", id)
 	log.Println("query params:", "Hello World!!")
 	// web.Respond(200, r, w, map[string]interface{}{

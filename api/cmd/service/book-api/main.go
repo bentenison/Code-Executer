@@ -12,6 +12,7 @@ import (
 	"github.com/bentenison/microservice/api/cmd/service/book-api/build/all"
 	"github.com/bentenison/microservice/api/sdk/http/debug"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
+	"github.com/bentenison/microservice/business/sdk/mongodb"
 	"github.com/bentenison/microservice/business/sdk/sqldb"
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
@@ -67,10 +68,24 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		MaxOpenConns: cfg.MaxOpenConns,
 	})
 	if err != nil {
-		return fmt.Errorf("connecting to db: %w", err)
+		// log.Error("error connecting to DB")
+		return err
 	}
 
 	defer db.Close()
+
+	mongo, err := mongodb.InitializeMongo(mongodb.Config{
+		Host:     cfg.MongoHost,
+		Port:     cfg.MongoPort,
+		Username: cfg.MongoUser,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to db: %w", err)
+	}
+	ds := mux.DataSource{
+		MGO: mongo,
+		SQL: db,
+	}
 	go func() {
 		log.Info("startup debug v1 server started", map[string]interface{}{
 			"port": cfg.DebugPort,
@@ -89,7 +104,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	cfgMux := mux.Config{
 		Build:  "develop",
 		Log:    log,
-		DB:     db,
+		DB:     ds,
 		Tracer: tracer,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())

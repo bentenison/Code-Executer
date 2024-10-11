@@ -1,7 +1,7 @@
 package mid
 
 import (
-	"github.com/gin-gonic/gin"
+	"context"
 )
 
 const (
@@ -13,6 +13,6 @@ const (
 	traceKey  = "tracectx"
 )
 
-func GetTraceId(ctx *gin.Context) (any, bool) {
-	return ctx.Get(traceKey)
+func GetTraceId(ctx context.Context) any {
+	return ctx.Value(traceKey)
 }
