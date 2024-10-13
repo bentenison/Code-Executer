@@ -19,6 +19,6 @@ func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, tp *tp.TracerP
 	return &App{logger: logger, brokerbus: bus, tracer: tp.Tracer("BROKER")}
 }
 
-func (a *App) GetTemplate(ctx context.Context) (brokerbus.Template, error) {
-	return a.brokerbus.GetQuestionTemplate(ctx)
+func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (brokerbus.Question, error) {
+	return a.brokerbus.HandleSubmissonService(ctx, brokerbus.Submission(submission))
 }

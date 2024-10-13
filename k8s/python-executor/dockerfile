@@ -1,0 +1,7 @@
+FROM python:3.12-alpine
+LABEL maintainer="bentenison"
+LABEL app="python-executor"
+LABEL language="python"
+WORKDIR /app/
+
+CMD [ "tail","-f","/dev/null" ]

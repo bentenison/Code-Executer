@@ -8,7 +8,7 @@ CREATE TABLE submissions (
     result_id INT,                               -- Foreign key referencing the execution result in the code_execution_stats table
     is_public BOOLEAN DEFAULT FALSE,             -- Visibility of the submission (public or private)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp for when the entry was created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Timestamp for last update
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp for last update
 );
 
 -- Indexes for optimization (if needed)

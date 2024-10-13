@@ -31,7 +31,7 @@ func main() {
 	// load congigurations
 	config, err := conf.LoadConfig()
 	if err != nil {
-		log.Error("error while loading conf", map[string]interface{}{
+		log.Errorc(context.TODO(), "error while loading conf", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
@@ -39,16 +39,16 @@ func main() {
 	// // INITIALIZE TRACER OTEL
 	trace, err := otel.NewTracer()
 	if err != nil {
-		log.Error("error while initializing tracer", map[string]interface{}{
+		log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
 	defer func() {
 		otel.ShutDownTracer(trace)
 	}()
-	log.Info("config", map[string]interface{}{"config": config})
+	log.Infoc(context.TODO(), "config", map[string]interface{}{"config": config})
 	if err := run(log, trace, config); err != nil {
-		log.Error("error while running server", map[string]interface{}{
+		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
@@ -87,12 +87,12 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		SQL: db,
 	}
 	go func() {
-		log.Info("startup debug v1 server started", map[string]interface{}{
+		log.Infoc(context.TODO(), "startup debug v1 server started", map[string]interface{}{
 			"port": cfg.DebugPort,
 		})
 
 		if err := http.ListenAndServe(cfg.DebugPort, debug.Mux()); err != nil {
-			log.Error("error occured while listning for traffic", map[string]interface{}{
+			log.Errorc(context.TODO(), "error occured while listning for traffic", map[string]interface{}{
 				"error": err.Error(),
 			})
 		}
@@ -120,7 +120,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	serverErrors := make(chan error, 1)
 	ctx := context.Background()
 	go func() {
-		log.Info("broker-api router started", map[string]interface{}{
+		log.Infoc(context.TODO(), "broker-api router started", map[string]interface{}{
 			"port": cfg.BrokerAPIPort,
 		})
 		serverErrors <- api.ListenAndServe()
@@ -134,10 +134,10 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		return fmt.Errorf("server error: %w", err)
 
 	case sig := <-shutdown:
-		log.Info("shutdown started", map[string]interface{}{
+		log.Infoc(context.TODO(), "shutdown started", map[string]interface{}{
 			"signal": sig,
 		})
-		defer log.Info("shutdown completed")
+		defer log.Infoc(context.TODO(), "shutdown completed", map[string]interface{}{})
 
 		ctx, cancel := context.WithTimeout(ctx, time.Duration(cfg.ShutdownTimeout))
 		defer cancel()

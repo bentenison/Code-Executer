@@ -17,6 +17,8 @@ type Config struct {
 	BookAPIPort     string
 	AuthAPIPort     string
 	BrokerAPIPort   string
+	ExecutorAPIPort string
+	GRPCPort        string
 	DebugPort       string
 	DBDSN           string
 	DBName          string
@@ -31,6 +33,7 @@ type Config struct {
 	MongoAuth       string
 	MongoDbName     string
 	AllowDirect     bool
+	AllowGRPC       bool
 }
 
 // LoadConfig loads configuration from environment variables and optional .env file
@@ -41,22 +44,24 @@ func LoadConfig() (*Config, error) {
 	}
 
 	config := &Config{
-		BookAPIPort:   getEnv("BOOKAPI_PORT", ":8000"),
-		AuthAPIPort:   getEnv("AUTHAPI_PORT", ":8001"),
-		BrokerAPIPort: getEnv("BROKER_PORT", ":8003"),
-		DebugPort:     getEnv("DEBUG_PORT", ":8002"),
-		DBDSN:         getEnv("DBDSN", "postgres://user:password@localhost:5432"),
-		User:          getEnv("DBUSER", "postgres"),
-		Password:      getEnv("DBPASSWORD", "root"),
-		Host:          getEnv("HOST", "localhost"),
-		DBName:        getEnv("DBNAME", "library"),
-		Environment:   getEnv("ENV", "devlopment"),
-		MongoHost:     getEnv("MONGO_HOST", "10.2.10.48"),
-		MongoPort:     getEnv("MONGO_PORT", "27017"),
-		MongoUser:     getEnv("MONGO_USER", "admin"),
-		MongoPassword: getEnv("MONGI_PASS", "admin#123"),
-		MongoAuth:     getEnv("MONGO_AUTH", "admin"),
-		MongoDbName:   getEnv("MONGO_DBNAME", "EXECUTOR"),
+		BookAPIPort:     getEnv("BOOKAPI_PORT", ":8000"),
+		AuthAPIPort:     getEnv("AUTHAPI_PORT", ":8001"),
+		BrokerAPIPort:   getEnv("BROKER_PORT", ":8003"),
+		ExecutorAPIPort: getEnv("EXECUTOR_PORT", ":8004"),
+		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
+		DebugPort:       getEnv("DEBUG_PORT", ":8002"),
+		DBDSN:           getEnv("DBDSN", "postgres://user:password@localhost:5432"),
+		User:            getEnv("DBUSER", "postgres"),
+		Password:        getEnv("DBPASSWORD", "root"),
+		Host:            getEnv("HOST", "localhost"),
+		DBName:          getEnv("DBNAME", "library"),
+		Environment:     getEnv("ENV", "devlopment"),
+		MongoHost:       getEnv("MONGO_HOST", "localhost"),
+		MongoPort:       getEnv("MONGO_PORT", "27017"),
+		MongoUser:       getEnv("MONGO_USER", "admin"),
+		MongoPassword:   getEnv("MONGI_PASS", "admin#123"),
+		MongoAuth:       getEnv("MONGO_AUTH", "admin"),
+		MongoDbName:     getEnv("MONGO_DBNAME", "EXECUTOR"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}
 	idleConns, _ := strconv.Atoi(getEnv("MAXIDLECONNS", "10"))
@@ -64,7 +69,9 @@ func LoadConfig() (*Config, error) {
 	shutdownTimeout, _ := strconv.Atoi(getEnv("SHUTDOWN_TIMEOUT", "5"))
 	requestTimeout, _ := strconv.Atoi(getEnv("REQUESTTIMEOUT_SEC", "1"))
 	responseTimeout, _ := strconv.Atoi(getEnv("RESPONSETIMEOUT_SEC", "1"))
-	allowDirect, _ := strconv.ParseBool(getEnv("ALLOW_DIRECT", "devlopment"))
+	allowDirect, _ := strconv.ParseBool(getEnv("ALLOW_DIRECT", "true"))
+	allowGRPC, _ := strconv.ParseBool(getEnv("ALLOW_GRPC", "true"))
+	config.AllowGRPC = allowGRPC
 	config.AllowDirect = allowDirect
 	config.MaxIdleConns = idleConns
 	config.MaxOpenConns = openConns

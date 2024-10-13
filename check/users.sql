@@ -7,7 +7,7 @@ CREATE TABLE users (
     last_name VARCHAR(50),                        -- User's last name
     role VARCHAR(20) CHECK (role IN ('admin', 'creator', 'user')) DEFAULT 'user', -- User role
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp of when the user was created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Timestamp for last update
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp for last update
 );
 
 -- Indexes for optimization (if needed)

@@ -46,7 +46,7 @@ func (tmw *TransactionMiddleware) TransactionManager() gin.HandlerFunc {
 		// If no error, commit the transaction
 		if err := tmw.tm.CommitTx(tx); err != nil {
 			c.JSON(http.StatusInternalServerError, "Could not commit transaction")
-			// http.Error(w,  http.StatusInternalServerError)
+			// http.Errorc(w,  http.StatusInternalServerError)
 			return
 		}
 	}

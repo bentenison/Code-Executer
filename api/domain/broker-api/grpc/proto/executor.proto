@@ -1,0 +1,16 @@
+syntax = "proto3";
+option go_package = ".";
+package proto;
+service ExecutorService {
+    rpc HandleExecution (stream ExecutionRequest) returns (ExecutionResponse);
+}
+
+message ExecutionRequest {
+    bytes content = 1;
+}
+message ExecutionResponse {
+    string output = 1;
+    string execTime =2;
+    string ramUsed = 3;
+    string cpuStats =4;
+}

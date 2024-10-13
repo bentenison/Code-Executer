@@ -65,7 +65,7 @@ CREATE TABLE submissions (
 );
 ```
 
-### 4. **Error Tracking Table (Optional)**
+### 4. **Errorc Tracking Table (Optional)**
 
 If you want a more detailed breakdown of errors, you can create a separate table for tracking errors associated with each submission.
 
@@ -84,7 +84,7 @@ CREATE TABLE submission_errors (
 1. **Users Table**: A new user is registered.
 2. **Questions Table**: A question is added to the database.
 3. **Submissions Table**: Every time a user submits an answer, an entry is made in the `submissions` table, recording the attempt, status, and any errors encountered.
-4. **Error Tracking (Optional)**: If a submission is incorrect, detailed error information can be stored in the `submission_errors` table.
+4. **Errorc Tracking (Optional)**: If a submission is incorrect, detailed error information can be stored in the `submission_errors` table.
 
 ### Benefits of This Structure
 

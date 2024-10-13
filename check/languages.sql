@@ -6,7 +6,7 @@ CREATE TABLE languages (
     container_name VARCHAR(255) NOT NULL, -- Name of the Docker container (e.g., 'python:3.9')
     version VARCHAR(20),            -- Version of the language (e.g., '3.9', '11', '14')
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp of when the entry was created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Timestamp for last update
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp for last update
     documentation_url VARCHAR(255), -- Optional URL to official documentation
     is_active BOOLEAN DEFAULT TRUE   -- Status indicating if the language is currently active
 );

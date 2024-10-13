@@ -18,7 +18,12 @@ type Config struct {
 func Routes(app *web.App, cfg Config) {
 	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, cfg.Tracer), cfg.Log)
 	app.Use(mid.TraceIdMiddleware())
-	// cfg.Log.Error("started serving ")
-	app.Handle("GET", "/broker/getTemplate", api.getQuestionTemplate)
-	app.Handle("GET", "/broker/authenticate", api.getQuestionTemplate)
+	// cfg.Log.Errorc("started serving ")
+	app.Handle("POST", "/broker/submission", api.newSubmissionHandler)
+	app.Handle("POST", "/broker/batchProcess", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/authenticate", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/getlanguages", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/getallowedlanguages", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/conf", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/updateconf", api.newSubmissionHandler)
 }

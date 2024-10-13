@@ -7,6 +7,7 @@ import (
 	"github.com/bentenison/microservice/business/domain/brokerbus"
 	"github.com/bentenison/microservice/foundation/logger"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Store struct {
@@ -21,15 +22,17 @@ func NewStore(ds mux.DataSource, logger *logger.CustomLogger) *Store {
 	}
 }
 
-func (s *Store) GetQuestionTemplate(ctx context.Context) (brokerbus.Template, error) {
-	template := brokerbus.Template{}
-	res := s.ds.MGO.Collection("question_template").FindOne(ctx, bson.M{})
+func (s *Store) GetQuestionTemplate(ctx context.Context, id string) (brokerbus.Question, error) {
+	question := Question{}
+	objId, _ := primitive.ObjectIDFromHex(id)
+	res := s.ds.MGO.Collection("questions").FindOne(ctx, bson.M{"_id": objId})
 	if res.Err() != nil {
-		return template, res.Err()
+		return brokerbus.Question{}, res.Err()
 	}
-	err := res.Decode(&template)
+	err := res.Decode(&question)
 	if err != nil {
-		return template, err
+		return brokerbus.Question{}, err
 	}
-	return template, nil
+	busQuest := toBusQuestion(question)
+	return busQuest, nil
 }

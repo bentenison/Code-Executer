@@ -2,16 +2,18 @@ package brokerbus
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"os"
+	"text/template"
 
 	"github.com/bentenison/microservice/api/sdk/http/mux"
-	"github.com/bentenison/microservice/app/sdk/mid"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
 )
 
 type Storer interface {
-	GetQuestionTemplate(ctx context.Context) (Template, error)
+	GetQuestionTemplate(ctx context.Context, id string) (Question, error)
 }
 
 type Business struct {
@@ -30,24 +32,46 @@ func NewBusiness(logger *logger.CustomLogger, ds mux.DataSource, delegate *deleg
 	}
 }
 
-func (b *Business) GetQuestionTemplate(ctx context.Context) (Template, error) {
-	template, err := b.storer.GetQuestionTemplate(ctx)
+func (b *Business) HandleSubmissonService(ctx context.Context, submission Submission) (Question, error) {
+	question, err := b.storer.GetQuestionTemplate(ctx, submission.QuestionId)
 	if err != nil {
-		b.log.Error("error while getting template", map[string]interface{}{
+		b.log.Errorc(ctx, "error while getting template", map[string]interface{}{
 			"error": err,
-			"trace": mid.GetTraceId(ctx),
 		})
-		return Template{}, err
+		return Question{}, err
 	}
-	f, err := os.OpenFile("code.py", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	decodedSnippet, err := decodeSnippet(submission.CodeSnippet)
 	if err != nil {
-		b.log.Error("error while creating file", map[string]interface{}{
-			"error": err,
-			"trace": mid.GetTraceId(ctx),
+		b.log.Errorc(ctx, "error while decoding base64 snippet", map[string]interface{}{
+			"error": err.Error(),
 		})
-		return template, err
+		return Question{}, err
+	}
+	question.Logic = decodedSnippet
+	b.createCodeTemplate(ctx, question)
+	return question, err
+}
+
+func (b *Business) createCodeTemplate(ctx context.Context, question Question) {
+	tmplt, err := template.New("code").Parse(question.TemplateCode)
+	if err != nil {
+		b.log.Errorc(ctx, "error creating template from string", map[string]interface{}{
+			"error": err,
+		})
+	}
+	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s", question.QuestionId), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		b.log.Errorc(ctx, "error while creating file", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 	defer f.Close()
-	f.WriteString(template.Template)
-	return template, err
+	tmplt.Execute(f, question)
+}
+func decodeSnippet(snippet string) (string, error) {
+	snipByte, err := base64.StdEncoding.DecodeString(snippet)
+	if err != nil {
+		return "", err
+	}
+	return string(snipByte), nil
 }
