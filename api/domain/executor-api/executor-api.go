@@ -38,7 +38,7 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 	// log.Println("context", stream.Context())
 	_, err := os.Stat("./static")
 	if err != nil {
-		err := os.MkdirAll("./static", 0664)
+		err := os.MkdirAll("./static", 0755)
 		if err != nil {
 			s.log.Errorc(stream.Context(), "error while creating dir", map[string]interface{}{
 				"error": err.Error(),
@@ -64,10 +64,20 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 			// 	Success: true,
 			// })
 		}
+		qid := chunk.GetQid()
+		uid := chunk.GetUid()
+		// if uid
+		s.log.Errorc(stream.Context(), "questionID", map[string]interface{}{
+			"quid": qid,
+			"uid":  uid,
+		})
+		// if chunk.Qid != "" && chunk.Uid != "" {
+		// }
+		// log.Println(chunk.Qid)
+		// log.Println(chunk.Uid)
 		if err != nil {
 			return err
 		}
-
 		_, err = file.Write(chunk.Content)
 		if err != nil {
 			return err

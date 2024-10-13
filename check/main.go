@@ -16,6 +16,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Stats struct {
@@ -135,25 +137,25 @@ func runPythonCode(code string) (string, error) {
 }
 
 func main() {
-	r := gin.Default()
-	r.GET("/execute", ExecutionHandler)
+	// r := gin.Default()
+	// r.GET("/execute", ExecutionHandler)
 
-	// test := 100
-	// start := time.Now()
-	// for i := 0; i < test; i++ {
-	// }
-	if err := r.Run(":8000"); err != nil {
-		log.Fatal(err)
-	}
-
-	// fmt.Println("time required for 100 executions is", time.Since(start))
-	// conn, err := grpc.NewClient(":50001", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// if err != nil {
+	// // test := 100
+	// // start := time.Now()
+	// // for i := 0; i < test; i++ {
+	// // }
+	// if err := r.Run(":8000"); err != nil {
 	// 	log.Fatal(err)
 	// }
-	// defer conn.Close()
-	// cli := pb.NewExecutorServiceClient(conn)
-	// uploadFile(cli, "./dockerfile")
+
+	// fmt.Println("time required for 100 executions is", time.Since(start))
+	conn, err := grpc.NewClient(":50001", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	cli := pb.NewExecutorServiceClient(conn)
+	uploadFile(cli, "./dockerfile")
 	// client:= proto
 }
 func uploadFile(client pb.ExecutorServiceClient, filePath string) {
@@ -178,7 +180,7 @@ func uploadFile(client pb.ExecutorServiceClient, filePath string) {
 			log.Fatalf("Error reading file: %v", err)
 		}
 
-		err = stream.Send(&pb.ExecutionRequest{Content: buf[:n]})
+		err = stream.Send(&pb.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123"})
 		if err != nil {
 			log.Fatalf("Error sending file chunk: %v", err)
 		}

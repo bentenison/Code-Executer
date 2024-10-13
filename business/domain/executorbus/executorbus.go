@@ -40,14 +40,14 @@ func NewBusiness(log *logger.CustomLogger, delegate *delegate.Delegate, db mux.D
 	}
 }
 func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.ExecutionResponse, error) {
-	var execResponse *pb.ExecutionResponse
+	var execResponse pb.ExecutionResponse
 	// get container spec
 	specs, err := b.getContainerSpec(language)
 	if err != nil {
 		b.log.Errorc(ctx, "error in getting specs", map[string]interface{}{
 			"error": err.Error(),
 		})
-		return execResponse, err
+		return &execResponse, err
 	}
 	b.log.Infoc(ctx, "container sppec values", map[string]interface{}{
 		"containerSpec": specs,
@@ -55,24 +55,24 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 	// create a tarfile from the temp file
 	buf, err := b.readTempFile(path)
 	if err != nil {
-		return execResponse, err
+		return &execResponse, err
 	}
 	// Copy the file to the existing container
 	err = b.cli.CopyToContainer(context.Background(), specs.ID, "app/", &buf, container.CopyToContainerOptions{})
 	if err != nil {
-		return execResponse, err
+		return &execResponse, err
 	}
 
 	// // Execute the Python script in the existing container
 	execConfig := container.ExecOptions{
-		Cmd:          []string{"python", filepath.Join("/app", filepath.Base(tmpFile.Name()))},
+		Cmd:          []string{"python", filepath.Join("/app", filepath.Base(path))},
 		AttachStdout: true,
 		AttachStderr: true,
 	}
 
 	execID, err := b.cli.ContainerExecCreate(context.Background(), specs.ID, execConfig)
 	if err != nil {
-		return execResponse, err
+		return &execResponse, err
 	}
 
 	// err = cli.ContainerExecStart(context.Background(), execID.ID, container.ExecStartOptions{})
@@ -82,13 +82,13 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 	startTime := time.Now()
 	res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{})
 	if err != nil {
-		return execResponse, err
+		return &execResponse, err
 	}
 	endTime := time.Since(startTime)
 	_ = res
 	stats, err := b.cli.ContainerStatsOneShot(ctx, specs.ID)
 	if err != nil {
-		return execResponse, err
+		return &execResponse, err
 	}
 	decoder := json.NewDecoder(stats.Body)
 	var s Stats
@@ -96,7 +96,7 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 		if err := decoder.Decode(&s); err == io.EOF {
 			break // End of the stream
 		} else if err != nil {
-			return execResponse, err
+			return &execResponse, err
 		}
 
 		// Extract memory usage
@@ -108,14 +108,15 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 		// Optionally break after one read to get stats at a single point in time
 		break
 	}
-	execResponse.CpuStats = fmt.Sprintf("%.2f", s.CPUStats.CPUUsage.TotalUsage)
-	execResponse.RamUsed = fmt.Sprintf("%.2f", s.MemoryStats.Usage)
+	execResponse.CpuStats = fmt.Sprintf("%d", s.CPUStats.CPUUsage.TotalUsage)
+	execResponse.RamUsed = fmt.Sprintf("%d", s.MemoryStats.Usage)
+	execResponse.ExecTime = endTime.String()
 	// defer res.Close()
 	// var logBuf bytes.Buffer
 	// if _, err := logBuf.ReadFrom(res.Conn); err != nil {
 	// 	return "", err
 	// }
-	return execResponse, nil
+	return &execResponse, nil
 }
 func (b *Business) getContainerSpec(language string) (ContainerSpec, error) {
 	var containerSpec ContainerSpec

@@ -1,0 +1,26 @@
+syntax = "proto3";
+option go_package = "./proto";
+package auth;
+
+service AuthService {
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+}
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+message AuthorizeRequest {
+    string token = 1;
+    string requiredRole = 2;
+}
+
+message AuthorizeResponse {
+    string message = 1;
+}

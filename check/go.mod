@@ -5,6 +5,7 @@ go 1.23
 require (
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	google.golang.org/grpc v1.66.1
 	google.golang.org/protobuf v1.34.2
 )

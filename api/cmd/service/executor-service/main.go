@@ -95,6 +95,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	}
 	// ENABLE GRPC SERVER
 	grpcSrv, listner := rpcserver.CreateServer(cfg.GRPCPort, log)
+	defer listner.Close()
 	go func() {
 		log.Infoc(context.TODO(), "startup grpc v1 server started", map[string]interface{}{
 			"port": cfg.GRPCPort,
@@ -170,7 +171,6 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
 		// close the net listner to free resources
-		defer listner.Close()
 	}
 
 	return nil
