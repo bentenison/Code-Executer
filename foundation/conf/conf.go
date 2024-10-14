@@ -32,6 +32,7 @@ type Config struct {
 	MongoPassword   string
 	MongoAuth       string
 	MongoDbName     string
+	Language        string
 	AllowDirect     bool
 	AllowGRPC       bool
 }
@@ -62,6 +63,7 @@ func LoadConfig() (*Config, error) {
 		MongoPassword:   getEnv("MONGI_PASS", "admin#123"),
 		MongoAuth:       getEnv("MONGO_AUTH", "admin"),
 		MongoDbName:     getEnv("MONGO_DBNAME", "EXECUTOR"),
+		Language:        getEnv("CONTAINER_LANGUAGE", "python"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}
 	idleConns, _ := strconv.Atoi(getEnv("MAXIDLECONNS", "10"))

@@ -1,6 +1,7 @@
 package mux
 
 import (
+	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -20,12 +21,13 @@ type Config struct {
 	Log   *logger.CustomLogger
 	// Auth       *auth.Auth
 	// AuthClient *authclient.Client
-	DB     DataSource
-	Tracer *trace.TracerProvider
+	DB        DataSource
+	Tracer    *trace.TracerProvider
+	AppConfig *conf.Config
 }
 
 func WebAPI(cfg Config, routeAdder RouteAdder) *web.App {
-	app := web.NewApp(cfg.Log, cfg.Build)
+	app := web.NewApp(cfg.Log, cfg.Build, cfg.AppConfig)
 	routeAdder.Add(app, cfg)
 	return app
 }

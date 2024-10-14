@@ -155,7 +155,7 @@ func main() {
 	}
 	defer conn.Close()
 	cli := pb.NewExecutorServiceClient(conn)
-	uploadFile(cli, "./dockerfile")
+	uploadFile(cli, "./sample.py")
 	// client:= proto
 }
 func uploadFile(client pb.ExecutorServiceClient, filePath string) {

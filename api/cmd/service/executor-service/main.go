@@ -9,10 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bentenison/microservice/api/cmd/service/broker-service/build/all"
-	executorapi "github.com/bentenison/microservice/api/domain/executor-api"
-	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
-	"github.com/bentenison/microservice/api/sdk/grpc/rpcserver"
+	"github.com/bentenison/microservice/api/cmd/service/executor-service/build/all"
 	"github.com/bentenison/microservice/api/sdk/http/debug"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
@@ -21,7 +18,6 @@ import (
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
-	"google.golang.org/grpc/reflection"
 )
 
 const apiType = "all"
@@ -93,22 +89,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		MGO: mongo,
 		SQL: db,
 	}
-	// ENABLE GRPC SERVER
-	grpcSrv, listner := rpcserver.CreateServer(cfg.GRPCPort, log)
-	defer listner.Close()
-	go func() {
-		log.Infoc(context.TODO(), "startup grpc v1 server started", map[string]interface{}{
-			"port": cfg.GRPCPort,
-		})
-		executorServer := executorapi.NewExecutorServer(log)
-		pb.RegisterExecutorServiceServer(grpcSrv, executorServer)
-		reflection.Register(grpcSrv)
-		if err := grpcSrv.Serve(listner); err != nil {
-			log.Errorc(context.TODO(), "error occured while listning for grpc traffic", map[string]interface{}{
-				"error": err.Error(),
-			})
-		}
-	}()
+
 	// ENABLE DEBUG SERVER
 	go func() {
 		log.Infoc(context.TODO(), "startup debug v1 server started", map[string]interface{}{
@@ -126,10 +107,11 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  "develop",
-		Log:    log,
-		DB:     ds,
-		Tracer: tracer,
+		Build:     "develop",
+		Log:       log,
+		DB:        ds,
+		Tracer:    tracer,
+		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{
@@ -144,7 +126,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	serverErrors := make(chan error, 1)
 	ctx := context.Background()
 	go func() {
-		log.Infoc(context.TODO(), "broker-api router started", map[string]interface{}{
+		log.Infoc(context.TODO(), "executor-api router started", map[string]interface{}{
 			"port": cfg.ExecutorAPIPort,
 		})
 		serverErrors <- api.ListenAndServe()

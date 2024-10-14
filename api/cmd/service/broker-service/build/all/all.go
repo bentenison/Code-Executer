@@ -20,7 +20,7 @@ type add struct{}
 // Add implements the RouterAdder interface.
 func (add) Add(app *web.App, cfg mux.Config) {
 	delegate := delegate.New(cfg.Log)
-	brokerbus := brokerbus.NewBusiness(cfg.Log, cfg.DB, delegate, brokerdb.NewStore(cfg.DB, cfg.Log))
+	brokerbus := brokerbus.NewBusiness(cfg.Log, delegate, brokerdb.NewStore(cfg.DB, cfg.Log))
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
 	brokerapi.Routes(app, brokerapi.Config{

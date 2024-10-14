@@ -23,7 +23,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	if err != nil {
 		panic(err)
 	}
-	execbus := executorbus.NewBusiness(cfg.Log, delegate, cfg.DB, executordb.NewStore(cfg.Log, cfg.DB), cli)
+	execbus := executorbus.NewBusiness(cfg.Log, delegate, executordb.NewStore(cfg.Log, cfg.DB), cli)
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
 
@@ -31,6 +31,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:         cfg.Log,
 		ExecutorBus: execbus,
 		Tracer:      cfg.Tracer,
+		AppConfig:   cfg.AppConfig,
 		// DockerClient: cli,
 	})
 

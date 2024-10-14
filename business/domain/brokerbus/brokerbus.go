@@ -7,7 +7,6 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
 )
@@ -18,15 +17,13 @@ type Storer interface {
 
 type Business struct {
 	log      *logger.CustomLogger
-	db       mux.DataSource
 	delegate *delegate.Delegate
 	storer   Storer
 }
 
-func NewBusiness(logger *logger.CustomLogger, ds mux.DataSource, delegate *delegate.Delegate, storer Storer) *Business {
+func NewBusiness(logger *logger.CustomLogger, delegate *delegate.Delegate, storer Storer) *Business {
 	return &Business{
 		log:      logger,
-		db:       ds,
 		delegate: delegate,
 		storer:   storer,
 	}

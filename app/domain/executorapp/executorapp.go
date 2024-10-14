@@ -3,6 +3,7 @@ package executorapp
 import (
 	"context"
 
+	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/business/domain/executorbus"
 	"github.com/bentenison/microservice/foundation/logger"
 	tp "go.opentelemetry.io/otel/sdk/trace"
@@ -25,6 +26,7 @@ func NewApp(executorbus *executorbus.Business, log *logger.CustomLogger, tracer 
 	}
 }
 
-func (a *App) HandleExecution(ctx context.Context) error {
-	return nil
+func (a *App) HandleExecution(ctx context.Context, path, language, qid, uid string) (*pb.ExecutionResponse, error) {
+	return a.executorbus.ExecuteCode(ctx, path, language)
+
 }

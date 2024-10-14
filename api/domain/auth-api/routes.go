@@ -5,7 +5,7 @@ import (
 	"github.com/bentenison/microservice/business/domain/authbus"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/web"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 type Config struct {
@@ -16,6 +16,6 @@ type Config struct {
 }
 
 func Routes(app *web.App, cfg Config) {
-	api := newAPI(cfg.log, authapp.NewApp(cfg.log, cfg.AuthBus))
+	api := newAPI(cfg.Log, authapp.NewApp(cfg.Log, cfg.AuthBus, cfg.Tracer))
 	app.Handle("GET", "/auth/check", api.checkHealthHandler)
 }

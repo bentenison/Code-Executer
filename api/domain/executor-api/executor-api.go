@@ -1,6 +1,7 @@
 package executorapi
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -8,7 +9,9 @@ import (
 	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/app/domain/executorapp"
 	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/version"
 	"github.com/gin-gonic/gin"
+
 	"google.golang.org/grpc"
 )
 
@@ -18,21 +21,22 @@ type api struct {
 	pb.UnimplementedExecutorServiceServer
 }
 
-var grpcApi *api
+// var grpcApi *api
 
 func newAPI(app *executorapp.App, log *logger.CustomLogger) *api {
 	api := &api{
 		app: app,
 		log: log,
 	}
-	grpcApi = api
+	// grpcApi = api
 	return api
 }
-func NewExecutorServer(log *logger.CustomLogger) *api {
-	return &api{
-		log: log,
-	}
-}
+
+// func NewExecutorServer(log *logger.CustomLogger) *api {
+// 	return &api{
+// 		log: log,
+// 	}
+// }
 
 func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequest, pb.ExecutionResponse]) error {
 	// log.Println("context", stream.Context())
@@ -46,7 +50,7 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 			return err
 		}
 	}
-	filePath := filepath.Join("static", "code.py")
+	filePath := filepath.Join("static", fmt.Sprintf("code_%s.py", stream.Context().Value("tracectx")))
 	file, err := os.Create(filePath)
 	if err != nil {
 		s.log.Errorc(stream.Context(), "error while creating file", map[string]interface{}{
@@ -55,22 +59,34 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 		return err
 	}
 	defer file.Close()
-
+	var questionId, userId string
 	for {
 		chunk, err := stream.Recv()
-		if err == io.EOF {
-			// return stream.SendAndClose(&pb.ExecutionResponse{
-			// 	Message: "File uploaded successfully",
-			// 	Success: true,
-			// })
-		}
 		qid := chunk.GetQid()
 		uid := chunk.GetUid()
-		// if uid
+		if uid != "" && qid != "" {
+			questionId = qid
+			userId = uid
+		}
 		s.log.Errorc(stream.Context(), "questionID", map[string]interface{}{
 			"quid": qid,
 			"uid":  uid,
 		})
+		if err == io.EOF {
+			if version.BuildInfo.LanguageName == "" {
+				res, err := s.app.HandleExecution(stream.Context(), filePath, "python", questionId, userId)
+				if err != nil {
+					s.log.Errorc(stream.Context(), "error while executing the code", map[string]interface{}{
+						"error": err.Error(),
+					})
+					return err
+				}
+				return stream.SendAndClose(res)
+				// return stream.SendAndClose(&pb.ExecutionResponse{
+				// 	Message: "File uploaded successfully",
+				// 	Success: true,
+			}
+		}
 		// if chunk.Qid != "" && chunk.Uid != "" {
 		// }
 		// log.Println(chunk.Qid)
@@ -85,6 +101,6 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 	}
 }
 
-func (api *api) handleSubmission(c *gin.Context) {
+func (s *api) handleSubmission(c *gin.Context) {
 
 }
