@@ -14,7 +14,7 @@ func BenchmarkExecution(b *testing.B) {
 	}
 	ctx := context.WithValue(context.TODO(), "tracectx", "1212345678890")
 	for i := 0; i < b.N; i++ {
-		res, err := db.BusDomain.ExecBus.ExecuteCode(ctx, "../static/code_0f047a28-797f-463e-97d8-381d412c27f2.py", "python")
+		res, err := db.BusDomain.ExecBus.ExecuteCode(ctx, "../static/code_508ab8bb-4946-424e-b228-7bbfaea71f7d.py", "python", "12345", "67890")
 		if err != nil {
 			db.Log.Errorc(ctx, "error in executing code", map[string]interface{}{
 				"error": err.Error(),

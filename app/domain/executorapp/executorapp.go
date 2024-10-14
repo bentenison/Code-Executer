@@ -27,6 +27,6 @@ func NewApp(executorbus *executorbus.Business, log *logger.CustomLogger, tracer 
 }
 
 func (a *App) HandleExecution(ctx context.Context, path, language, qid, uid string) (*pb.ExecutionResponse, error) {
-	return a.executorbus.ExecuteCode(ctx, path, language)
+	return a.executorbus.ExecuteCode(ctx, path, language, uid, qid)
 
 }

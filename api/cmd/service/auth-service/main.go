@@ -102,10 +102,11 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  "develop",
-		Log:    log,
-		DB:     ds,
-		Tracer: tracer,
+		Build:     "develop",
+		Log:       log,
+		DB:        ds,
+		Tracer:    tracer,
+		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{

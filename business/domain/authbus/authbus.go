@@ -22,3 +22,18 @@ func NewBusiness(log *logger.CustomLogger, delegate *delegate.Delegate, ds mux.D
 		storer:   storer,
 	}
 }
+
+func (b *Business) AuthenticateUser(username, password string) {
+	// check if user exists in db
+	// check if password hash matches
+	// add session
+	// return user token with role info
+
+}
+func (b *Business) AuthorizeUser(token string) {
+	// get token
+	// decrypt tokken
+	// if token valid get userid
+	// check session
+
+}

@@ -22,22 +22,30 @@ import (
 
 type Storer interface{}
 type Business struct {
-	log      *logger.CustomLogger
-	delegate *delegate.Delegate
-	storer   Storer
-	cli      *client.Client
+	log           *logger.CustomLogger
+	delegate      *delegate.Delegate
+	storer        Storer
+	cli           *client.Client
+	containerSpec map[string]ContainerSpec
 }
 
 func NewBusiness(log *logger.CustomLogger, delegate *delegate.Delegate, storer Storer, cli *client.Client) *Business {
 	return &Business{
-		log:      log,
-		delegate: delegate,
-		storer:   storer,
-		cli:      cli,
+		log:           log,
+		delegate:      delegate,
+		storer:        storer,
+		cli:           cli,
+		containerSpec: make(map[string]ContainerSpec),
 	}
 }
-func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.ExecutionResponse, error) {
+func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid string) (*pb.ExecutionResponse, error) {
 	var execResponse pb.ExecutionResponse
+	// b.log.Errorc(ctx, "questionID", map[string]interface{}{
+	// 	"qid": qid,
+	// })
+	// b.log.Errorc(ctx, "userID", map[string]interface{}{
+	// 	"uid": uid,
+	// })
 	// get container spec
 	specs, err := b.getContainerSpec(language)
 	if err != nil {
@@ -87,6 +95,8 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 	if err != nil {
 		return &execResponse, err
 	}
+	defer stats.Body.Close()
+	defer res.Close()
 	decoder := json.NewDecoder(stats.Body)
 	var s Stats
 	for {
@@ -95,32 +105,32 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language string) (*pb.
 		} else if err != nil {
 			return &execResponse, err
 		}
-
-		// Extract memory usage
-		fmt.Printf("Usage: %d mb, Limit: %d mb\n", s.MemoryStats.Usage/(1024*1024), s.MemoryStats.Limit/(1024*1024))
-
-		// Extract CPU usage
-		fmt.Printf("Total CPU Usage: %d\n", s.CPUStats.CPUUsage.TotalUsage)
-
 		// Optionally break after one read to get stats at a single point in time
 		break
 	}
 	execResponse.CpuStats = fmt.Sprintf("%d", s.CPUStats.CPUUsage.TotalUsage)
 	execResponse.RamUsed = fmt.Sprintf("%d", s.MemoryStats.Usage)
 	execResponse.TotalRAM = fmt.Sprintf("%d", s.MemoryStats.Limit)
-	execResponse.PercetRAMUsage = fmt.Sprintf("%.4f", (s.MemoryStats.Usage/s.MemoryStats.Limit)*100)
+	execResponse.PercetRAMUsage = fmt.Sprintf("%d", (s.MemoryStats.Usage/s.MemoryStats.Limit)*100)
 	execResponse.ExecTime = endTime.String()
-	defer res.Close()
 	var logBuf bytes.Buffer
 	if _, err := logBuf.ReadFrom(res.Conn); err != nil {
 		return &execResponse, err
 	}
-	execResponse.Output = logBuf.String()
+	result := []byte{}
+	for _, b := range logBuf.Bytes() {
+		if b >= 32 && b <= 126 {
+			result = append(result, b)
+		}
+	}
+	execResponse.Output = string(result)
 	return &execResponse, nil
 }
 func (b *Business) getContainerSpec(language string) (ContainerSpec, error) {
 	var containerSpec ContainerSpec
-
+	if spec, ok := b.containerSpec[language]; ok {
+		return spec, nil
+	}
 	filters := filters.NewArgs()
 	filters.Add("label", fmt.Sprintf("app=%s-executor", language))
 	filters.Add("label", fmt.Sprintf("language=%s", language))
@@ -145,24 +155,11 @@ func (b *Business) getContainerSpec(language string) (ContainerSpec, error) {
 		containerSpec.Status = container.Status
 		// containerSpec.Ports = []Port(container.Ports)
 	}
+	b.containerSpec[language] = containerSpec
 	return containerSpec, nil
 }
 
 func (b *Business) readTempFile(path string) (*bytes.Buffer, error) {
-	// suff := fmt.Sprintf("%d", rand.Int())
-	// tmpFile, err := os.Create(fmt.Sprintf("%s.py", suff))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer os.Remove(tmpFile.Name())
-	// data, err := os.ReadFile(path)
-	// if err != nil {
-	// 	return bytes.Buffer{}, err
-	// }
-	// Write the Python code to the file
-	// if err := os.WriteFile(tmpFile.Name(), []byte(code), 0644); err != nil {
-	// 	return err
-	// }
 	buf, err := tarFile(path)
 	if err != nil {
 		log.Println("error in tarfile", err)
