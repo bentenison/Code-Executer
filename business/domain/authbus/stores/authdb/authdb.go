@@ -27,7 +27,14 @@ func (s *Store) CreateUser(ctx context.Context, user *authbus.User) (string, err
 		VALUES (:id, :username, :email, :password_hash, :first_name, :last_name, :role, :created_at, :updated_at)
 		RETURNING id`
 	var lastInsertedID string
-	err := s.ds.SQL.QueryRowx(query, user).Scan(&lastInsertedID)
+	stmt, err := s.ds.SQL.PrepareNamed(query)
+	if err != nil {
+		s.log.Errorc(ctx, "error while adding user", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return "", err
+	}
+	err = stmt.Get(&lastInsertedID, user)
 	if err != nil {
 		s.log.Errorc(ctx, "error while adding user", map[string]interface{}{
 			"error": err.Error(),
@@ -37,7 +44,7 @@ func (s *Store) CreateUser(ctx context.Context, user *authbus.User) (string, err
 	return lastInsertedID, nil
 
 }
-func (s *Store) GetUser(ctx context.Context, u string) (*UserDB, error) {
+func (s *Store) GetUser(ctx context.Context, u string) (*authbus.User, error) {
 	//create user query
 	query := `
 		SELECT id, username, email, password_hash, first_name, last_name, role, created_at, updated_at
@@ -54,8 +61,8 @@ func (s *Store) GetUser(ctx context.Context, u string) (*UserDB, error) {
 		}
 		return nil, err
 	}
-
-	return &user, nil
+	busUser := toBusUser(&user)
+	return busUser, nil
 }
 func (s *Store) ListUsers(ctx context.Context) ([]UserDB, error) {
 	//create user query

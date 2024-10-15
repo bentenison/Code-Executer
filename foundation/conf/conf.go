@@ -34,6 +34,7 @@ type Config struct {
 	MongoAuth       string
 	MongoDbName     string
 	Language        string
+	JWTKey          string
 	AllowDirect     bool
 	AllowGRPC       bool
 }
@@ -53,11 +54,11 @@ func LoadConfig() (*Config, error) {
 		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
 		AuthGRPCPort:    getEnv("AUTH_GRPC_PORT", ":50002"),
 		DebugPort:       getEnv("DEBUG_PORT", ":8002"),
-		DBDSN:           getEnv("DBDSN", "postgres://user:password@localhost:5432"),
-		User:            getEnv("DBUSER", "postgres"),
-		Password:        getEnv("DBPASSWORD", "root"),
+		DBDSN:           getEnv("DBDSN", "postgres://epic:password@localhost:5432"),
+		User:            getEnv("DBUSER", "epic"),
+		Password:        getEnv("DBPASSWORD", "admin#123"),
 		Host:            getEnv("HOST", "localhost"),
-		DBName:          getEnv("DBNAME", "library"),
+		DBName:          getEnv("DBNAME", "epic"),
 		Environment:     getEnv("ENV", "devlopment"),
 		MongoHost:       getEnv("MONGO_HOST", "localhost"),
 		MongoPort:       getEnv("MONGO_PORT", "27017"),
@@ -66,6 +67,7 @@ func LoadConfig() (*Config, error) {
 		MongoAuth:       getEnv("MONGO_AUTH", "admin"),
 		MongoDbName:     getEnv("MONGO_DBNAME", "EXECUTOR"),
 		Language:        getEnv("CONTAINER_LANGUAGE", "python"),
+		JWTKey:          getEnv("JWT_KEY", "mysupersecret"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}
 	idleConns, _ := strconv.Atoi(getEnv("MAXIDLECONNS", "10"))

@@ -24,10 +24,11 @@ type Config struct {
 }
 
 func Routes(app *web.App, cfg Config) {
-	api := newAPI(cfg.Log, authapp.NewApp(cfg.Log, cfg.AuthBus, cfg.Tracer))
+	api := newAPI(cfg.Log, authapp.NewApp(cfg.Log, cfg.AuthBus, cfg.Tracer, cfg.AppConfig))
 	app.Use(mid.TraceIdMiddleware())
 	go RunGRPCServer(cfg.AppConfig.GRPCPort, cfg.Log, api)
 	app.Handle("GET", "/auth/check", api.checkHealthHandler)
+	app.Handle("POST", "/auth/create", api.createUserHandler)
 	app.Handle("POST", "/auth/authenticate", api.loginHandler)
 	app.Handle("POST", "/auth/authorize", api.authorizeHandler)
 }
