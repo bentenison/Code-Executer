@@ -24,8 +24,8 @@ func CreateServer(grpcPort string, log *logger.CustomLogger) (*grpc.Server, net.
 	return grpcServer, lis
 }
 
-func CreateClient(log *logger.CustomLogger) *grpc.ClientConn {
-	conn, err := grpc.NewClient(":50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+func CreateClient(log *logger.CustomLogger, port string) *grpc.ClientConn {
+	conn, err := grpc.NewClient(port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Errorc(context.TODO(), "failed to connect:", map[string]interface{}{
 			"error": err.Error(),

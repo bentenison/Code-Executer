@@ -27,6 +27,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:       cfg.Log,
 		BrokerBus: brokerbus,
 		Tracer:    cfg.Tracer,
+		AppConfig: cfg.AppConfig,
 	})
 
 }

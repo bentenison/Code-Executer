@@ -28,7 +28,7 @@ func main() {
 		"env":     "production",
 		"build":   "1.0.0",
 	})
-	// load congigurations
+	// load configurations
 	config, err := conf.LoadConfig()
 	if err != nil {
 		log.Errorc(context.TODO(), "error while loading conf", map[string]interface{}{

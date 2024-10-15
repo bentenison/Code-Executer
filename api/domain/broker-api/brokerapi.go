@@ -3,6 +3,8 @@ package brokerapi
 import (
 	"net/http"
 
+	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
+	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
 	brokerapp "github.com/bentenison/microservice/app/domain/broker-app"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,8 @@ import (
 type api struct {
 	brokerapp *brokerapp.App
 	logger    *logger.CustomLogger
+	authcli   authpb.AuthServiceClient
+	execcli   execpb.ExecutorServiceClient
 }
 
 func newAPI(brokerApp *brokerapp.App, logger *logger.CustomLogger) *api {
