@@ -64,7 +64,7 @@ func (s *Store) GetUser(ctx context.Context, u string) (*authbus.User, error) {
 	busUser := toBusUser(&user)
 	return busUser, nil
 }
-func (s *Store) ListUsers(ctx context.Context) ([]UserDB, error) {
+func (s *Store) ListUsers(ctx context.Context) ([]*authbus.User, error) {
 	//create user query
 	query := `
 		SELECT id, username, email, password_hash, first_name, last_name, role, created_at, updated_at
@@ -76,6 +76,6 @@ func (s *Store) ListUsers(ctx context.Context) ([]UserDB, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return users, nil
+	busUsers := toBustUsers(users)
+	return busUsers, nil
 }

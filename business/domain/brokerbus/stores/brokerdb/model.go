@@ -111,3 +111,25 @@ func addTestCases(cases []TestCase) []brokerbus.TestCase {
 	}
 	return out
 }
+func toBusLanguage(lang *LanguageDB) *brokerbus.Language {
+	var lg brokerbus.Language
+	lg.ID = lang.ID.String
+	lg.Code = lang.Code.String
+	lg.Name = lang.Name.String
+	lg.ContainerID = lang.ContainerID.String
+	lg.ContainerName = lang.ContainerName.String
+	lg.Version = lang.Version.String
+	lg.DocumentationURL = lang.DocumentationURL.String
+	lg.IsActive = lang.IsActive.Bool
+	lg.UpdatedAt = lang.UpdatedAt.Time
+	lg.CreatedAt = lang.UpdatedAt.Time
+	return &lg
+}
+func toBusLanguages(lang []LanguageDB) []*brokerbus.Language {
+	var langs []*brokerbus.Language
+	for _, v := range lang {
+		lg := toBusLanguage(&v)
+		langs = append(langs, lg)
+	}
+	return langs
+}

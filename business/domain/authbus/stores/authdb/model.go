@@ -34,3 +34,12 @@ func toBusUser(user *UserDB) *authbus.User {
 	u.ID = user.ID.String
 	return &u
 }
+
+func toBustUsers(users []UserDB) []*authbus.User {
+	busUsers := make([]*authbus.User, len(users))
+	for _, v := range users {
+		u := toBusUser(&v)
+		busUsers = append(busUsers, u)
+	}
+	return busUsers
+}

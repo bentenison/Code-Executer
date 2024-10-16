@@ -15,6 +15,7 @@ import (
 type Storer interface {
 	CreateUser(ctx context.Context, user *User) (string, error)
 	GetUser(ctx context.Context, u string) (*User, error)
+	ListUsers(ctx context.Context) ([]*User, error)
 }
 type Business struct {
 	log      *logger.CustomLogger
@@ -71,10 +72,7 @@ func (b *Business) AuthenticateUser(ctx context.Context, username, password, jwt
 	return tkn, nil
 }
 func (b *Business) AuthorizeUser(ctx context.Context, token, jwtKey string) (*Claims, error) {
-	// get token
-
-	// decrypt tokken
-	claims, err := validateJWT(ctx, token, jwtKey)
+	claims, err := validateJWT(token, jwtKey)
 	if err != nil {
 		b.log.Errorc(ctx, "error in validating token", map[string]interface{}{
 			"error": err.Error(),
@@ -85,7 +83,10 @@ func (b *Business) AuthorizeUser(ctx context.Context, token, jwtKey string) (*Cl
 	// check session
 	return claims, nil
 }
-func validateJWT(ctx context.Context, token, jwtKey string) (*Claims, error) {
+func (b *Business) ListUsers(ctx context.Context) ([]*User, error) {
+	return b.storer.ListUsers(ctx)
+}
+func validateJWT(token, jwtKey string) (*Claims, error) {
 	tkn, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtKey), nil
 	})

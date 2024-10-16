@@ -117,7 +117,7 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid str
 	if _, err := logBuf.ReadFrom(res.Conn); err != nil {
 		return &execResponse, err
 	}
-
+	go b.performCleanup(filepath.Base(path), specs.ID)
 	execResponse.Output = convertOutput(logBuf)
 	//TODO: ADD the code execution stats here
 	return &execResponse, nil
@@ -163,7 +163,28 @@ func (b *Business) getContainerSpec(language string) (ContainerSpec, error) {
 	b.containerSpec[language] = containerSpec
 	return containerSpec, nil
 }
+func (b *Business) performCleanup(path, id string) error {
+	cmd := []string{"rm", filepath.Join("/app", path)}
+	// Create a new exec instance
+	execConfig := container.ExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+		Cmd:          cmd,
+	}
 
+	execIDResp, err := b.cli.ContainerExecCreate(context.Background(), id, execConfig)
+	if err != nil {
+		return err
+	}
+	// Start the exec instance
+	execStartCheck := container.ExecStartOptions{Detach: false, Tty: false}
+	err = b.cli.ContainerExecStart(context.Background(), execIDResp.ID, execStartCheck)
+	if err != nil {
+		log.Fatalf("Error starting exec instance: %v", err)
+	}
+	return nil
+}
 func (b *Business) readTempFile(path string) (*bytes.Buffer, error) {
 	buf, err := tarFile(path)
 	if err != nil {

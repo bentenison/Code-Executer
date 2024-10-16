@@ -5,9 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"text/template"
 
+	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
+	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
 	"github.com/bentenison/microservice/api/sdk/http/client"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
@@ -15,6 +18,9 @@ import (
 
 type Storer interface {
 	GetQuestionTemplate(ctx context.Context, id string) (Question, error)
+	AddSubmission(ctx context.Context, submission *Submission) (string, error)
+	AddExecutionStats(ctx context.Context, newStat *CodeExecutionStats) (string, error)
+	GetLanguages(ctx context.Context) ([]*Language, error)
 }
 
 type Business struct {
@@ -31,20 +37,20 @@ func NewBusiness(logger *logger.CustomLogger, delegate *delegate.Delegate, store
 	}
 }
 
-func (b *Business) HandleSubmissonService(ctx context.Context, submission Submission) (Question, error) {
+func (b *Business) HandleSubmissonService(ctx context.Context, submission Submission, authcli authpb.AuthServiceClient, execcli execpb.ExecutorServiceClient) (*execpb.ExecutionResponse, error) {
 	question, err := b.storer.GetQuestionTemplate(ctx, submission.QuestionId)
 	if err != nil {
 		b.log.Errorc(ctx, "error while getting template", map[string]interface{}{
 			"error": err,
 		})
-		return Question{}, err
+		return nil, err
 	}
 	decodedSnippet, err := decodeSnippet(submission.CodeSnippet)
 	if err != nil {
 		b.log.Errorc(ctx, "error while decoding base64 snippet", map[string]interface{}{
 			"error": err.Error(),
 		})
-		return Question{}, err
+		return nil, err
 	}
 	question.Logic = decodedSnippet
 	err = b.createCodeTemplate(ctx, question, submission.UserID)
@@ -52,11 +58,41 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 		b.log.Errorc(ctx, "error while ceating template for the question", map[string]interface{}{
 			"error": err.Error(),
 		})
+		return nil, err
 	}
 	//TODO: create submission and add to DB
+	submission.QuestionId = question.QuestionId
+	submission.ExecutionStatus = "EXECUTED"
+
+	id, err := b.storer.AddSubmission(ctx, &submission)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding submission", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+		// return "", err
+	}
+	_ = id
+	path := fmt.Sprintf("./static/code_%s_%s.py", question.QuestionId, submission.UserID)
 	//TODO: call the executor client to exec code
+	res, err := startExecution(execcli, path)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding submission", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	stats := createCodeExecutionStats(res, id, submission.UserID, submission.CodeSnippet, submission.LanguageID)
+	_, err = b.storer.AddExecutionStats(ctx, stats)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
 	//TODO: After result from executor client add the perfromance metrics and code_execution stats to DB
-	return question, err
+	// b.storer.AddExecutionStats(ctx,)
+	return res, err
 }
 
 func (b *Business) HandleAuthentication(ctx context.Context, username, password string) (string, error) {
@@ -127,7 +163,7 @@ func (b *Business) createCodeTemplate(ctx context.Context, question Question, us
 		})
 		return err
 	}
-	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s", question.QuestionId, userId), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s.py", question.QuestionId, userId), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	if err != nil {
 		b.log.Errorc(ctx, "error while creating file", map[string]interface{}{
 			"error": err.Error(),
@@ -147,4 +183,38 @@ func decodeSnippet(snippet string) (string, error) {
 		return "", err
 	}
 	return string(snipByte), nil
+}
+func startExecution(exec execpb.ExecutorServiceClient, path string) (*execpb.ExecutionResponse, error) {
+	stream, err := exec.HandleExecution(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	buf := make([]byte, 1024) // 1 KB chunks
+	for {
+		n, err := file.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		err = stream.Send(&execpb.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123"})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

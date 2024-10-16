@@ -9,15 +9,16 @@ CREATE TABLE submissions (
     code_snippet TEXT NOT NULL,                             -- The code that was submitted
     submission_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,    -- Timestamp of when the submission was made
     execution_status VARCHAR(20) NOT NULL,                  -- Status of the execution (e.g., 'Pending', 'Executed', 'Failed')
-    result_id VARCHAR(36),                                  -- UUID (as string) referencing the execution result in code_execution_stats
+    result_id VARCHAR(36), 
+    question_id VARCHAR(36) NOT NULL;                                 -- UUID (as string) referencing the execution result in code_execution_stats
     is_public BOOLEAN DEFAULT FALSE,                        -- Visibility of the submission (public or private)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp of when the entry was created
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp for last update
     FOREIGN KEY (user_id) REFERENCES users(id),             -- Foreign key referencing users table
-    FOREIGN KEY (language_id) REFERENCES languages(id),     -- Foreign key referencing languages table
-    FOREIGN KEY (result_id) REFERENCES code_execution_stats(id) -- Foreign key referencing code_execution_stats table
+    FOREIGN KEY (language_id) REFERENCES languages(id)     -- Foreign key referencing languages table
 );
-
+ALTER TABLE submissions
+ADD COLUMN question_id VARCHAR(36) NOT NULL;
 -- Indexes for optimization
 CREATE INDEX idx_submissions_user ON submissions(user_id);
 CREATE INDEX idx_submissions_language ON submissions(language_id);
@@ -37,25 +38,29 @@ CREATE TABLE performance_metrics (
 
 -- Updated code_execution_stats table with UUID as string
 CREATE TABLE code_execution_stats (
-    id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(),-- Unique identifier for each execution record as UUID string
-    user_id VARCHAR(36) NOT NULL,                         -- UUID (as string) for the user who executed the code
-    language_id VARCHAR(36) NOT NULL,                     -- UUID (as string) for the programming language
-    execution_time INTERVAL NOT NULL,                     -- Time taken for the execution
-    memory_usage INT,                                     -- Memory used during execution (in bytes)
-    status VARCHAR(20) NOT NULL,                          -- Execution status (e.g., 'Success', 'Errorc', 'Timeout')
-    error_message TEXT,                                   -- Errorc message if execution failed
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,        -- Timestamp of when the execution was recorded
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,        -- Timestamp for last update
-    code_snippet TEXT NOT NULL,                           -- Code snippet that was executed
-    container_id VARCHAR(255) NOT NULL,                   -- ID of the container used for execution
-    FOREIGN KEY (user_id) REFERENCES users(id),           -- Foreign key referencing users table
-    FOREIGN KEY (language_id) REFERENCES languages(id)    -- Foreign key referencing languages table
+    id VARCHAR(36) PRIMARY KEY DEFAULT uuid_generate_v4(), -- Unique identifier for each execution record as UUID string
+    user_id VARCHAR(36) NOT NULL,                           -- UUID (as string) for the user who executed the code
+    language_id VARCHAR(36) NOT NULL,                       -- UUID (as string) for the programming language
+    execution_time DOUBLE PRECISION NOT NULL,                         -- Time taken for the execution in milliseconds (int64)
+    memory_usage BIGINT,                                   -- Memory used during execution (in bytes, int64)
+    total_memory BIGINT,                                   -- Total memory available (in bytes, int64)
+    cpu_usage BIGINT,                                      -- CPU usage (in milliseconds, int64)
+    memory_percentage FLOAT,                                -- Memory usage percentage (float64)
+    status VARCHAR(20) NOT NULL,                            -- Execution status (e.g., 'Success', 'Error', 'Timeout')
+    error_message TEXT,                                     -- Error message if execution failed
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp of when the execution was recorded
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,         -- Timestamp for last update
+    code_snippet TEXT NOT NULL,                             -- Code snippet that was executed
+    container_id VARCHAR(255) NOT NULL,                     -- ID of the container used for execution
+    FOREIGN KEY (user_id) REFERENCES users(id),             -- Foreign key referencing users table
+    FOREIGN KEY (language_id) REFERENCES languages(id)      -- Foreign key referencing languages table
 );
 
 -- Indexes for optimization
 CREATE INDEX idx_code_execution_user ON code_execution_stats(user_id);
 CREATE INDEX idx_code_execution_language ON code_execution_stats(language_id);
 CREATE INDEX idx_code_execution_status ON code_execution_stats(status);
+
 
 -- Updated users table with UUID as string
 CREATE TABLE users (

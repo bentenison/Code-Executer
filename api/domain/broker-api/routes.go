@@ -23,15 +23,16 @@ type Config struct {
 }
 
 func Routes(app *web.App, cfg Config) {
-	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, cfg.Tracer), cfg.Log)
-	app.Use(mid.TraceIdMiddleware())
-
 	authcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.AuthGRPCPort)
 	authcli := authpb.NewAuthServiceClient(authcliConn)
-	api.authcli = authcli
 	executorcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.GRPCPort)
 	execcli := execpb.NewExecutorServiceClient(executorcliConn)
+	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, cfg.Tracer, execcli, authcli), cfg.Log)
 	api.execcli = execcli
+	api.authcli = authcli
+
+	app.Use(mid.TraceIdMiddleware())
+
 	// cfg.Log.Errorc("started serving ")
 	app.Handle("POST", "/broker/submission", api.newSubmissionHandler)
 	app.Handle("POST", "/broker/batchProcess", api.newSubmissionHandler)
