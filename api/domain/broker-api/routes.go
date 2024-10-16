@@ -35,7 +35,10 @@ func Routes(app *web.App, cfg Config) {
 	// cfg.Log.Errorc("started serving ")
 	app.Handle("POST", "/broker/submission", api.newSubmissionHandler)
 	app.Handle("POST", "/broker/batchProcess", api.newSubmissionHandler)
-	app.Handle("GET", "/broker/authenticate", api.newSubmissionHandler)
+	app.Handle("POST", "/broker/authenticate", api.authenticateHandler)
+	app.Handle("POST", "/broker/authorize", api.authorizeHandler)
+	app.Handle("POST", "/broker/create", api.createUserHandler)
+
 	app.Handle("GET", "/broker/getlanguages", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/getallowedlanguages", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/conf", api.newSubmissionHandler)

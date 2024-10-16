@@ -2,6 +2,8 @@ package brokerbus
 
 import (
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type TestCase struct {
@@ -87,4 +89,19 @@ type Language struct {
 	IsActive         bool      `json:"is_active"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+type UserPayload struct {
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	PasswordHash string `json:"password_hash"`
+	FirstName    string `json:"first_name,omitempty"`
+	LastName     string `json:"last_name,omitempty"`
+	Role         string `json:"role"`
+}
+type Claims struct {
+	UserId string `json:"userId"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
 }

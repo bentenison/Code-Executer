@@ -29,3 +29,34 @@ func toAppSubmission(payload SubmissionPayload) brokerapp.Submission {
 	submission.UpdatedAt = time.Now()
 	return submission
 }
+
+type Credentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type User struct {
+	ID           string    `json:"id"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	Password     string    `json:"password"`
+	PasswordHash string    `json:"password_hash"`
+	FirstName    string    `json:"first_name,omitempty"`
+	LastName     string    `json:"last_name,omitempty"`
+	Role         string    `json:"role"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type UserPayload struct {
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	PasswordHash string `json:"password_hash"`
+	FirstName    string `json:"first_name,omitempty"`
+	LastName     string `json:"last_name,omitempty"`
+	Role         string `json:"role"`
+}
+type token struct {
+	Token string `json:"token,omitempty"`
+}

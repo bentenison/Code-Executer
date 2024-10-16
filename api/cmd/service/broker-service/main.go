@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bentenison/microservice/api/cmd/service/broker-service/build/all"
-	"github.com/bentenison/microservice/api/sdk/http/debug"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
 	"github.com/bentenison/microservice/business/sdk/sqldb"
@@ -86,26 +85,27 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		MGO: mongo,
 		SQL: db,
 	}
-	go func() {
-		log.Infoc(context.TODO(), "startup debug v1 server started", map[string]interface{}{
-			"port": cfg.DebugPort,
-		})
+	// go func() {
+	// 	log.Infoc(context.TODO(), "startup debug v1 server started", map[string]interface{}{
+	// 		"port": cfg.DebugPort,
+	// 	})
 
-		if err := http.ListenAndServe(cfg.DebugPort, debug.Mux()); err != nil {
-			log.Errorc(context.TODO(), "error occured while listning for traffic", map[string]interface{}{
-				"error": err.Error(),
-			})
-		}
-	}()
+	// 	if err := http.ListenAndServe(cfg.DebugPort, debug.Mux()); err != nil {
+	// 		log.Errorc(context.TODO(), "error occured while listning for traffic", map[string]interface{}{
+	// 			"error": err.Error(),
+	// 		})
+	// 	}
+	// }()
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  "develop",
-		Log:    log,
-		DB:     ds,
-		Tracer: tracer,
+		Build:     "develop",
+		Log:       log,
+		DB:        ds,
+		Tracer:    tracer,
+		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{

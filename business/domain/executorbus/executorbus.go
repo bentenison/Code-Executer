@@ -117,14 +117,19 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid str
 	if _, err := logBuf.ReadFrom(res.Conn); err != nil {
 		return &execResponse, err
 	}
+
+	execResponse.Output = convertOutput(logBuf)
+	//TODO: ADD the code execution stats here
+	return &execResponse, nil
+}
+func convertOutput(logBuf bytes.Buffer) string {
 	result := []byte{}
 	for _, b := range logBuf.Bytes() {
 		if b >= 32 && b <= 126 {
 			result = append(result, b)
 		}
 	}
-	execResponse.Output = string(result)
-	return &execResponse, nil
+	return string(result)
 }
 func (b *Business) getContainerSpec(language string) (ContainerSpec, error) {
 	var containerSpec ContainerSpec

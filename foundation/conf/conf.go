@@ -49,11 +49,11 @@ func LoadConfig() (*Config, error) {
 	config := &Config{
 		BookAPIPort:     getEnv("BOOKAPI_PORT", ":8000"),
 		AuthAPIPort:     getEnv("AUTHAPI_PORT", ":8001"),
+		DebugPort:       getEnv("DEBUG_PORT", ":8002"),
 		BrokerAPIPort:   getEnv("BROKER_PORT", ":8003"),
 		ExecutorAPIPort: getEnv("EXECUTOR_PORT", ":8004"),
 		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
 		AuthGRPCPort:    getEnv("AUTH_GRPC_PORT", ":50002"),
-		DebugPort:       getEnv("DEBUG_PORT", ":8002"),
 		DBDSN:           getEnv("DBDSN", "postgres://epic:password@localhost:5432"),
 		User:            getEnv("DBUSER", "epic"),
 		Password:        getEnv("DBPASSWORD", "admin#123"),

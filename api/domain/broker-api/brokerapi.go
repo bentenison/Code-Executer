@@ -44,3 +44,121 @@ func (api *api) newSubmissionHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, template)
 }
+func (api *api) authenticateHandler(c *gin.Context) {
+	var cred brokerapp.Credentials
+	if err := c.Bind(&cred); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	// submission := toAppSubmission(submissionPayload)
+	token, err := api.brokerapp.Authenticate(c.Request.Context(), cred)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while getting token:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, token)
+}
+func (api *api) authorizeHandler(c *gin.Context) {
+	var tkn token
+	if err := c.Bind(&tkn); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+
+	res, err := api.brokerapp.Authorize(c.Request.Context(), tkn.Token)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while authorizing user:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) createUserHandler(c *gin.Context) {
+	var up brokerapp.UserPayload
+	if err := c.Bind(&up); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	// submission := toAppSubmission(submissionPayload)
+	template, err := api.brokerapp.CreateUser(c.Request.Context(), up)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while getting template data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, template)
+}
+
+func (api *api) authenticate(c *gin.Context) {
+	var cred Credentials
+	if err := c.Bind(&cred); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	res, err := api.authcli.Authenticate(c.Request.Context(), &authpb.LoginRequest{Username: cred.Username, Password: cred.Password})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in Authenticate GRPC API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) authorize(c *gin.Context) {
+	var tkn token
+	if err := c.Bind(&tkn); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	res, err := api.authcli.Authorize(c.Request.Context(), &authpb.AuthorizeRequest{Token: tkn.Token})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in Authorize GRPC API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) createUser(c *gin.Context) {
+	var user UserPayload
+	if err := c.Bind(&user); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	res, err := api.authcli.CreateAccount(c.Request.Context(), &authpb.CreateAccountRequest{Username: user.Username, Email: user.Email, Password: user.Password, Role: user.Role})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in CreateAccount GRPC API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
