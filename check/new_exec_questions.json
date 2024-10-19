@@ -1,0 +1,555 @@
+[{
+  "_id": {
+    "$oid": "6713eed887830b50814e7198"
+  },
+  "title": "Fibonacci Sequence Generator",
+  "description": "Write a function that generates the Fibonacci sequence up to n numbers.",
+  "input": {
+    "description": "You will receive a single integer n as input.",
+    "expected": "The function should return a list of the first n Fibonacci numbers."
+  },
+  "output": {
+    "description": "The output will be a list of Fibonacci numbers."
+  },
+  "template_code": "def main(n):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (5,),\n        (0,),\n        (10,),\n        (1,)\n    ]\n    expected_outputs = [\n        [0, 1, 1, 2, 3],\n        [],\n        [0, 1, 1, 2, 3, 5, 8, 13, 21, 34],\n        [0]\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "fibonacci",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(n):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (5,),\n        (0,),\n        (10,),\n        (1,)\n    ]\n    expected_outputs = [\n        [0, 1, 1, 2, 3],\n        [],\n        [0, 1, 1, 2, 3, 5, 8, 13, 21, 34],\n        [0]\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": 5,
+      "expectedOutput": [
+        0,
+        1,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "input": 0,
+      "expectedOutput": []
+    },
+    {
+      "input": 10,
+      "expectedOutput": [
+        0,
+        1,
+        1,
+        2,
+        3,
+        5,
+        8,
+        13,
+        21,
+        34
+      ]
+    },
+    {
+      "input": 1,
+      "expectedOutput": [
+        0
+      ]
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e7199"
+  },
+  "title": "Factorial Calculator",
+  "description": "Write a function that calculates the factorial of a given number n.",
+  "input": {
+    "description": "You will receive a single integer n as input.",
+    "expected": "The function should return the factorial of n."
+  },
+  "output": {
+    "description": "The output will be an integer value representing the factorial."
+  },
+  "template_code": "def main(n):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (5,),\n        (0,),\n        (3,),\n        (1,)\n    ]\n    expected_outputs = [\n        120,\n        1,\n        6,\n        1\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "factorial",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(n):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (5,),\n        (0,),\n        (3,),\n        (1,)\n    ]\n    expected_outputs = [\n        120,\n        1,\n        6,\n        1\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": 5,
+      "expectedOutput": 120
+    },
+    {
+      "input": 0,
+      "expectedOutput": 1
+    },
+    {
+      "input": 3,
+      "expectedOutput": 6
+    },
+    {
+      "input": 1,
+      "expectedOutput": 1
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719a"
+  },
+  "title": "Anagram Checker",
+  "description": "Write a function that checks if two given strings are anagrams.",
+  "input": {
+    "description": "You will receive two strings s1 and s2 as input.",
+    "expected": "The function should return True if they are anagrams, and False otherwise."
+  },
+  "output": {
+    "description": "The output will be a boolean value."
+  },
+  "template_code": "def main(s1, s2):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('listen', 'silent'),\n        ('hello', 'world'),\n        ('evil', 'vile'),\n        ('test', 'sett')\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        True\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0], test_input[1])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "anagram",
+    "string",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(s1, s2):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('listen', 'silent'),\n        ('hello', 'world'),\n        ('evil', 'vile'),\n        ('test', 'sett')\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        True\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0], test_input[1])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": [
+        "listen",
+        "silent"
+      ],
+      "expectedOutput": true
+    },
+    {
+      "input": [
+        "hello",
+        "world"
+      ],
+      "expectedOutput": false
+    },
+    {
+      "input": [
+        "evil",
+        "vile"
+      ],
+      "expectedOutput": true
+    },
+    {
+      "input": [
+        "test",
+        "sett"
+      ],
+      "expectedOutput": true
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719b"
+  },
+  "title": "Prime Number Checker",
+  "description": "Write a function that checks if a number is prime.",
+  "input": {
+    "description": "You will receive a single integer n as input.",
+    "expected": "The function should return True if n is prime, and False otherwise."
+  },
+  "output": {
+    "description": "The output will be a boolean value."
+  },
+  "template_code": "def main(n):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (7,),\n        (10,),\n        (13,),\n        (1,)\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        False\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "prime",
+    "number",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(n):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (7,),\n        (10,),\n        (13,),\n        (1,)\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        False\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": 7,
+      "expectedOutput": true
+    },
+    {
+      "input": 10,
+      "expectedOutput": false
+    },
+    {
+      "input": 13,
+      "expectedOutput": true
+    },
+    {
+      "input": 1,
+      "expectedOutput": false
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719c"
+  },
+  "title": "String Reversal",
+  "description": "Write a function that reverses a given string.",
+  "input": {
+    "description": "You will receive a single string s as input.",
+    "expected": "The function should return the reversed string."
+  },
+  "output": {
+    "description": "The output will be the reversed string."
+  },
+  "template_code": "def main(s):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello',),\n        ('racecar',),\n        ('Python',),\n        ('',)\n    ]\n    expected_outputs = [\n        'olleh',\n        'racecar',\n        'nohtyP',\n        ''\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "string",
+    "reversal",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(s):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello',),\n        ('racecar',),\n        ('Python',),\n        ('',)\n    ]\n    expected_outputs = [\n        'olleh',\n        'racecar',\n        'nohtyP',\n        ''\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": "hello",
+      "expectedOutput": "olleh"
+    },
+    {
+      "input": "racecar",
+      "expectedOutput": "racecar"
+    },
+    {
+      "input": "Python",
+      "expectedOutput": "nohtyP"
+    },
+    {
+      "input": "",
+      "expectedOutput": ""
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719d"
+  },
+  "title": "Sum of Digits",
+  "description": "Write a function that calculates the sum of digits of a given number.",
+  "input": {
+    "description": "You will receive a single integer n as input.",
+    "expected": "The function should return the sum of digits of n."
+  },
+  "output": {
+    "description": "The output will be an integer value."
+  },
+  "template_code": "def main(n):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (123,),\n        (0,),\n        (4567,),\n        (89,)\n    ]\n    expected_outputs = [\n        6,\n        0,\n        22,\n        17\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "digits",
+    "math",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(n):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (123,),\n        (0,),\n        (4567,),\n        (89,)\n    ]\n    expected_outputs = [\n        6,\n        0,\n        22,\n        17\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": 123,
+      "expectedOutput": 6
+    },
+    {
+      "input": 0,
+      "expectedOutput": 0
+    },
+    {
+      "input": 4567,
+      "expectedOutput": 22
+    },
+    {
+      "input": 89,
+      "expectedOutput": 17
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719e"
+  },
+  "title": "Count Vowels",
+  "description": "Write a function that counts the number of vowels in a given string.",
+  "input": {
+    "description": "You will receive a single string s as input.",
+    "expected": "The function should return the count of vowels in s."
+  },
+  "output": {
+    "description": "The output will be an integer value."
+  },
+  "template_code": "def main(s):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello',),\n        ('python',),\n        ('aeiou',),\n        ('xyz',)\n    ]\n    expected_outputs = [\n        2,\n        1,\n        5,\n        0\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "vowels",
+    "string",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(s):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello',),\n        ('python',),\n        ('aeiou',),\n        ('xyz',)\n    ]\n    expected_outputs = [\n        2,\n        1,\n        5,\n        0\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": "hello",
+      "expectedOutput": 2
+    },
+    {
+      "input": "python",
+      "expectedOutput": 1
+    },
+    {
+      "input": "aeiou",
+      "expectedOutput": 5
+    },
+    {
+      "input": "xyz",
+      "expectedOutput": 0
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e719f"
+  },
+  "title": "Count Words",
+  "description": "Write a function that counts the number of words in a given string.",
+  "input": {
+    "description": "You will receive a single string s as input.",
+    "expected": "The function should return the count of words in s."
+  },
+  "output": {
+    "description": "The output will be an integer value."
+  },
+  "template_code": "def main(s):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello world',),\n        ('Python is fun',),\n        ('',),\n        ('count words',)\n    ]\n    expected_outputs = [\n        2,\n        3,\n        0,\n        2\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "words",
+    "string",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(s):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ('hello world',),\n        ('Python is fun',),\n        ('',),\n        ('count words',)\n    ]\n    expected_outputs = [\n        2,\n        3,\n        0,\n        2\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": "hello world",
+      "expectedOutput": 2
+    },
+    {
+      "input": "Python is fun",
+      "expectedOutput": 3
+    },
+    {
+      "input": "",
+      "expectedOutput": 0
+    },
+    {
+      "input": "count words",
+      "expectedOutput": 2
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e71a0"
+  },
+  "title": "Remove Duplicates",
+  "description": "Write a function that removes duplicate elements from a list.",
+  "input": {
+    "description": "You will receive a list of integers as input.",
+    "expected": "The function should return a list with duplicates removed."
+  },
+  "output": {
+    "description": "The output will be a list of unique integers."
+  },
+  "template_code": "def main(lst):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ([1, 2, 2, 3],),\n        ([1, 1, 1],),\n        ([3, 2, 1],),\n        ([],)\n    ]\n    expected_outputs = [\n        [1, 2, 3],\n        [1],\n        [3, 2, 1],\n        []\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "duplicates",
+    "list",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(lst):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ([1, 2, 2, 3],),\n        ([1, 1, 1],),\n        ([3, 2, 1],),\n        ([],)\n    ]\n    expected_outputs = [\n        [1, 2, 3],\n        [1],\n        [3, 2, 1],\n        []\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": [
+        1,
+        2,
+        2,
+        3
+      ],
+      "expectedOutput": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "input": [
+        1,
+        1,
+        1
+      ],
+      "expectedOutput": [
+        1
+      ]
+    },
+    {
+      "input": [
+        3,
+        2,
+        1
+      ],
+      "expectedOutput": [
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "input": [],
+      "expectedOutput": []
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "6713eed887830b50814e71a1"
+  },
+  "title": "Calculate Average",
+  "description": "Write a function that calculates the average of a list of numbers.",
+  "input": {
+    "description": "You will receive a list of numbers as input.",
+    "expected": "The function should return the average of the numbers."
+  },
+  "output": {
+    "description": "The output will be a float value."
+  },
+  "template_code": "def main(lst):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ([1, 2, 3],),\n        ([10, 20, 30],),\n        ([5, 5, 5, 5],),\n        ([],)\n    ]\n    expected_outputs = [\n        2.0,\n        20.0,\n        5.0,\n        0.0\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
+  "language": "python",
+  "language_code": "py",
+  "difficulty": "easy",
+  "tags": [
+    "average",
+    "math",
+    "beginner"
+  ],
+  "user_logic_template": {
+    "description": "Insert your logic below:",
+    "code": "def main(lst):\n    # Your code here"
+  },
+  "testcase_template": {
+    "description": "You can use the following test case structure to validate your function:",
+    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        ([1, 2, 3],),\n        ([10, 20, 30],),\n        ([5, 5, 5, 5],),\n        ([],)\n    ]\n    expected_outputs = [\n        2.0,\n        20.0,\n        5.0,\n        0.0\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
+  },
+  "testcases": [
+    {
+      "input": [
+        1,
+        2,
+        3
+      ],
+      "expectedOutput": 2
+    },
+    {
+      "input": [
+        10,
+        20,
+        30
+      ],
+      "expectedOutput": 20
+    },
+    {
+      "input": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "expectedOutput": 5
+    },
+    {
+      "input": [],
+      "expectedOutput": 0
+    }
+  ]
+}]
