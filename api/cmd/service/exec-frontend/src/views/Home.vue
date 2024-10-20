@@ -1,5 +1,5 @@
 <template>
-  <div class="body" :class="{ 'menu-on': isMenuDisplayed }">
+  <div :class="{ 'menu-on': isMenuDisplayed }">
     <transition name="fade">
       <div class="menu" v-show="isMenuDisplayed">
         <div class="menu-title">
@@ -1522,42 +1522,31 @@
     <div class="demo">
       <div class="container">
         <!-- <CodeEditor
-        :autofocus="true"
-        :theme="theme"
-        v-model="animationCode"
-        z-index="3"
-        width="100%"
-        :languages="[
-              ['html', 'HTML'],
-              ['javascript', 'JS'],
-              ['scss', 'SCSS'],
-            ]"
-      ></CodeEditor> -->
+          :autofocus="true"
+          :theme="theme"
+          v-model="animationCode"
+          width="100%"
+          :languages="[
+            ['html', 'HTML'],
+            ['javascript', 'JS'],
+            ['scss', 'SCSS'],
+          ]"
+        ></CodeEditor> -->
         <CodeEditor
           :line-nums="true"
           :theme="theme"
-          value="import CodeEditor from 'simple-code-editor';
-export default {
-  components: {
-    CodeEditor
-  },
-  data() {
-    return {
-      value: ''
-    }
-  }
-}"
+          :value="prog"
           width=""
           height="500px"
         ></CodeEditor>
-
-        <CodeEditor
+        <terminal/>
+        <!-- <CodeEditor
           :read-only="true"
           v-model="themeDemo"
           theme="atom-one-dark"
           width="100%"
           :languages="[['html', 'HTML']]"
-        ></CodeEditor>
+        ></CodeEditor> -->
         <div class="button-group">
           <button
             :class="{ selected: theme == 'github-dark' }"
@@ -1607,21 +1596,23 @@ export default {
         </div>
       </div>
     </div>
-    <!-- useage -->
+    <!-- <terminal /> -->
     <div class="footer">
       The playground system powered by
-      <a target="_blank" href="https://github.com/bentenison">Bentenison</a>
+      <a target="_blank" href="https://github.com/bentenison"> Bentenison</a>
     </div>
   </div>
 </template>
 
 <script>
+import Terminal from "../components/Terminal.vue";
 import CodeEditor from "../SimpleCodeEditor/CodeEditor.vue";
 
 export default {
   name: "Home",
   components: {
     CodeEditor,
+    Terminal,
   },
   data() {
     return {
@@ -1632,6 +1623,13 @@ export default {
       isMenuDisplayed: false,
       code: '<CodeEditor v-model="value"></CodeEditor>',
       animationCode: "",
+      prog:`from typing import List, Dict, Any
+from datetime import datetime
+
+class TestCase:
+    def __init__(self, input: Any, expected_output: Any):
+        self.input = input
+        self.expected_output = expected_output`
     };
   },
   computed: {
@@ -1642,6 +1640,7 @@ export default {
   methods: {
     switchTheme(theme) {
       this.theme = theme;
+      this.emitter.emit("ThemeChanged",theme)
     },
     getLanguage(lang) {
       console.log("The current language is: " + lang);
@@ -1671,7 +1670,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @font-face {
   font-family: "Quicksand";
   src: url("../assets/font/Quicksand-Regular.woff2") format("woff2"),
@@ -1974,6 +1973,12 @@ body::-webkit-scrollbar-thumb {
 }
 // footer
 .footer {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 0;
+  width: 100%;
   font-size: 13px;
   color: var(--grey-4);
   text-align: center;

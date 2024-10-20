@@ -192,7 +192,7 @@ export default {
     languages: {
       type: Array,
       default: function () {
-        return [["javascript", "JS"]];
+        return [["python", "Python"]];
       },
     },
     langListWidth: {
@@ -392,13 +392,30 @@ export default {
 
       return formattedLines.join("\n");
     },
+    alertThemeChange(e) {
+      window.setTimeout(() => {
+        const element = document.querySelector(`[theme="${e}"] .hljs`);
+        const styles = window.getComputedStyle(element);
+        // console.log("mitt", this.emitter);
+        // console.log(styles);
+        let st = {
+          bg:styles.background,
+          foreground:styles.color
+        }
+        this.emitter.emit("changeTerminalTheme", st);
+      }, 100);
+    },
   },
   mounted() {
     this.$emit("lang", this.languages[0][0]);
     this.$emit("content", this.content);
     this.$emit("textarea", this.$refs.textarea);
     this.resizer();
+    // let code = document.getElementsByClassName("hljs")[0];
+    // console.log("code", styles.background);
+    this.emitter.on("ThemeChanged", this.alertThemeChange);
   },
+  created() {},
   updated() {
     if (this.insertTab) {
       this.$refs.textarea.setSelectionRange(
@@ -418,7 +435,7 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss" scoped>
 .code-editor {
   position: relative;
 }

@@ -9,22 +9,65 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type TestCase struct {
-	Input          interface{} `bson:"input" json:"input"`                     // Input can be of any type
-	ExpectedOutput interface{} `bson:"expected_output" json:"expected_output"` // Expected output can be of any type
+//	type Question struct {
+//		QuestionId   string     `bson:"_id" json:"questionId"`
+//		Title        string     `bson:"title" json:"title"`                 // Title of the problem
+//		Description  string     `bson:"description" json:"description"`     // Problem description
+//		TemplateCode string     `bson:"template_code" json:"template_code"` // Code template for user logic
+//		Language     string     `bson:"language" json:"language"`           // Programming language (e.g., Python)
+//		LanguageCode string     `bson:"language_code" json:"language_code"` // Language code (e.g., "py")
+//		TestCases    []TestCase `bson:"test_cases" json:"test_cases"`       // List of test cases with dynamic types
+//		Difficulty   string     `bson:"difficulty" json:"difficulty"`       // Difficulty level of the problem
+//		Tags         []string   `bson:"tags" json:"tags"`
+//		Logic        string     // Tags related to the problem
+//	}
+type Question struct {
+	QuestionId        string            `json:"_id" bson:"_id"`
+	Title             string            `json:"title" bson:"title"`
+	Description       string            `json:"description" bson:"description"`
+	Logic             string            `json:"logic" bson:"logic"`
+	Input             Input             `json:"input" bson:"input"`
+	Output            Output            `json:"output" bson:"output"`
+	TemplateCode      string            `json:"template_code" bson:"template_code"`
+	Language          string            `json:"language" bson:"language"`
+	LanguageCode      string            `json:"language_code" bson:"language_code"`
+	Difficulty        string            `json:"difficulty" bson:"difficulty"`
+	Tags              []string          `json:"tags" bson:"tags"`
+	UserLogicTemplate UserLogicTemplate `json:"user_logic_template" bson:"user_logic_template"`
+	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
+	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
 }
 
-type Question struct {
-	QuestionId   string     `bson:"_id" json:"questionId"`
-	Title        string     `bson:"title" json:"title"`                 // Title of the problem
-	Description  string     `bson:"description" json:"description"`     // Problem description
-	TemplateCode string     `bson:"template_code" json:"template_code"` // Code template for user logic
-	Language     string     `bson:"language" json:"language"`           // Programming language (e.g., Python)
-	LanguageCode string     `bson:"language_code" json:"language_code"` // Language code (e.g., "py")
-	TestCases    []TestCase `bson:"test_cases" json:"test_cases"`       // List of test cases with dynamic types
-	Difficulty   string     `bson:"difficulty" json:"difficulty"`       // Difficulty level of the problem
-	Tags         []string   `bson:"tags" json:"tags"`
-	Logic        string     // Tags related to the problem
+type Input struct {
+	Description string `json:"description" bson:"description"`
+	Expected    string `json:"expected" bson:"expected"`
+}
+
+type Output struct {
+	Description string `json:"description" bson:"description"`
+}
+
+type UserLogicTemplate struct {
+	Description string `json:"description" bson:"description"`
+	Code        string `json:"code" bson:"code"`
+}
+
+type TestcaseTemplate struct {
+	Description string `json:"description" bson:"description"`
+	Code        string `json:"code" bson:"code"`
+}
+
+type Testcase struct {
+	Input          int   `json:"input" bson:"input"`
+	ExpectedOutput []int `json:"expectedOutput" bson:"expectedOutput"`
+}
+
+type Answer struct {
+	ID        string     `json:"id"`
+	Logic     string     `json:"logic"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	TestCases []Testcase `json:"testcases"`
 }
 
 // Submission struct for returning a submission result

@@ -1,14 +1,17 @@
 <template>
-  <div>
+  <div class="body">
     <Home></Home>
+     <demo></demo>
   </div>
 </template>
 
 <script>
 import Home from "./views/Home.vue";
+import Demo from "./views/Demo.vue"
 export default {
   components: {
     Home,
+    Demo
   },
   mounted() {
     this.$nextTick(function () {
@@ -36,8 +39,8 @@ export default {
 </script>
 
 <style lang="scss">
-@import "./assets/theme/lisa.css";
-@import "./assets/theme/lisa-dark.css";
+// @import "./assets/theme/lisa.css";
+// @import "./assets/theme/lisa-dark.css";
 body {
   font-family: sans-serif;
   background: var(--white);

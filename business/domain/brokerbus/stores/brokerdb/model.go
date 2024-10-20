@@ -2,26 +2,74 @@ package brokerdb
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/bentenison/microservice/business/domain/brokerbus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type TestCase struct {
-	Input          interface{} `bson:"input" json:"input"`                     // Input can be of any type
-	ExpectedOutput interface{} `bson:"expected_output" json:"expected_output"` // Expected output can be of any type
-}
+// type TestCase struct {
+// 	Input          interface{} `bson:"input" json:"input"`                     // Input can be of any type
+// 	ExpectedOutput interface{} `bson:"expected_output" json:"expected_output"` // Expected output can be of any type
+// }
+
+//	type Question struct {
+//		QuestionId   primitive.ObjectID `bson:"_id" json:"questionId"`
+//		Title        string             `bson:"title" json:"title"`                 // Title of the problem
+//		Description  string             `bson:"description" json:"description"`     // Problem description
+//		TemplateCode string             `bson:"template_code" json:"template_code"` // Code template for user logic
+//		Language     string             `bson:"language" json:"language"`           // Programming language (e.g., Python)
+//		LanguageCode string             `bson:"language_code" json:"language_code"` // Language code (e.g., "py")
+//		TestCases    []TestCase         `bson:"test_cases" json:"test_cases"`       // List of test cases with dynamic types
+//		Difficulty   string             `bson:"difficulty" json:"difficulty"`       // Difficulty level of the problem
+//		Tags         []string           `bson:"tags" json:"tags"`                   // Tags related to the problem
+//	}
 
 type Question struct {
-	QuestionId   primitive.ObjectID `bson:"_id" json:"questionId"`
-	Title        string             `bson:"title" json:"title"`                 // Title of the problem
-	Description  string             `bson:"description" json:"description"`     // Problem description
-	TemplateCode string             `bson:"template_code" json:"template_code"` // Code template for user logic
-	Language     string             `bson:"language" json:"language"`           // Programming language (e.g., Python)
-	LanguageCode string             `bson:"language_code" json:"language_code"` // Language code (e.g., "py")
-	TestCases    []TestCase         `bson:"test_cases" json:"test_cases"`       // List of test cases with dynamic types
-	Difficulty   string             `bson:"difficulty" json:"difficulty"`       // Difficulty level of the problem
-	Tags         []string           `bson:"tags" json:"tags"`                   // Tags related to the problem
+	QuestionId        primitive.ObjectID `json:"_id" bson:"_id"`
+	Title             string             `json:"title" bson:"title"`
+	Description       string             `json:"description" bson:"description"`
+	Input             Input              `json:"input" bson:"input"`
+	Output            Output             `json:"output" bson:"output"`
+	TemplateCode      string             `json:"template_code" bson:"template_code"`
+	Language          string             `json:"language" bson:"language"`
+	LanguageCode      string             `json:"language_code" bson:"language_code"`
+	Difficulty        string             `json:"difficulty" bson:"difficulty"`
+	Tags              []string           `json:"tags" bson:"tags"`
+	UserLogicTemplate UserLogicTemplate  `json:"user_logic_template" bson:"user_logic_template"`
+	TestcaseTemplate  TestcaseTemplate   `json:"testcase_template" bson:"testcase_template"`
+	Testcases         []Testcase         `json:"testcases" bson:"testcases"`
+}
+
+type Input struct {
+	Description string `json:"description" bson:"description"`
+	Expected    string `json:"expected" bson:"expected"`
+}
+
+type Output struct {
+	Description string `json:"description" bson:"description"`
+}
+
+type UserLogicTemplate struct {
+	Description string `json:"description" bson:"description"`
+	Code        string `json:"code" bson:"code"`
+}
+
+type TestcaseTemplate struct {
+	Description string `json:"description" bson:"description"`
+	Code        string `json:"code" bson:"code"`
+}
+
+type Testcase struct {
+	Input          int   `json:"input" bson:"input"`
+	ExpectedOutput []int `json:"expectedOutput" bson:"expectedOutput"`
+}
+type Answer struct {
+	ID        string     `json:"id"`
+	Logic     string     `json:"logic"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	TestCases []Testcase `json:"testcases"`
 }
 
 // Submission struct for the 'submissions' table
@@ -96,18 +144,22 @@ func toBusQuestion(q Question) brokerbus.Question {
 	busQuestion.QuestionId = q.QuestionId.Hex()
 	busQuestion.Title = q.Title
 	busQuestion.Description = q.Description
+	busQuestion.Input = brokerbus.Input(q.Input)
+	busQuestion.Output = brokerbus.Output(q.Output)
+	busQuestion.UserLogicTemplate = brokerbus.UserLogicTemplate(q.UserLogicTemplate)
+	busQuestion.TestcaseTemplate = brokerbus.TestcaseTemplate(q.TestcaseTemplate)
 	busQuestion.Difficulty = q.Difficulty
 	busQuestion.TemplateCode = q.TemplateCode
 	busQuestion.Language = q.Language
 	busQuestion.LanguageCode = q.LanguageCode
 	busQuestion.Tags = q.Tags
-	busQuestion.TestCases = addTestCases(q.TestCases)
+	busQuestion.Testcases = addTestCases(q.Testcases)
 	return busQuestion
 }
-func addTestCases(cases []TestCase) []brokerbus.TestCase {
-	out := []brokerbus.TestCase{}
+func addTestCases(cases []Testcase) []brokerbus.Testcase {
+	out := []brokerbus.Testcase{}
 	for _, v := range cases {
-		out = append(out, brokerbus.TestCase(v))
+		out = append(out, brokerbus.Testcase(v))
 	}
 	return out
 }
