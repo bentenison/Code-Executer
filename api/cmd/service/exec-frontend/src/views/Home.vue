@@ -1,6 +1,6 @@
 <template>
   <div :class="{ 'menu-on': isMenuDisplayed }">
-    <transition name="fade">
+    <!-- <transition name="fade">
       <div class="menu" v-show="isMenuDisplayed">
         <div class="menu-title">
           <div>Theme</div>
@@ -1517,7 +1517,7 @@
           </ul>
         </div>
       </div>
-    </transition>
+    </transition> -->
     <!-- demo -->
     <div class="demo">
       <div class="container">

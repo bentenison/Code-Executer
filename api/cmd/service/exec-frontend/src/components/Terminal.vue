@@ -24,6 +24,7 @@ export default {
   },
   data() {
     return {
+      defaultTheme:{bg:"#0d1117",foreground:"#c9d1d9"},
       context: "🖥️root@tanvirs:~$",
       title: "EPIC terminal",
       currentTheme: "github",
@@ -126,6 +127,7 @@ export default {
     },
   },
   mounted() {
+    this.changeTheme(this.defaultTheme)
     // updateColor() {
     // Update the CSS variable dynamically
     // document.documentElement.style.setProperty("--t-main-background-color", "red");
@@ -153,7 +155,7 @@ export default {
   position: static;
   // position: relative;
   margin-top: 10px !important;
-  height: 400px !important;
+  height: 300px !important;
   border-radius: 12px;
   width: 100%;
   transition: background 0.5s ease-in-out;

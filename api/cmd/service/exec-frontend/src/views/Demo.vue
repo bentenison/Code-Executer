@@ -2,7 +2,7 @@
   <div>
     <menubar />
     <div
-      class="mini-sidebar flex flex-column align-items-center surface-ground"
+      class="mini-sidebar border-solid border-y-none border-left-none border-right-1 border-white-alpha-20 flex flex-column align-items-center surface-ground"
     >
       <!-- @mouseover="visible = !visible" -->
       <!-- <TieredMenu ref="menu" id="overlay_tmenu" :model="items" popup /> -->
@@ -22,7 +22,7 @@
       <TieredMenu ref="menu3" id="overlay_tmenu3" :model="licenceItems" popup />
       <!-- <TieredMenu ref="menu4" id="overlay_tmenu" :model="menuitems" popup /> -->
       <div
-        class="menu-icons mt-3 mb-2 flex flex-column align-items-center justify-content-between"
+        class="menu-icons mt-8 mb-5 flex h-20rem flex-column align-items-center justify-content-between"
       >
         <Button
           @click="toggle"
@@ -558,10 +558,10 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
-  width: 3.5rem;
+  width: 3.8rem;
   z-index: 999;
-  background: white;
-  border-right: var(--sidebar-border);
+  /* background: white; */
+  /* border-right: 1px solid var(--surface-500); */
   /* box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.02), 0px 0px 5px rgba(0, 0, 0, 0.05),
     0px 3px 7px rgba(0, 0, 0, 0.8); */
   display: flex;

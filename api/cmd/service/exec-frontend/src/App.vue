@@ -1,27 +1,44 @@
 <template>
-  <div class="body">
+  <demo></demo>
+  <div class=" ">
     <Home></Home>
-     <demo></demo>
   </div>
 </template>
 
 <script>
 import Home from "./views/Home.vue";
-import Demo from "./views/Demo.vue"
+import Demo from "./views/Demo.vue";
+import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
+import {useLayout} from "./components/layout"
+// import { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
 export default {
   components: {
     Home,
-    Demo
+    Demo,
   },
   mounted() {
-    this.$nextTick(function () {
-      if (localStorage.getItem("simple-code-editor-theme")) {
-        localStorage.getItem("simple-code-editor-theme") == "light"
-          ? (document.body.className = "")
-          : (document.body.className = "dark");
-      } else {
-        document.body.className = "dark";
-      }
+    // this.$nextTick(function () {
+    //   if (localStorage.getItem("simple-code-editor-theme")) {
+    //     localStorage.getItem("simple-code-editor-theme") == "light"
+    //       ? (document.body.className = "")
+    //       : (document.body.className = "dark");
+    //   } else {
+    //     document.body.className = "dark";
+    //   }
+    // });
+    updateSurfacePalette({
+      0: "#ffffff",
+      50: "#fafafa",
+      100: "#f5f5f5",
+      200: "#e5e5e5",
+      300: "#d4d4d4",
+      400: "#a3a3a3",
+      500: "#737373",
+      600: "#525252",
+      700: "#404040",
+      800: "#262626",
+      900: "#171717",
+      950: "#0a0a0a",
     });
   },
   methods: {
@@ -43,7 +60,7 @@ export default {
 // @import "./assets/theme/lisa-dark.css";
 body {
   font-family: sans-serif;
-  background: var(--white);
+  background: var(--surface-ground);
   margin: 0;
 }
 #app {
