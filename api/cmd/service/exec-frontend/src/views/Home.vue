@@ -1519,9 +1519,8 @@
       </div>
     </transition> -->
     <!-- demo -->
-    <div class="demo">
-      <div class="container">
-        <!-- <CodeEditor
+    <div class="flex justify-content-between">
+      <!-- <CodeEditor
           :autofocus="true"
           :theme="theme"
           v-model="animationCode"
@@ -1532,22 +1531,45 @@
             ['scss', 'SCSS'],
           ]"
         ></CodeEditor> -->
+      <div class="flex flex-column">
         <CodeEditor
           :line-nums="true"
           :theme="theme"
           :value="prog"
-          width=""
+          width="60rem"
           height="500px"
         ></CodeEditor>
-        <terminal/>
-        <!-- <CodeEditor
+        <terminal />
+      </div>
+      <aside class="bg-surface-700 flex-1 px-4 align-items-center">
+        <div class="flex align-items-center gap-2">
+          <Avatar image="/images/avatar/amyelsner.png" shape="circle" />
+          <span class="font-bold">Amy Elsner</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Button
+            label="Account"
+            icon="pi pi-user"
+            class="flex-auto"
+            outlined
+          ></Button>
+          <Button
+            label="Logout"
+            icon="pi pi-sign-out"
+            class="flex-auto"
+            severity="danger"
+            text
+          ></Button>
+        </div>
+      </aside>
+      <!-- <CodeEditor
           :read-only="true"
           v-model="themeDemo"
           theme="atom-one-dark"
           width="100%"
           :languages="[['html', 'HTML']]"
         ></CodeEditor> -->
-        <div class="button-group">
+      <!-- <div class="button-group">
           <button
             :class="{ selected: theme == 'github-dark' }"
             @click="switchTheme('github-dark')"
@@ -1593,14 +1615,13 @@
           <button style="color: var(--main-5)" @click="toggleMenu">
             All themes
           </button>
-        </div>
-      </div>
+        </div> -->
     </div>
     <!-- <terminal /> -->
-    <div class="footer">
+    <!-- <div class="footer surface-card">
       The playground system powered by
       <a target="_blank" href="https://github.com/bentenison"> Bentenison</a>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -1623,13 +1644,13 @@ export default {
       isMenuDisplayed: false,
       code: '<CodeEditor v-model="value"></CodeEditor>',
       animationCode: "",
-      prog:`from typing import List, Dict, Any
+      prog: `from typing import List, Dict, Any
 from datetime import datetime
 
 class TestCase:
     def __init__(self, input: Any, expected_output: Any):
         self.input = input
-        self.expected_output = expected_output`
+        self.expected_output = expected_output`,
     };
   },
   computed: {
@@ -1640,7 +1661,7 @@ class TestCase:
   methods: {
     switchTheme(theme) {
       this.theme = theme;
-      this.emitter.emit("ThemeChanged",theme)
+      this.emitter.emit("ThemeChanged", theme);
     },
     getLanguage(lang) {
       console.log("The current language is: " + lang);
@@ -1803,7 +1824,7 @@ li {
 // demo
 .demo {
   box-sizing: border-box;
-  padding: 60px 20px 120px 20px;
+  padding: 10px 20px 120px 20px;
   margin: 0 auto;
   background: var(--grey-0);
 }
@@ -1823,7 +1844,7 @@ li {
   }
 }
 .container {
-  margin: 0 auto;
+  // margin: 0 auto;
   max-width: 100vh;
 }
 // useage
@@ -1916,7 +1937,7 @@ body::-webkit-scrollbar-thumb {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 9;
+  // z-index: 9;
   width: 240px;
   height: 100vh;
   background: var(--grey-1);

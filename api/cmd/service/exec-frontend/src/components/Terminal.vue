@@ -157,7 +157,7 @@ export default {
   margin-top: 10px !important;
   height: 300px !important;
   border-radius: 12px;
-  width: 100%;
+  // width: 100%;
   transition: background 0.5s ease-in-out;
   // background: #0d1117;
 }

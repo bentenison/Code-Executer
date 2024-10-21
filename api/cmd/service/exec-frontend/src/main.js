@@ -2,12 +2,14 @@
 import "primeflex/primeflex.css";
 import "primeicons/primeicons.css";
 import "./assets/theme/_dark.scss"
+import "./assets/theme/layout.scss"
 // import 'prismjs/themes/prism-coy.css';
 // import './assets/styles/layout.scss';
 // import './assets/demo/flags/flags.css';
 import Aura from "@primevue/themes/aura";
 import App from "./App.vue";
 import mitt from "mitt";
+import router from "./router/router"
 import PrimeVue from "primevue/config";
 import { createApp, reactive } from "vue";
 import AutoComplete from "primevue/autocomplete";
@@ -114,7 +116,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const vm = createApp(App);
 // const pinia = createPinia()
 // pinia.use(piniaPluginPersistedstate)
-// vm.$router = router
+vm.$router = router
 // vm.$pinia = pinia
 // vm.$confirm = ConfirmationService
 vm.component("ConfirmDialog", ConfirmDialog);
@@ -127,7 +129,7 @@ vm.config.globalProperties.$appState = reactive({
 // vm.use(primeVue, { ripple: true, inputStyle: 'outlined' });
 // vm.use(ConfirmationService);
 vm.use(ToastService);
-// vm.use(router);
+vm.use(router);
 
 vm.directive("tooltip", Tooltip);
 vm.directive("ripple", Ripple);

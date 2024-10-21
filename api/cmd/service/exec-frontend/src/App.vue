@@ -1,20 +1,21 @@
-<template>
-  <demo></demo>
-  <div class=" ">
+<!-- <template> -->
+<!-- <demo></demo>
+  <div class="">
     <Home></Home>
-  </div>
+  </div> -->
+<template>
+  <router-view />
 </template>
+<!-- </template> -->
 
 <script>
-import Home from "./views/Home.vue";
-import Demo from "./views/Demo.vue";
+
 import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
-import {useLayout} from "./components/layout"
+import { useLayout } from "./components/layout";
 // import { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
 export default {
   components: {
-    Home,
-    Demo,
+
   },
   mounted() {
     // this.$nextTick(function () {
@@ -26,20 +27,6 @@ export default {
     //     document.body.className = "dark";
     //   }
     // });
-    updateSurfacePalette({
-      0: "#ffffff",
-      50: "#fafafa",
-      100: "#f5f5f5",
-      200: "#e5e5e5",
-      300: "#d4d4d4",
-      400: "#a3a3a3",
-      500: "#737373",
-      600: "#525252",
-      700: "#404040",
-      800: "#262626",
-      900: "#171717",
-      950: "#0a0a0a",
-    });
   },
   methods: {
     switchTheme() {
@@ -66,6 +53,8 @@ body {
 #app {
   width: 100%;
   height: 100%;
+}
+.container {
 }
 // .float-button {
 //   cursor: pointer;

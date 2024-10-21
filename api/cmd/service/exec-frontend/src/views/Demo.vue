@@ -558,13 +558,14 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
-  width: 3.8rem;
-  z-index: 999;
+  width: 4rem;
+  /* z-index: 999; */
   /* background: white; */
   /* border-right: 1px solid var(--surface-500); */
   /* box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.02), 0px 0px 5px rgba(0, 0, 0, 0.05),
     0px 3px 7px rgba(0, 0, 0, 0.8); */
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 </style>
