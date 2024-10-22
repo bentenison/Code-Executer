@@ -192,7 +192,41 @@ export default {
     languages: {
       type: Array,
       default: function () {
-        return [["python", "Python"]];
+        return [
+          ["javascript", "JS"],
+          ["python", "PY"],
+          ["java", "JAVA"],
+          ["c", "C"],
+          ["cpp", "C++"],
+          ["csharp", "C#"],
+          ["ruby", "RUBY"],
+          ["php", "PHP"],
+          ["swift", "SWIFT"],
+          ["go", "GO"],
+          ["html", "HTML"],
+          ["css", "CSS"],
+          ["typescript", "TS"],
+          ["kotlin", "KOTLIN"],
+          ["scala", "SCALA"],
+          ["rust", "RUST"],
+          ["sql", "SQL"],
+          ["bash", "BASH"],
+          ["powershell", "POWERSHELL"],
+          ["objectivec", "OBJECTIVE-C"],
+          ["elixir", "ELIXIR"],
+          ["haskell", "HASKELL"],
+          ["lua", "LUA"],
+          ["r", "R"],
+          ["matlab", "MATLAB"],
+          ["fortran", "FORTRAN"],
+          ["dart", "DART"],
+          ["assembly", "ASSEMBLY"],
+          ["groovy", "GROOVY"],
+          ["pascal", "PASCAL"],
+          ["prolog", "PROLOG"],
+          ["scheme", "SCHEME"],
+          ["visualbasic", "VB.NET"],
+        ];
       },
     },
     langListWidth: {
@@ -283,11 +317,34 @@ export default {
   },
   methods: {
     updateValue(e) {
-      if (this.modelValue == undefined) {
-        this.content = e.target.value;
+      const value = e.target.value;
+      const cursorPos = e.target.selectionStart;
+
+      // Check if the last character typed is an opening bracket
+      const lastChar = value[cursorPos - 1];
+      const brackets = {
+        "(": ")",
+        "{": "}",
+        "[": "]",
+      };
+
+      // Insert closing bracket if the last character is an opening bracket
+      if (brackets[lastChar]) {
+        // Update the content by adding the closing bracket
+        this.content = value + brackets[lastChar];
+        // Set the cursor position
+        this.$nextTick(() => {
+          e.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        });
       } else {
-        this.$emit("update:modelValue", e.target.value);
+        // If no auto-close action, just update the content or emit event
+        if (this.modelValue === undefined) {
+          this.content = value;
+        } else {
+          this.$emit("update:modelValue", value);
+        }
       }
+      this.$emit("content", this.content);
     },
     changeLang(lang) {
       this.languageTitle = lang[1] ? lang[1] : lang[0];
@@ -399,9 +456,9 @@ export default {
         // console.log("mitt", this.emitter);
         // console.log(styles);
         let st = {
-          bg:styles.background,
-          foreground:styles.color
-        }
+          bg: styles.background,
+          foreground: styles.color,
+        };
         this.emitter.emit("changeTerminalTheme", st);
       }, 100);
     },

@@ -1,15 +1,15 @@
 // import 'primevue/resources/primevue.min.css';
 import "primeflex/primeflex.css";
 import "primeicons/primeicons.css";
-import "./assets/theme/_dark.scss"
-import "./assets/theme/layout.scss"
+import "./assets/theme/_dark.scss";
+import "./assets/theme/layout.scss";
 // import 'prismjs/themes/prism-coy.css';
 // import './assets/styles/layout.scss';
 // import './assets/demo/flags/flags.css';
 import Aura from "@primevue/themes/aura";
 import App from "./App.vue";
 import mitt from "mitt";
-import router from "./router/router"
+import router from "./router/router";
 import PrimeVue from "primevue/config";
 import { createApp, reactive } from "vue";
 import AutoComplete from "primevue/autocomplete";
@@ -38,6 +38,7 @@ import DataTable from "primevue/datatable";
 import DataView from "primevue/dataview";
 // import DataViewLayoutOptions from 'primevue/dataviewlayoutoptions';
 import Dialog from "primevue/dialog";
+import DialogService from "primevue/dialogservice";
 import Divider from "primevue/divider";
 import Dropdown from "primevue/dropdown";
 import Fieldset from "primevue/fieldset";
@@ -116,7 +117,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const vm = createApp(App);
 // const pinia = createPinia()
 // pinia.use(piniaPluginPersistedstate)
-vm.$router = router
+vm.$router = router;
 // vm.$pinia = pinia
 // vm.$confirm = ConfirmationService
 vm.component("ConfirmDialog", ConfirmDialog);
@@ -151,7 +152,7 @@ vm.component("Carousel", Carousel);
 // vm.component('Chart', Chart);
 vm.component("Checkbox", Checkbox);
 vm.component("Chip", Chip);
-vm.component('Popover',Popover)
+vm.component("Popover", Popover);
 // vm.component('Chips', Chips);
 vm.component("ColorPicker", ColorPicker);
 vm.component("Column", Column);
@@ -224,13 +225,14 @@ vm.component("TreeTable", TreeTable);
 // vm.use(primeVue)
 // vm.use(router)
 vm.use(ConfirmationService);
+vm.use(DialogService);
 vm.use(ConfirmDialog);
 
 // import Aura from "@primevue/themes/lara";
 const emitter = mitt();
 
 vm.config.globalProperties.emitter = emitter;
-vm.provide('emitter', emitter);  
+vm.provide("emitter", emitter);
 vm.use(PrimeVue, {
   theme: {
     preset: Aura,

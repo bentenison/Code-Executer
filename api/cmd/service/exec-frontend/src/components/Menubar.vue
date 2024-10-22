@@ -1,6 +1,6 @@
 <template>
   <div class="card fixed z-5 top-0 w-full">
-    <Menubar :model="items" class=" text-muted border-none">
+    <Menubar :model="items" class="text-muted border-none">
       <template #start>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -32,33 +32,23 @@
           </g>
         </svg>
       </template>
-      <template #item="{ item, props, hasSubmenu, root }">
-        <a v-ripple class="flex w-8rem ml-3 items-center" v-bind="props.action">
-          <span>{{ item.label }}</span>
-          <Badge
-            v-if="item.badge"
-            :class="{ 'ml-auto': !root, 'ml-2': root }"
-            :value="item.badge"
-          />
-          <span
-            v-if="item.shortcut"
-            class="ml-auto border rounded bg-emphasis text-muted-color text-xs p-1"
-            >{{ item.shortcut }}</span
-          >
-          <i
-            v-if="hasSubmenu"
-            :class="[
-              'pi pi-angle-down ml-auto',
-              { 'pi-angle-down': root, 'pi-angle-right': !root },
-            ]"
-          >
-          </i>
-        </a>
+      <template>
+        <SplitButton
+          label="Save"
+          class="text-primary"
+          :model="items"
+          @click="save"
+        ></SplitButton>
       </template>
       <template #end>
         <div class="flex align-items-center gap-2">
           <Button type="button" @click="toggleDarkMode">
-            <i :class="['pi',{ 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
+            <i
+              :class="[
+                'pi',
+                { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme },
+              ]"
+            ></i>
           </Button>
           <Button @click="emitter.emit('PopOpened', $event)" class="">
             <i class="pi pi-palette"></i>
@@ -72,59 +62,358 @@
         </div>
       </template>
     </Menubar>
+
+    <Dialog
+      v-model:visible="visible"
+      modal
+      header="Header"
+      :style="{ width: '45rem', height: '50rem' }"
+      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+    >
+      <div class="flex flex-column gap-3">
+        <div class="flex">
+          <p class="text-grey font-semibold">Input Control</p>
+        </div>
+        <div class="flex w-20rem gap-3">
+          <p>Mode :</p>
+          <SelectButton
+            v-model="value"
+            :options="ThemeOptions"
+            @change="toggleDarkMode"
+            aria-labelledby="basic"
+          />
+        </div>
+
+        <div class="flex gap-3">
+          <p class="text-muted line-height-1">Theme :</p>
+          <theme-selector :Themes="themes" />
+        </div>
+        <div class="flex">
+          <p class="text-grey font-semibold">Editor Control</p>
+        </div>
+        <div class="flex gap-4">
+          <p>Line Number :</p>
+          <SelectButton
+            v-model="value"
+            :options="LineOptions"
+            aria-labelledby="basic"
+          />
+        </div>
+        <div class="flex gap-5">
+          <p>Auto format :</p>
+          <SelectButton
+            v-model="value"
+            :options="options"
+            aria-labelledby="basic"
+          />
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script>
 import { useLayout } from "../components/layout";
 import Appconfigurator from "./Appconfigurator.vue";
+import SelectButton from "primevue/selectbutton";
+import ThemeSelector from "./ThemeSelector.vue";
 export default {
   components: {
     Appconfigurator,
+    SelectButton,
+    ThemeSelector,
   },
   data() {
     return {
       isDarkTheme: false,
+      visible: false,
+      themes: [
+        { name: "a11y-dark", code: "a11y-dark" },
+        { name: "a11y-light", code: "a11y-light" },
+        { name: "agate", code: "agate" },
+        { name: "an-old-hope", code: "an-old-hope" },
+        { name: "androidstudio", code: "androidstudio" },
+        { name: "arduino-light", code: "arduino-light" },
+        { name: "arta", code: "arta" },
+        { name: "ascetic", code: "ascetic" },
+        { name: "atom-one-dark-reasonable", code: "atom-one-dark-reasonable" },
+        { name: "atom-one-dark", code: "atom-one-dark" },
+        { name: "atom-one-light", code: "atom-one-light" },
+        { name: "brown-paper", code: "brown-paper" },
+        { name: "codepen-embed", code: "codepen-embed" },
+        { name: "color-brewer", code: "color-brewer" },
+        { name: "dark", code: "dark" },
+        { name: "default", code: "default" },
+        { name: "devibeans", code: "devibeans" },
+        { name: "docco", code: "docco" },
+        { name: "far", code: "far" },
+        { name: "felipec", code: "felipec" },
+        { name: "foundation", code: "foundation" },
+        { name: "github-dark-dimmed", code: "github-dark-dimmed" },
+        { name: "github-dark", code: "github-dark" },
+        { name: "github", code: "github" },
+        { name: "gml", code: "gml" },
+        { name: "googlecode", code: "googlecode" },
+        { name: "gradient-dark", code: "gradient-dark" },
+        { name: "gradient-light", code: "gradient-light" },
+        { name: "grayscale", code: "grayscale" },
+        { name: "hybrid", code: "hybrid" },
+        { name: "idea", code: "idea" },
+        { name: "intellij-light", code: "intellij-light" },
+        { name: "ir-black", code: "ir-black" },
+        { name: "isbl-editor-dark", code: "isbl-editor-dark" },
+        { name: "isbl-editor-light", code: "isbl-editor-light" },
+        { name: "kimbie-dark", code: "kimbie-dark" },
+        { name: "kimbie-light", code: "kimbie-light" },
+        { name: "lightfair", code: "lightfair" },
+        { name: "lioshi", code: "lioshi" },
+        { name: "magula", code: "magula" },
+        { name: "mono-blue", code: "mono-blue" },
+        { name: "monokai-sublime", code: "monokai-sublime" },
+        { name: "monokai", code: "monokai" },
+        { name: "night-owl", code: "night-owl" },
+        { name: "nnfx-dark", code: "nnfx-dark" },
+        { name: "nnfx-light", code: "nnfx-light" },
+        { name: "nord", code: "nord" },
+        { name: "obsidian", code: "obsidian" },
+        { name: "panda-syntax-dark", code: "panda-syntax-dark" },
+        { name: "panda-syntax-light", code: "panda-syntax-light" },
+        { name: "paraiso-dark", code: "paraiso-dark" },
+        { name: "paraiso-light", code: "paraiso-light" },
+        { name: "pojoaque", code: "pojoaque" },
+        { name: "purebasic", code: "purebasic" },
+        { name: "qtcreator-dark", code: "qtcreator-dark" },
+        { name: "qtcreator-light", code: "qtcreator-light" },
+        { name: "rainbow", code: "rainbow" },
+        { name: "routeros", code: "routeros" },
+        { name: "school-book", code: "school-book" },
+        { name: "shades-of-purple", code: "shades-of-purple" },
+        { name: "srcery", code: "srcery" },
+        { name: "stackoverflow-dark", code: "stackoverflow-dark" },
+        { name: "stackoverflow-light", code: "stackoverflow-light" },
+        { name: "sunburst", code: "sunburst" },
+        { name: "tokyo-night-dark", code: "tokyo-night-dark" },
+        { name: "tokyo-night-light", code: "tokyo-night-light" },
+        { name: "tomorrow-night-blue", code: "tomorrow-night-blue" },
+        { name: "tomorrow-night-bright", code: "tomorrow-night-bright" },
+        { name: "vs", code: "vs" },
+        { name: "vs2015", code: "vs2015" },
+        { name: "xcode", code: "xcode" },
+        { name: "xt256", code: "xt256" },
+        { name: "base16-3024", code: "base16-3024" },
+        { name: "base16-apathy", code: "base16-apathy" },
+        { name: "base16-apprentice", code: "base16-apprentice" },
+        { name: "base16-ashes", code: "base16-ashes" },
+        {
+          name: "base16-atelier-cave-light",
+          code: "base16-atelier-cave-light",
+        },
+        { name: "base16-atelier-cave", code: "base16-atelier-cave" },
+        {
+          name: "base16-atelier-dune-light",
+          code: "base16-atelier-dune-light",
+        },
+        { name: "base16-atelier-dune", code: "base16-atelier-dune" },
+        {
+          name: "base16-atelier-estuary-light",
+          code: "base16-atelier-estuary-light",
+        },
+        { name: "base16-atelier-estuary", code: "base16-atelier-estuary" },
+        {
+          name: "base16-atelier-forest-light",
+          code: "base16-atelier-forest-light",
+        },
+        { name: "base16-atelier-forest", code: "base16-atelier-forest" },
+        {
+          name: "base16-atelier-heath-light",
+          code: "base16-atelier-heath-light",
+        },
+        { name: "base16-atelier-heath", code: "base16-atelier-heath" },
+        {
+          name: "base16-atelier-lakeside-light",
+          code: "base16-atelier-lakeside-light",
+        },
+        { name: "base16-atelier-lakeside", code: "base16-atelier-lakeside" },
+        {
+          name: "base16-atelier-plateau-light",
+          code: "base16-atelier-plateau-light",
+        },
+        { name: "base16-atelier-plateau", code: "base16-atelier-plateau" },
+        {
+          name: "base16-atelier-savanna-light",
+          code: "base16-atelier-savanna-light",
+        },
+        { name: "base16-atelier-savanna", code: "base16-atelier-savanna" },
+        {
+          name: "base16-atelier-seaside-light",
+          code: "base16-atelier-seaside-light",
+        },
+        { name: "base16-atelier-seaside", code: "base16-atelier-seaside" },
+        {
+          name: "base16-atelier-sulphurpool-light",
+          code: "base16-atelier-sulphurpool-light",
+        },
+        {
+          name: "base16-atelier-sulphurpool",
+          code: "base16-atelier-sulphurpool",
+        },
+        { name: "base16-atlas", code: "base16-atlas" },
+        { name: "base16-bespin", code: "base16-bespin" },
+        {
+          name: "base16-black-metal-bathory",
+          code: "base16-black-metal-bathory",
+        },
+        {
+          name: "base16-black-metal-burzum",
+          code: "base16-black-metal-burzum",
+        },
+        {
+          name: "base16-black-metal-dark-funeral",
+          code: "base16-black-metal-dark-funeral",
+        },
+        {
+          name: "base16-black-metal-gorgoroth",
+          code: "base16-black-metal-gorgoroth",
+        },
+        {
+          name: "base16-black-metal-immortal",
+          code: "base16-black-metal-immortal",
+        },
+        { name: "base16-black-metal-khold", code: "base16-black-metal-khold" },
+        {
+          name: "base16-black-metal-marduk",
+          code: "base16-black-metal-marduk",
+        },
+        {
+          name: "base16-black-metal-mayhem",
+          code: "base16-black-metal-mayhem",
+        },
+        { name: "base16-black-metal-nile", code: "base16-black-metal-nile" },
+        { name: "base16-black-metal-venom", code: "base16-black-metal-venom" },
+        { name: "base16-black-metal", code: "base16-black-metal" },
+        { name: "base16-brewer", code: "base16-brewer" },
+        { name: "base16-bright", code: "base16-bright" },
+        { name: "base16-brogrammer", code: "base16-brogrammer" },
+        { name: "base16-brush-trees-dark", code: "base16-brush-trees-dark" },
+        { name: "base16-brush-trees", code: "base16-brush-trees" },
+        { name: "base16-chalk", code: "base16-chalk" },
+        { name: "base16-circus", code: "base16-circus" },
+        { name: "base16-classic-dark", code: "base16-classic-dark" },
+        { name: "base16-classic-light", code: "base16-classic-light" },
+        { name: "base16-codeschool", code: "base16-codeschool" },
+        { name: "base16-colors", code: "base16-colors" },
+        { name: "base16-cupcake", code: "base16-cupcake" },
+        { name: "base16-cupertino", code: "base16-cupertino" },
+        { name: "base16-danqing", code: "base16-danqing" },
+        { name: "base16-darcula", code: "base16-darcula" },
+        { name: "base16-dark-violet", code: "base16-dark-violet" },
+        { name: "base16-darkmoss", code: "base16-darkmoss" },
+        { name: "base16-darktooth", code: "base16-darktooth" },
+        { name: "base16-decaf", code: "base16-decaf" },
+        { name: "base16-default-dark", code: "base16-default-dark" },
+        { name: "base16-default-light", code: "base16-default-light" },
+        { name: "base16-dirtysea", code: "base16-dirtysea" },
+        { name: "base16-dracula", code: "base16-dracula" },
+        { name: "base16-edge-dark", code: "base16-edge-dark" },
+        { name: "base16-edge-light", code: "base16-edge-light" },
+        { name: "base16-eighties", code: "base16-eighties" },
+        { name: "base16-embers", code: "base16-embers" },
+        { name: "base16-equilibrium-dark", code: "base16-equilibrium-dark" },
+        {
+          name: "base16-equilibrium-gray-dark",
+          code: "base16-equilibrium-gray-dark",
+        },
+        {
+          name: "base16-equilibrium-gray-light",
+          code: "base16-equilibrium-gray-light",
+        },
+        { name: "base16-equilibrium-light", code: "base16-equilibrium-light" },
+        { name: "base16-espresso", code: "base16-espresso" },
+        { name: "base16-eva-dim", code: "base16-eva-dim" },
+        { name: "base16-eva", code: "base16-eva" },
+        { name: "base16-flat", code: "base16-flat" },
+        { name: "base16-framer", code: "base16-framer" },
+        { name: "base16-fruit-soda", code: "base16-fruit-soda" },
+        { name: "base16-gigavolt", code: "base16-gigavolt" },
+        { name: "base16-github", code: "base16-github" },
+        { name: "base16-google-dark", code: "base16-google-dark" },
+        { name: "base16-google-light", code: "base16-google-light" },
+        { name: "base16-grayscale-dark", code: "base16-grayscale-dark" },
+        { name: "base16-grayscale-light", code: "base16-grayscale-light" },
+        { name: "base16-green-screen", code: "base16-green-screen" },
+        { name: "base16-gruvbox-dark-hard", code: "base16-gruvbox-dark-hard" },
+        {
+          name: "base16-gruvbox-dark-medium",
+          code: "base16-gruvbox-dark-medium",
+        },
+        { name: "base16-gruvbox-dark-pale", code: "base16-gruvbox-dark-pale" },
+        { name: "base16-gruvbox-dark-soft", code: "base16-gruvbox-dark-soft" },
+        {
+          name: "base16-gruvbox-light-hard",
+          code: "base16-gruvbox-light-hard",
+        },
+        {
+          name: "base16-gruvbox-light-medium",
+          code: "base16-gruvbox-light-medium",
+        },
+        {
+          name: "base16-gruvbox-light-soft",
+          code: "base16-gruvbox-light-soft",
+        },
+        { name: "base16-hardcore", code: "base16-hardcore" },
+        { name: "base16-harmonic16-dark", code: "base16-harmonic16-dark" },
+        { name: "base16-harmonic16-light", code: "base16-harmonic16-light" },
+        { name: "base16-heetch-dark", code: "base16-heetch-dark" },
+        { name: "base16-heetch-light", code: "base16-heetch-light" },
+        { name: "base16-helios", code: "base16-helios" },
+        { name: "base16-hopscotch", code: "base16-hopscotch" },
+        { name: "base16-horizon-dark", code: "base16-horizon-dark" },
+        { name: "base16-horizon-light", code: "base16-horizon-light" },
+        { name: "base16-humanoid-dark", code: "base16-humanoid-dark" },
+        { name: "base16-humanoid-light", code: "base16-humanoid-light" },
+        { name: "base16-ia-dark", code: "base16-ia-dark" },
+        { name: "base16-ia-light", code: "base16-ia-light" },
+        { name: "base16-icy-dark", code: "base16-icy-dark" },
+      ],
+      value: "One-Way",
+      options: ["On", "Off"],
+      ThemeOptions: ["Light", "Dark"],
+      LineOptions: ["Show", "Hide"],
       items: [
         {
-          label: "Home",
-          icon: "pi pi-home",
+          label: "Settings",
+          icon: "pi pi-cog",
+          command: () => {
+            this.visible = true;
+            this.$toast.add({
+              severity: "success",
+              summary: "Updated",
+              detail: "Data Updated",
+              life: 3000,
+            });
+          },
         },
         {
           label: "Projects",
           icon: "pi pi-search",
           badge: 3,
-          items: [
-            {
-              label: "Core",
-              icon: "pi pi-bolt",
-              shortcut: "⌘+S",
-            },
-            {
-              label: "Blocks",
-              icon: "pi pi-server",
-              shortcut: "⌘+B",
-            },
-            {
-              separator: true,
-            },
-            {
-              label: "UI Kit",
-              icon: "pi pi-pencil",
-              shortcut: "⌘+U",
-            },
-          ],
         },
       ],
     };
   },
   methods: {
+    openSettings() {
+      this.emitter.emit("OpenDialog", true);
+    },
     toggleDarkMode() {
       const { toggleDarkMode } = useLayout();
       toggleDarkMode();
       this.isDarkTheme = !this.isDarkTheme; // Sync with local state
     },
   },
+  created(){
+    // this.emitter.on('toggleMode',this.toggleDarkMode)
+  }
 };
 </script>
 

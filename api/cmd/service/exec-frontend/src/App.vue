@@ -4,19 +4,19 @@
     <Home></Home>
   </div> -->
 <template>
-  <router-view />
+  <div>
+    <Toast />
+    <router-view />
+  </div>
 </template>
 <!-- </template> -->
 
 <script>
-
 import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
 import { useLayout } from "./components/layout";
 // import { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
 export default {
-  components: {
-
-  },
+  components: {},
   mounted() {
     // this.$nextTick(function () {
     //   if (localStorage.getItem("simple-code-editor-theme")) {
