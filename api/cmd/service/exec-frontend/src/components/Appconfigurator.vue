@@ -27,26 +27,7 @@ const menuModeOptions = ref([
   { label: "Overlay", value: "overlay" },
 ]);
 const op = ref();
-const members = ref([
-  {
-    name: "Amy Elsner",
-    image: "amyelsner.png",
-    email: "amy@email.com",
-    role: "Owner",
-  },
-  {
-    name: "Bernardo Dominic",
-    image: "bernardodominic.png",
-    email: "bernardo@email.com",
-    role: "Editor",
-  },
-  {
-    name: "Ioni Bowcher",
-    image: "ionibowcher.png",
-    email: "ioni@email.com",
-    role: "Viewer",
-  },
-]);
+
 
 const toggle = (event) => {
   op.value.toggle(event);
@@ -628,7 +609,7 @@ function onMenuModeChange() {
         </div>
     </div> -->
   <Popover ref="op">
-    <div class="flex flex-column gap-4 w-20rem">
+    <div class="flex flex-column gap-4 w-15rem">
       <div>
         <span class="text-sm text-muted-color font-semibold">Primary</span>
         <div class="pt-2 flex gap-2 flex-wrap justify-content-start">
@@ -638,7 +619,7 @@ function onMenuModeChange() {
             :title="primaryColor.name"
             @click="updateColors('primary', primaryColor)"
             :class="[
-              'border-circle w-2rem h-2rem p-0 cursor-pointer outline-none outline-offset-1',
+              'border-circle w-1rem h-1rem p-0 cursor-pointer outline-none outline-offset-1',
               { 'outline-primary': layoutConfig.primary === primaryColor.name },
             ]"
             :style="{
@@ -660,7 +641,7 @@ function onMenuModeChange() {
             :title="surface.name"
             @click="updateColors('surface', surface)"
             :class="[
-              'border-circle w-2rem h-2rem p-0 cursor-pointer outline-none outline-offset-1',
+              'border-circle w-1rem h-1rem p-0 cursor-pointer outline-none outline-offset-1',
               {
                 'outline-primary': layoutConfig.surface
                   ? layoutConfig.surface === surface.name

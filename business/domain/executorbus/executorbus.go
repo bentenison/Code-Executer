@@ -237,7 +237,7 @@ func tarFile(filePath string) (*bytes.Buffer, error) {
 	if err := tw.Close(); err != nil {
 		return nil, err
 	}
-
+	os.Remove(filePath)
 	// Return the buffer (can be written to disk or sent over network)
 	return &buf, nil
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="card fixed z-5 top-0 w-full">
-    <Menubar :model="items" class="bg-surface-card border-none">
+    <Menubar :model="items" class=" text-muted border-none">
       <template #start>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -56,7 +56,7 @@
         </a>
       </template>
       <template #end>
-        <div class="flex items-center gap-2">
+        <div class="flex align-items-center gap-2">
           <Button type="button" @click="toggleDarkMode">
             <i :class="['pi',{ 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
           </Button>
@@ -129,7 +129,7 @@ export default {
 </script>
 
 <style lang="scss">
-.p-menubar{
-  // background: var(--p-surface-100) !important;
-}
+// .p-menubar{
+//   background: var(--p-surface-600) !important;
+// }
 </style>

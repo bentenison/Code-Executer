@@ -1532,36 +1532,31 @@
           ]"
         ></CodeEditor> -->
       <div class="flex flex-column">
-        <CodeEditor
-          :line-nums="true"
-          :theme="theme"
-          :value="prog"
-          width="60rem"
-          height="500px"
-        ></CodeEditor>
+        <CodeEditor :line-nums="true" :theme="theme" :value="prog" width="80rem" height="450px"></CodeEditor>
         <terminal />
       </div>
-      <aside class="bg-surface-700 flex-1 px-4 align-items-center">
-        <div class="flex align-items-center gap-2">
-          <Avatar image="/images/avatar/amyelsner.png" shape="circle" />
+      <div class="bg-surface-100 w-20rem pl-4">
+        <div class="flex align-items-center justify-content-start gap-2 mb-2">
+          <Avatar image="https://primefaces.org/cdn/primevue/images/avatar/amyelsner.png" shape="circle" />
           <span class="font-bold">Amy Elsner</span>
         </div>
         <div class="flex items-center gap-2">
-          <Button
-            label="Account"
-            icon="pi pi-user"
-            class="flex-auto"
-            outlined
-          ></Button>
-          <Button
-            label="Logout"
-            icon="pi pi-sign-out"
-            class="flex-auto"
-            severity="danger"
-            text
-          ></Button>
+          <Button label="Account" icon="pi pi-user" class="flex-auto"  severity="success" text></Button>
+          <Button label="Logout" icon="pi pi-sign-out"  severity="danger" text></Button>
         </div>
-      </aside>
+        <hr class="bg-surface-100">
+        <div class="question-pallete flex flex-column">
+          <div class="flex align-items-center justify-content-between max-h-30rem pb-2 overflow-y-scroll gap-2 flex-wrap w-full">
+            <Button  class="w-3rem h-3rem shadow-4" v-for="index in 50" severity="success">
+              <span class="text-muted">{{ index }}</span>
+            </Button>
+          </div>
+          <div class="pallete-footer flex align-items-center mt-5">
+            <!-- <Button label="Account" icon="pi pi-user" class="flex-auto" severity="success" text></Button> -->
+            <Button  type="button" label="End Exam" icon="pi pi-sign-out" class="flex-auto" severity="danger" raised></Button>
+          </div>
+        </div>
+      </div>
       <!-- <CodeEditor
           :read-only="true"
           v-model="themeDemo"
@@ -1628,12 +1623,13 @@
 <script>
 import Terminal from "../components/Terminal.vue";
 import CodeEditor from "../SimpleCodeEditor/CodeEditor.vue";
-
+// import Button from "primevue/button"
 export default {
   name: "Home",
   components: {
     CodeEditor,
     Terminal,
+    // Button
   },
   data() {
     return {
@@ -1699,329 +1695,5 @@ class TestCase:
   font-weight: normal;
   font-style: normal;
   font-display: swap;
-}
-[center] {
-  text-align: center;
-}
-table {
-  overflow: hidden;
-  border-spacing: 0;
-  font-size: 16px;
-  text-align: left;
-  box-sizing: border-box;
-  border: 1px solid var(--grey-4);
-  border-radius: 6px;
-}
-th,
-td {
-  color: var(--grey-9);
-  padding: 12px 12px;
-}
-th + th,
-td + td {
-  border-left: 1px solid var(--grey-4);
-}
-td {
-  border-top: 1px solid var(--grey-4);
-}
-a {
-  color: var(--main-5);
-  text-decoration: none;
-  &:hover {
-    color: var(--main-5);
-    text-decoration: underline;
-  }
-}
-h1,
-h2,
-h3,
-h4 {
-  font-family: "Quicksand";
-  > label {
-    color: var(--grey-4);
-  }
-}
-h1 {
-  color: var(--grey-8);
-  margin: 50px 0;
-  font-size: 46px;
-  text-align: center;
-}
-h2 {
-  color: var(--grey-8);
-  margin: 40px 0;
-  font-size: 34px;
-}
-h3 {
-  color: var(--grey-8);
-  margin: 20px 0;
-  font-size: 20px;
-}
-h4 {
-  color: var(--grey-7);
-  margin: 20px 0;
-  font-size: 17px;
-}
-p {
-  font-size: 15px;
-  color: var(--grey-8);
-  line-height: 1.5;
-}
-p code {
-  font-family: Consolas, Monaco, monospace;
-  font-size: 90%;
-  color: var(--main-5);
-  background: var(--grey-2);
-  padding: 0.2em 0.4em;
-  border-radius: 0.3em;
-}
-mark {
-  color: var(--main-5);
-  background: none;
-}
-ul,
-li {
-  list-style: none;
-  padding: 0;
-}
-// animation
-.menu.fade-enter-active,
-.menu.fade-leave-active {
-  transition: transform 0.2s;
-}
-.menu.fade-enter-from,
-.menu.fade-leave-to {
-  transform: translateX(-240px);
-}
-// main
-.link {
-  transition: color 0.2s;
-  color: var(--grey-6);
-  text-align: center;
-  display: block;
-  text-decoration: none;
-  margin-top: 40px;
-}
-.link > span {
-  transition: margin-right 0.2s;
-  margin-right: 6px;
-  vertical-align: top;
-  display: inline-block;
-  line-height: 20px;
-}
-.link > svg {
-  vertical-align: top;
-}
-.link:hover {
-  color: var(--main-5);
-}
-.link:hover > span {
-  margin-right: 10px;
-}
-.body {
-  transition: padding 0.2s;
-}
-// demo
-.demo {
-  box-sizing: border-box;
-  padding: 10px 20px 120px 20px;
-  margin: 0 auto;
-  background: var(--grey-0);
-}
-.subtitle {
-  text-align: center;
-
-  & + div {
-    margin-top: 60px;
-  }
-}
-.code-editor {
-  & + .code-editor {
-    margin-top: 32px;
-  }
-  & + p {
-    margin-top: 32px;
-  }
-}
-.container {
-  // margin: 0 auto;
-  max-width: 100vh;
-}
-// useage
-.useage {
-  background: var(--grey-3);
-  padding: 60px 20px 100px 20px;
-}
-// session
-.session {
-  background: var(--grey-0);
-  padding: 60px 20px;
-  h3 {
-    margin: 60px 0 12px 0;
-  }
-  p {
-    margin: 0 0 4px 0;
-
-    & + .code-editor {
-      margin-top: 16px;
-    }
-  }
-  .code-editor + p {
-    margin-top: 16px;
-  }
-}
-.button-group {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-row-gap: 20px;
-  grid-column-gap: 20px;
-  button {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-button {
-  -webkit-user-select: none;
-  user-select: none;
-  color: var(--grey-8);
-  font-size: 14px;
-  background: var(--grey-2);
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-  padding: 8px 12px;
-}
-button.selected {
-  color: var(--main-5);
-  background: var(--main-1);
-}
-// body scroll bar
-body::-webkit-scrollbar {
-  width: 13px;
-  height: 13px;
-}
-body {
-  scrollbar-width: thin;
-  scrollbar-color: var(--grey-4) var(--grey-2);
-}
-body::-webkit-scrollbar-track {
-  background: var(--grey-2);
-}
-body::-webkit-scrollbar-thumb {
-  border: 3px solid var(--grey-2);
-  background-color: var(--grey-4);
-  border-radius: 6px;
-}
-// menu-body scroll bar
-.menu-body::-webkit-scrollbar {
-  width: 11px;
-  height: 11px;
-}
-.menu-body {
-  scrollbar-width: thin;
-  scrollbar-color: var(--grey-4) var(--grey-2);
-}
-.menu-body::-webkit-scrollbar-track {
-  background: var(--grey-2);
-}
-.menu-body::-webkit-scrollbar-thumb {
-  border: 3px solid var(--grey-2);
-  background-color: var(--grey-4);
-  border-radius: 6px;
-}
-// menu
-.menu {
-  box-sizing: border-box;
-  position: fixed;
-  top: 0;
-  left: 0;
-  // z-index: 9;
-  width: 240px;
-  height: 100vh;
-  background: var(--grey-1);
-  li.selected {
-    font-weight: bold;
-    color: var(--main-5);
-    background: var(--grey-0);
-    box-shadow: inset -2px 0 0 0 var(--main-5);
-  }
-  li {
-    box-sizing: border-box;
-    text-indent: 1px;
-    height: 36px;
-    line-height: 36px;
-    padding: 0 20px;
-    margin: 0 -20px;
-    font-size: 14px;
-    color: var(--grey-5);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    &:hover {
-      color: var(--main-5);
-    }
-  }
-}
-.menu-title {
-  box-sizing: border-box;
-  padding: 20px 20px 10px 20px;
-  font-family: "Quicksand";
-  display: flex;
-  justify-content: space-between;
-  color: var(--grey-4);
-  font-weight: bold;
-  font-size: 18px;
-  line-height: 22px;
-  border-bottom: 1px solid var(--grey-2);
-  svg {
-    cursor: pointer;
-    &:hover {
-      color: var(--main-5);
-    }
-  }
-}
-.body.menu-on {
-  padding-left: 240px;
-}
-.menu-body {
-  box-sizing: border-box;
-  padding: 0 20px 20px 20px;
-  height: calc(100vh - 53px);
-  overflow: auto;
-}
-// footer
-.footer {
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  bottom: 0;
-  width: 100%;
-  font-size: 13px;
-  color: var(--grey-4);
-  text-align: center;
-  padding: 24px 0;
-  a {
-    color: var(--grey-4);
-    &:hover {
-      color: var(--main-5);
-    }
-  }
-}
-@media screen and (max-width: 560px) {
-  .button-group {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media screen and (max-width: 540px) {
-  .body.menu-on {
-    padding-left: 60px;
-  }
-  .menu {
-    width: 190px;
-  }
 }
 </style>

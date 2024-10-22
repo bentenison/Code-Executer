@@ -121,10 +121,10 @@ vm.$router = router
 // vm.$confirm = ConfirmationService
 vm.component("ConfirmDialog", ConfirmDialog);
 // window.app = vm
-vm.config.globalProperties.$appState = reactive({
-  theme: "lara",
-  darkTheme: true,
-});
+// vm.config.globalProperties.$appState = reactive({
+//   theme: "lara",
+//   darkTheme: true,
+// });
 
 // vm.use(primeVue, { ripple: true, inputStyle: 'outlined' });
 // vm.use(ConfirmationService);

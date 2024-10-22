@@ -7,9 +7,9 @@
     @exec-cmd="onExecCmd"
     :drag-conf="dragConf"
     :title="title"
-    :init-log="Messages"
     :show-header="false"
-  />
+    />
+    <!-- :init-log="Messages" -->
 </template>
 <script>
 import execTerm from "vue-web-terminal";
@@ -155,7 +155,7 @@ export default {
   position: static;
   // position: relative;
   margin-top: 10px !important;
-  height: 300px !important;
+  height: 250px !important;
   border-radius: 12px;
   // width: 100%;
   transition: background 0.5s ease-in-out;
