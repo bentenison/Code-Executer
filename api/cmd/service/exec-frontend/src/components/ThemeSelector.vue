@@ -5,7 +5,7 @@
       :options="Themes"
       filter
       optionLabel="name"
-      placeholder="Select a Country"
+      placeholder="Select a Theme"
       class="w-full md:w-56"
       @change="changeTheme"
     >

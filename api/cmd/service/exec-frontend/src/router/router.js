@@ -20,6 +20,16 @@ const router = createRouter({
             name: 'landing',
             component: () => import('../components/EditorLayout.vue')
         },
+        {
+            path: '/login',
+            name: 'login',
+            component: () => import('../views/login.vue')
+        },
+        {
+            path: '/access-denied',
+            name: 'access denied',
+            component: () => import('../views/auth.vue')
+        },
         // {
         //     path: '/pages/notfound',
         //     name: 'notfound',

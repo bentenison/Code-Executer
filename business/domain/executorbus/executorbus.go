@@ -73,6 +73,7 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid str
 		Cmd:          []string{"python", filepath.Join("/app", filepath.Base(path))},
 		AttachStdout: true,
 		AttachStderr: true,
+		Tty:          true,
 	}
 
 	execID, err := b.cli.ContainerExecCreate(context.Background(), specs.ID, execConfig)
@@ -85,7 +86,9 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid str
 	// 	return "", err
 	// }
 	startTime := time.Now()
-	res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{})
+	res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{
+		Tty: true,
+	})
 	if err != nil {
 		return &execResponse, err
 	}
@@ -114,11 +117,12 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid str
 	execResponse.PercetRAMUsage = fmt.Sprintf("%d", (s.MemoryStats.Usage/s.MemoryStats.Limit)*100)
 	execResponse.ExecTime = endTime.String()
 	var logBuf bytes.Buffer
-	if _, err := logBuf.ReadFrom(res.Conn); err != nil {
+	if _, err := logBuf.ReadFrom(res.Reader); err != nil {
 		return &execResponse, err
 	}
 	go b.performCleanup(filepath.Base(path), specs.ID)
 	execResponse.Output = convertOutput(logBuf)
+	// fmt.Println("the log is", string(logBuf.Bytes()))
 	//TODO: ADD the code execution stats here
 	return &execResponse, nil
 }

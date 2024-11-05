@@ -193,39 +193,39 @@ export default {
       type: Array,
       default: function () {
         return [
-          ["javascript", "JS"],
+          // ["javascript", "JS"],
           ["python", "PY"],
-          ["java", "JAVA"],
-          ["c", "C"],
-          ["cpp", "C++"],
-          ["csharp", "C#"],
-          ["ruby", "RUBY"],
-          ["php", "PHP"],
-          ["swift", "SWIFT"],
-          ["go", "GO"],
-          ["html", "HTML"],
-          ["css", "CSS"],
-          ["typescript", "TS"],
-          ["kotlin", "KOTLIN"],
-          ["scala", "SCALA"],
-          ["rust", "RUST"],
-          ["sql", "SQL"],
-          ["bash", "BASH"],
-          ["powershell", "POWERSHELL"],
-          ["objectivec", "OBJECTIVE-C"],
-          ["elixir", "ELIXIR"],
-          ["haskell", "HASKELL"],
-          ["lua", "LUA"],
-          ["r", "R"],
-          ["matlab", "MATLAB"],
-          ["fortran", "FORTRAN"],
-          ["dart", "DART"],
-          ["assembly", "ASSEMBLY"],
-          ["groovy", "GROOVY"],
-          ["pascal", "PASCAL"],
-          ["prolog", "PROLOG"],
-          ["scheme", "SCHEME"],
-          ["visualbasic", "VB.NET"],
+          // ["java", "JAVA"],
+          // ["c", "C"],
+          // ["cpp", "C++"],
+          // ["csharp", "C#"],
+          // ["ruby", "RUBY"],
+          // ["php", "PHP"],
+          // ["swift", "SWIFT"],
+          // ["go", "GO"],
+          // ["html", "HTML"],
+          // ["css", "CSS"],
+          // ["typescript", "TS"],
+          // ["kotlin", "KOTLIN"],
+          // ["scala", "SCALA"],
+          // ["rust", "RUST"],
+          // ["sql", "SQL"],
+          // ["bash", "BASH"],
+          // ["powershell", "POWERSHELL"],
+          // ["objectivec", "OBJECTIVE-C"],
+          // ["elixir", "ELIXIR"],
+          // ["haskell", "HASKELL"],
+          // ["lua", "LUA"],
+          // ["r", "R"],
+          // ["matlab", "MATLAB"],
+          // ["fortran", "FORTRAN"],
+          // ["dart", "DART"],
+          // ["assembly", "ASSEMBLY"],
+          // ["groovy", "GROOVY"],
+          // ["pascal", "PASCAL"],
+          // ["prolog", "PROLOG"],
+          // ["scheme", "SCHEME"],
+          // ["visualbasic", "VB.NET"],
         ];
       },
     },
@@ -328,13 +328,17 @@ export default {
         "[": "]",
       };
 
-      // Insert closing bracket if the last character is an opening bracket
+      // If the last character is an opening bracket, insert the closing bracket
       if (brackets[lastChar]) {
-        // Update the content by adding the closing bracket
-        this.content = value + brackets[lastChar];
-        // Set the cursor position
+        const closingBracket = brackets[lastChar];
+        // Construct the new content
+        this.content =
+          value.slice(0, cursorPos) + closingBracket + value.slice(cursorPos);
+
+        // Set the cursor position to just after the closing bracket
         this.$nextTick(() => {
-          e.target.setSelectionRange(cursorPos + 1, cursorPos + 1);
+          e.target.value = this.content; // Update the textarea value
+          e.target.setSelectionRange(cursorPos + 1, cursorPos + 1); // Move cursor to right after closing bracket
         });
       } else {
         // If no auto-close action, just update the content or emit event
@@ -344,6 +348,8 @@ export default {
           this.$emit("update:modelValue", value);
         }
       }
+
+      // Emit the updated content
       this.$emit("content", this.content);
     },
     changeLang(lang) {
@@ -470,9 +476,10 @@ export default {
     this.resizer();
     // let code = document.getElementsByClassName("hljs")[0];
     // console.log("code", styles.background);
+  },
+  created() {
     this.emitter.on("ThemeChanged", this.alertThemeChange);
   },
-  created() {},
   updated() {
     if (this.insertTab) {
       this.$refs.textarea.setSelectionRange(

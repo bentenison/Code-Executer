@@ -3,19 +3,19 @@
     class="hljs"
     :theme="currentTheme"
     name="my-terminal"
+    ref="execTerm"
     :context="context"
     @exec-cmd="onExecCmd"
     :drag-conf="dragConf"
     :title="title"
     :show-header="false"
-    />
-    <!-- :init-log="Messages" -->
+  />
+  <!-- :init-log="Messages" -->
 </template>
 <script>
 import execTerm from "vue-web-terminal";
 //  Light theme: vue-web-terminal/lib/theme/light.css
 import "vue-web-terminal/lib/theme/dark.css";
-
 
 export default {
   name: "Terminal",
@@ -24,7 +24,7 @@ export default {
   },
   data() {
     return {
-      defaultTheme:{bg:"#0d1117",foreground:"#c9d1d9"},
+      defaultTheme: { bg: "#0d1117", foreground: "#c9d1d9" },
       context: "🖥️root@tanvirs:~$",
       title: "EPIC terminal",
       currentTheme: "github",
@@ -120,14 +120,35 @@ export default {
     },
     changeTheme(e) {
       console.log("event catched!!!", e);
+      // setTimeout(() => {
       let win = document.getElementsByClassName("t-window")[0];
+      if (win) {
+        win.style.background = e.bg;
+        win.style.color = e.foreground;
+      }
       // console.log(win)
-      win.style.background = e.bg;
-      win.style.color = e.foreground;
+      // }, 100);
+    },
+    showMessage(data) {
+      console.log("terminal refs ", data);
+      let msg = data.toLowerCase();
+      if (msg.includes("error") || msg.includes("exception")) {
+        this.$refs.execTerm.pushMessage({
+          class: "error",
+          tag: "ERROR",
+          content: data,
+        });
+      } else {
+        this.$refs.execTerm.pushMessage({
+          class: "success",
+          tag: "SUCCESS",
+          content: data,
+        });
+      }
     },
   },
   mounted() {
-    this.changeTheme(this.defaultTheme)
+    this.changeTheme(this.defaultTheme);
     // updateColor() {
     // Update the CSS variable dynamically
     // document.documentElement.style.setProperty("--t-main-background-color", "red");
@@ -136,6 +157,7 @@ export default {
   },
   created() {
     this.emitter.on("changeTerminalTheme", this.changeTheme);
+    this.emitter.on("showMessage", this.showMessage);
   },
 };
 </script>
@@ -155,7 +177,7 @@ export default {
   position: static;
   // position: relative;
   margin-top: 10px !important;
-  height: 250px !important;
+  height: 280px !important;
   border-radius: 12px;
   // width: 100%;
   transition: background 0.5s ease-in-out;

@@ -4,6 +4,7 @@ import (
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/web"
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -15,6 +16,7 @@ type RouteAdder interface {
 type DataSource struct {
 	SQL *sqlx.DB
 	MGO *mongo.Database
+	RDB *redis.Client
 }
 type Config struct {
 	Build string

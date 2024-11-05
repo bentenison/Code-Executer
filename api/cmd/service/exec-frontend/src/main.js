@@ -97,6 +97,12 @@ import Tree from "primevue/tree";
 import TreeSelect from "primevue/treeselect";
 import TreeTable from "primevue/treetable";
 import Popover from "primevue/popover";
+import { createPinia } from "pinia";
+import piniaPluginPersistedState from "pinia-plugin-persistedstate";
+import axios from "axios"
+import JsonViewer from "vue3-json-viewer";
+// if you used v1.0.5 or latster ,you should add import "vue3-json-viewer/dist/index.css"
+import "vue3-json-viewer/dist/index.css";
 // import TriStateCheckbox from 'primevue/tristatecheckbox';
 
 // import CodeHighlight from './AppCodeHighlight';
@@ -115,10 +121,10 @@ const isProduction = process.env.NODE_ENV === "production";
 // }
 
 const vm = createApp(App);
-// const pinia = createPinia()
-// pinia.use(piniaPluginPersistedstate)
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedState);
 vm.$router = router;
-// vm.$pinia = pinia
+vm.$pinia = pinia;
 // vm.$confirm = ConfirmationService
 vm.component("ConfirmDialog", ConfirmDialog);
 // window.app = vm
@@ -220,7 +226,8 @@ vm.component("TreeTable", TreeTable);
 
 // vm.component('BlockViewer', BlockViewer);
 // vm.use(PiniaVuePlugin)
-// vm.use(pinia)
+vm.use(pinia);
+vm.use(JsonViewer)
 // vm.use(i18n)
 // vm.use(primeVue)
 // vm.use(router)
@@ -230,7 +237,11 @@ vm.use(ConfirmDialog);
 
 // import Aura from "@primevue/themes/lara";
 const emitter = mitt();
+//axios setup
+var baseURL = "/server";
+var cdnBaseURL = "/cdnserver";
 
+axios.defaults.baseURL = baseURL;
 vm.config.globalProperties.emitter = emitter;
 vm.provide("emitter", emitter);
 vm.use(PrimeVue, {

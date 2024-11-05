@@ -22,10 +22,10 @@ import (
 //		Logic        string     // Tags related to the problem
 //	}
 type Question struct {
-	QuestionId        string            `json:"_id" bson:"_id"`
+	QuestionId        string            `json:"id" bson:"id"`
 	Title             string            `json:"title" bson:"title"`
 	Description       string            `json:"description" bson:"description"`
-	Logic             string            `json:"logic" bson:"logic"`
+	UserLogic         string            `json:"logic" bson:"logic"`
 	Input             Input             `json:"input" bson:"input"`
 	Output            Output            `json:"output" bson:"output"`
 	TemplateCode      string            `json:"template_code" bson:"template_code"`
@@ -36,6 +36,8 @@ type Question struct {
 	UserLogicTemplate UserLogicTemplate `json:"user_logic_template" bson:"user_logic_template"`
 	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
 	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
+	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
+	TestCases         string
 }
 
 type Input struct {
@@ -58,8 +60,8 @@ type TestcaseTemplate struct {
 }
 
 type Testcase struct {
-	Input          int   `json:"input" bson:"input"`
-	ExpectedOutput []int `json:"expectedOutput" bson:"expectedOutput"`
+	Input          interface{} `json:"input" bson:"input"`
+	ExpectedOutput interface{} `json:"expectedOutput" bson:"expectedOutput"`
 }
 
 type Answer struct {

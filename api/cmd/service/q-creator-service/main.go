@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bentenison/microservice/api/cmd/service/broker-service/build/all"
+	"github.com/bentenison/microservice/api/cmd/service/q-creator-service/build/all"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
 	"github.com/bentenison/microservice/business/sdk/redisdb"
@@ -115,7 +115,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{
-		Addr:    cfg.BrokerAPIPort,
+		Addr:    cfg.CreatorAPIPort,
 		Handler: app,
 		// ReadTimeout:  cfg.Web.ReadTimeout,
 		// WriteTimeout: cfg.,
@@ -127,7 +127,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	ctx := context.Background()
 	go func() {
 		log.Infoc(context.TODO(), "broker-api router started", map[string]interface{}{
-			"port": cfg.BrokerAPIPort,
+			"port": cfg.CreatorAPIPort,
 		})
 		serverErrors <- api.ListenAndServe()
 	}()

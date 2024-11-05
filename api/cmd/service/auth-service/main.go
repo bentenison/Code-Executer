@@ -13,6 +13,7 @@ import (
 	"github.com/bentenison/microservice/api/sdk/http/debug"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
+	"github.com/bentenison/microservice/business/sdk/redisdb"
 	"github.com/bentenison/microservice/business/sdk/sqldb"
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
@@ -82,9 +83,14 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	if err != nil {
 		return err
 	}
+	rdb, err := redisdb.OpenRDB(redisdb.Config{})
+	if err != nil {
+		return err
+	}
 	ds := mux.DataSource{
 		MGO: mongo,
 		SQL: db,
+		RDB: rdb,
 	}
 	go func() {
 		log.Infoc(context.TODO(), "startup debug v1 server started", map[string]interface{}{

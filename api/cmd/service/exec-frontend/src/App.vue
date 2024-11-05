@@ -5,6 +5,9 @@
   </div> -->
 <template>
   <div>
+    <div id="app-loader" v-if="mainStore.isBlocked">
+      <ProgressSpinner></ProgressSpinner>
+    </div>
     <Toast />
     <router-view />
   </div>
@@ -14,9 +17,17 @@
 <script>
 import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
 import { useLayout } from "./components/layout";
+import ProgressSpinner from "primevue/progressspinner";
+import { useMainStore } from "./stores/main";
+
 // import { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
 export default {
-  components: {},
+  components: { ProgressSpinner },
+  data() {
+    return {
+      mainStore: useMainStore(),
+    };
+  },
   mounted() {
     // this.$nextTick(function () {
     //   if (localStorage.getItem("simple-code-editor-theme")) {
@@ -45,6 +56,18 @@ export default {
 <style lang="scss">
 // @import "./assets/theme/lisa.css";
 // @import "./assets/theme/lisa-dark.css";
+#app-loader {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 body {
   font-family: sans-serif;
   background: var(--surface-ground);

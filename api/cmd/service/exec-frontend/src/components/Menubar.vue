@@ -66,7 +66,7 @@
     <Dialog
       v-model:visible="visible"
       modal
-      header="Header"
+      header="IDE Settings"
       :style="{ width: '45rem', height: '50rem' }"
       :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
     >
@@ -107,6 +107,22 @@
             aria-labelledby="basic"
           />
         </div>
+        <div class="flex gap-6">
+          <p>Font Size :</p>
+          <div class="flex gap-3 align-items-center">
+            <Button
+              icon="pi pi-minus"
+              @click="decreaseFontSize"
+              :disabled="fontSize <= 14"
+            />
+            <span>{{ fontSize }}</span>
+            <Button
+              icon="pi pi-plus"
+              @click="increaseFontSize"
+              :disabled="fontSize >= 20"
+            />
+          </div>
+        </div>
       </div>
     </Dialog>
   </div>
@@ -127,6 +143,7 @@ export default {
     return {
       isDarkTheme: false,
       visible: false,
+      fontSize: 17,
       themes: [
         { name: "a11y-dark", code: "a11y-dark" },
         { name: "a11y-light", code: "a11y-light" },
@@ -410,10 +427,18 @@ export default {
       toggleDarkMode();
       this.isDarkTheme = !this.isDarkTheme; // Sync with local state
     },
+    increaseFontSize() {
+      this.fontSize++;
+      this.emitter.emit("increaseFont", this.fontSize);
+    },
+    decreaseFontSize() {
+      this.fontSize--;
+      this.emitter.emit("decreaseFont", this.fontSize);
+    },
   },
-  created(){
+  created() {
     // this.emitter.on('toggleMode',this.toggleDarkMode)
-  }
+  },
 };
 </script>
 

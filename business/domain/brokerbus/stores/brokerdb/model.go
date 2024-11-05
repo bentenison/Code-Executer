@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bentenison/microservice/business/domain/brokerbus"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // type TestCase struct {
@@ -26,19 +25,20 @@ import (
 //	}
 
 type Question struct {
-	QuestionId        primitive.ObjectID `json:"_id" bson:"_id"`
-	Title             string             `json:"title" bson:"title"`
-	Description       string             `json:"description" bson:"description"`
-	Input             Input              `json:"input" bson:"input"`
-	Output            Output             `json:"output" bson:"output"`
-	TemplateCode      string             `json:"template_code" bson:"template_code"`
-	Language          string             `json:"language" bson:"language"`
-	LanguageCode      string             `json:"language_code" bson:"language_code"`
-	Difficulty        string             `json:"difficulty" bson:"difficulty"`
-	Tags              []string           `json:"tags" bson:"tags"`
-	UserLogicTemplate UserLogicTemplate  `json:"user_logic_template" bson:"user_logic_template"`
-	TestcaseTemplate  TestcaseTemplate   `json:"testcase_template" bson:"testcase_template"`
-	Testcases         []Testcase         `json:"testcases" bson:"testcases"`
+	QuestionId        string            `json:"id" bson:"id"`
+	Title             string            `json:"title" bson:"title"`
+	Description       string            `json:"description" bson:"description"`
+	Input             Input             `json:"input" bson:"input"`
+	Output            Output            `json:"output" bson:"output"`
+	TemplateCode      string            `json:"template_code" bson:"template_code"`
+	Language          string            `json:"language" bson:"language"`
+	LanguageCode      string            `json:"language_code" bson:"language_code"`
+	Difficulty        string            `json:"difficulty" bson:"difficulty"`
+	Tags              []string          `json:"tags" bson:"tags"`
+	UserLogicTemplate UserLogicTemplate `json:"user_logic_template" bson:"user_logic_template"`
+	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
+	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
+	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
 }
 
 type Input struct {
@@ -61,9 +61,10 @@ type TestcaseTemplate struct {
 }
 
 type Testcase struct {
-	Input          int   `json:"input" bson:"input"`
-	ExpectedOutput []int `json:"expectedOutput" bson:"expectedOutput"`
+	Input          interface{} `json:"input" bson:"input"`
+	ExpectedOutput interface{} `json:"expectedOutput" bson:"expectedOutput"`
 }
+
 type Answer struct {
 	ID        string     `json:"id"`
 	Logic     string     `json:"logic"`
@@ -141,7 +142,7 @@ type LanguageDB struct {
 
 func toBusQuestion(q Question) brokerbus.Question {
 	busQuestion := brokerbus.Question{}
-	busQuestion.QuestionId = q.QuestionId.Hex()
+	busQuestion.QuestionId = q.QuestionId
 	busQuestion.Title = q.Title
 	busQuestion.Description = q.Description
 	busQuestion.Input = brokerbus.Input(q.Input)
@@ -154,6 +155,7 @@ func toBusQuestion(q Question) brokerbus.Question {
 	busQuestion.LanguageCode = q.LanguageCode
 	busQuestion.Tags = q.Tags
 	busQuestion.Testcases = addTestCases(q.Testcases)
+	busQuestion.ExecTemplate = q.ExecTemplate
 	return busQuestion
 }
 func addTestCases(cases []Testcase) []brokerbus.Testcase {
@@ -184,4 +186,28 @@ func toBusLanguages(lang []LanguageDB) []*brokerbus.Language {
 		langs = append(langs, lg)
 	}
 	return langs
+}
+func toBusQuestions(q []Question) []brokerbus.Question {
+	busQuestions := []brokerbus.Question{}
+	for _, v := range q {
+		res := toBusQuestion(v)
+		busQuestions = append(busQuestions, res)
+	}
+	return busQuestions
+}
+func toBusAnswer(a Answer) brokerbus.Answer {
+	busAnswer := brokerbus.Answer{}
+	busAnswer.ID = a.ID
+	busAnswer.Logic = a.Logic
+	busAnswer.TestCases = addTestCases(a.TestCases)
+	return busAnswer
+}
+func toBusAnswers(a []Answer) []brokerbus.Answer {
+	// busAnswer := brokerbus.Answer{}
+	busAnswers := []brokerbus.Answer{}
+	for _, v := range a {
+		res := toBusAnswer(v)
+		busAnswers = append(busAnswers, res)
+	}
+	return busAnswers
 }

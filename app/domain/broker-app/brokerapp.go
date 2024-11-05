@@ -26,6 +26,9 @@ func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, tp *tp.TracerP
 func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
 	return a.brokerbus.HandleSubmissonService(ctx, brokerbus.Submission(submission), a.authcli, a.execcli)
 }
+func (a *App) HandleCodeRun(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
+	return a.brokerbus.HandleCodeRun(ctx, brokerbus.Submission(submission), a.authcli, a.execcli)
+}
 func (a *App) Authenticate(ctx context.Context, up Credentials) (string, error) {
 	return a.brokerbus.HandleAuthentication(ctx, up.Username, up.Password)
 }
@@ -35,4 +38,16 @@ func (a *App) Authorize(ctx context.Context, token string) (brokerbus.Claims, er
 }
 func (a *App) CreateUser(ctx context.Context, up UserPayload) (string, error) {
 	return a.brokerbus.HandleCreation(ctx, brokerbus.UserPayload(up))
+}
+func (a *App) GetAllQuestions(ctx context.Context) ([]brokerbus.Question, error) {
+	return a.brokerbus.GetAllQuestions(ctx)
+}
+func (a *App) GetQuestionById(ctx context.Context, id string) (brokerbus.Question, error) {
+	return a.brokerbus.GetSingleQuestion(ctx, id)
+}
+func (a *App) GetAllAnswers(ctx context.Context) ([]brokerbus.Answer, error) {
+	return a.brokerbus.GetAllAnswers(ctx)
+}
+func (a *App) GetAnswerByQuestionId(ctx context.Context, id string) (brokerbus.Answer, error) {
+	return a.brokerbus.GetAnswerByQuestion(ctx, id)
 }

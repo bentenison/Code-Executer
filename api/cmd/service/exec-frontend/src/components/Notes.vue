@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card notes-panel">
     <Editor v-model="value" editorStyle="height: 320px" />
   </div>
 </template>
@@ -15,4 +15,10 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.notes-panel{
+  min-height: 44rem;
+  width: 49rem;
+  border-radius: 10px;
+}
+</style>

@@ -44,6 +44,26 @@ func (api *api) newSubmissionHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, template)
 }
+func (api *api) codeRunHandler(c *gin.Context) {
+	var submissionPayload SubmissionPayload
+	if err := c.Bind(&submissionPayload); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	submission := toAppSubmission(submissionPayload)
+	template, err := api.brokerapp.HandleCodeRun(c.Request.Context(), submission)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while getting template data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, template)
+}
 func (api *api) authenticateHandler(c *gin.Context) {
 	var cred brokerapp.Credentials
 	if err := c.Bind(&cred); err != nil {
@@ -161,4 +181,66 @@ func (api *api) createUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (api *api) getQuestionHandler(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	quest, err := api.brokerapp.GetQuestionById(c.Request.Context(), id)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in GetQuestionById  API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, quest)
+}
+func (api *api) getAllQuestionsHandler(c *gin.Context) {
+
+	quests, err := api.brokerapp.GetAllQuestions(c.Request.Context())
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in GetQuestionById  API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, quests)
+}
+func (api *api) getAnswerHandler(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	answer, err := api.brokerapp.GetAnswerByQuestionId(c.Request.Context(), id)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in GetAnswerByQuestionId  API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, answer)
+}
+func (api *api) getAllAnswersHandler(c *gin.Context) {
+	answers, err := api.brokerapp.GetAllAnswers(c.Request.Context())
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in GetAllAnswers  API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, answers)
 }
