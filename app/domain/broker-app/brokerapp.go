@@ -7,7 +7,6 @@ import (
 	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
 	"github.com/bentenison/microservice/business/domain/brokerbus"
 	"github.com/bentenison/microservice/foundation/logger"
-	tp "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -19,8 +18,8 @@ type App struct {
 	execcli   execpb.ExecutorServiceClient
 }
 
-func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, tp *tp.TracerProvider, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient) *App {
-	return &App{logger: logger, brokerbus: bus, tracer: tp.Tracer("BROKER"), authcli: authcli, execcli: execcli}
+func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient) *App {
+	return &App{logger: logger, brokerbus: bus, authcli: authcli, execcli: execcli}
 }
 
 func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
@@ -50,4 +49,13 @@ func (a *App) GetAllAnswers(ctx context.Context) ([]brokerbus.Answer, error) {
 }
 func (a *App) GetAnswerByQuestionId(ctx context.Context, id string) (brokerbus.Answer, error) {
 	return a.brokerbus.GetAnswerByQuestion(ctx, id)
+}
+func (a *App) GetAllLanguages(ctx context.Context) ([]*brokerbus.Language, error) {
+	return a.brokerbus.GetAllAllowedLanguages(ctx)
+}
+func (a *App) HandleQCQuestion(ctx context.Context, q Question) (*execpb.ExecutionResponse, error) {
+	return a.brokerbus.HandleQcService(ctx, toBusQuestion(q), a.authcli, a.execcli)
+}
+func (a *App) HandleGetAllTemplates(ctx context.Context) ([]brokerbus.Question, error) {
+	return a.brokerbus.GetAllQuestTemplates(ctx)
 }

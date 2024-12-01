@@ -1,0 +1,11 @@
+# Use the smallest OpenJDK image based on Alpine Linux
+FROM openjdk:17-alpine
+
+LABEL maintainer="tanvirs"
+LABEL app="java-executor"
+LABEL language="java"
+
+# Set the working directory
+WORKDIR /app/
+
+CMD ["tail", "-f", "/dev/null"]

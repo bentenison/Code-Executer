@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/bentenison/microservice/api/sdk/http/client"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Storer interface {
@@ -25,6 +27,8 @@ type Storer interface {
 	GetAllQuestionsDAO(ctx context.Context) ([]Question, error)
 	GetAllAnswersDAO(ctx context.Context) ([]Answer, error)
 	GetAnswerById(ctx context.Context, id string) (Answer, error)
+	UpdateQCQuestion(ctx context.Context, id string) (*mongo.UpdateResult, error)
+	GetQuestionTemplates(ctx context.Context) ([]Question, error)
 	Get(ctx context.Context, key string, res any) error
 	Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error)
 }
@@ -99,7 +103,7 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 	_ = id
 	path := fmt.Sprintf("./static/code_%s_%s.py", question.QuestionId, submission.UserID)
 	//TODO: call the executor client to exec code
-	res, err := startExecution(execcli, path)
+	res, err := startExecution(execcli, path, question.Language, submission.FileExtension)
 	if err != nil {
 		b.log.Errorc(ctx, "error in adding submission", map[string]interface{}{
 			"error": err.Error(),
@@ -114,6 +118,97 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 		})
 		return nil, err
 	}
+	//TODO: After result from executor client add the perfromance metrics and code_execution stats to DB
+	// b.storer.AddExecutionStats(ctx,)
+	return res, err
+}
+func (b *Business) HandleQcService(ctx context.Context, question Question, authcli authpb.AuthServiceClient, execcli execpb.ExecutorServiceClient) (*execpb.ExecutionResponse, error) {
+	//check if question exists in redis first
+	// question := Question{}
+	// err := b.storer.Get(ctx, submission.QuestionId, &question)
+	// if err != nil {
+	// 	b.log.Errorc(ctx, "error while getting data from redis .. going for DB now.", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// 	question, err = b.storer.GetQuestionTemplate(ctx, submission.QuestionId)
+	// 	if err != nil {
+	// 		b.log.Errorc(ctx, "error while getting template", map[string]interface{}{
+	// 			"error": err,
+	// 		})
+	// 		return nil, err
+	// 	}
+	// 	res, err := b.storer.Set(ctx, submission.QuestionId, &question, 0)
+	// 	if err != nil {
+	// 		b.log.Errorc(ctx, "error while setting template in redis", map[string]interface{}{
+	// 			"error": err,
+	// 			"res":   res,
+	// 		})
+	// 		return nil, err
+	// 	}
+	// }
+	// fmt.Println(data)
+	// decodedSnippet, err := decodeSnippet(submission.CodeSnippet)
+	// if err != nil {
+	// 	b.log.Errorc(ctx, "error while decoding base64 snippet", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// 	return nil, err
+	// }
+	switch question.Language {
+	case "python":
+		question.UserLogic = question.Answer.Logic
+		question.TestCases = question.TestcaseTemplate.Code
+	case "java":
+		question.UserLogic = question.Answer.Logic
+		question.TestCases = question.TestcaseTemplate.Code
+		question.ClassName = "Main"
+	default:
+		question.UserLogic = question.Answer.Logic
+		question.TestCases = question.TestcaseTemplate.Code
+	}
+	err := b.createCodeTemplateForQC(ctx, question)
+	if err != nil {
+		b.log.Errorc(ctx, "error while ceating template for the question", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	//TODO: create submission and add to DB
+	// submission.QuestionId = question.QuestionId
+	// submission.ExecutionStatus = "EXECUTED"
+
+	path := fmt.Sprintf("./static/code_%s_%s%s", question.QuestionId, question.QuestionId, question.FileExtension)
+	//TODO: call the executor client to exec code
+	res, err := startExecution(execcli, path, question.Language, question.FileExtension)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding submission", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	if strings.ToLower(res.Output) != "" {
+		if strings.Contains(res.GetOutput(), "error") {
+			res.Output = "false"
+		}
+	}
+	if strings.ToLower(res.Output) == "true" {
+		res, err := b.storer.UpdateQCQuestion(ctx, question.QuestionId)
+		if err != nil {
+			b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
+				"error": err.Error(),
+			})
+			return nil, err
+		}
+		_ = res
+	}
+	// stats := createCodeExecutionStats(res, "", submission.UserID, submission.CodeSnippet, submission.LanguageID)
+	// _, err = b.storer.AddExecutionStats(ctx, stats)
+	// if err != nil {
+	// 	b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// 	return nil, err
+	// }
 	//TODO: After result from executor client add the perfromance metrics and code_execution stats to DB
 	// b.storer.AddExecutionStats(ctx,)
 	return res, err
@@ -134,7 +229,20 @@ func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, aut
 		return nil, err
 	}
 	question.UserLogic = decodedSnippet
+	question.FileExtension = submission.FileExtension
 	// question.TestCases = question.TestcaseTemplate.Code
+	switch question.Language {
+	case "python":
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+	case "java":
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+		question.ClassName = "Main"
+	default:
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+	}
 	err = b.createCodeTemplate(ctx, question, submission.UserID)
 	if err != nil {
 		b.log.Errorc(ctx, "error while ceating template for the question", map[string]interface{}{
@@ -155,9 +263,10 @@ func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, aut
 		// return "", err
 	}
 	_ = id
-	path := fmt.Sprintf("./static/code_%s_%s.py", question.QuestionId, submission.UserID)
+	//TODO: how we will handle diffrent languages and their respective extensions
+	path := fmt.Sprintf("./static/code_%s_%s%s", question.QuestionId, submission.UserID, submission.FileExtension)
 	//TODO: call the executor client to exec code
-	res, err := startExecution(execcli, path)
+	res, err := startExecution(execcli, path, question.Language, submission.FileExtension)
 	if err != nil {
 		b.log.Errorc(ctx, "error in adding submission", map[string]interface{}{
 			"error": err.Error(),
@@ -236,6 +345,50 @@ func (b *Business) HandleCreation(ctx context.Context, user UserPayload) (string
 	}
 	return uid, nil
 }
+func (b *Business) createCodeTemplateForQC(ctx context.Context, question Question) error {
+	tmplt, err := template.New("code").Parse(question.ExecTemplate)
+	if err != nil {
+		b.log.Errorc(ctx, "error creating template from string", map[string]interface{}{
+			"error": err,
+		})
+		return err
+	}
+	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s%s", question.QuestionId, question.QuestionId, question.FileExtension), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		b.log.Errorc(ctx, "error while creating file", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	defer f.Close()
+	err = tmplt.Execute(f, question)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (b *Business) createCodeTemplatetoRun(ctx context.Context, question Question, userId string) error {
+	tmplt, err := template.New("code").Parse(question.ExecTemplate)
+	if err != nil {
+		b.log.Errorc(ctx, "error creating template from string", map[string]interface{}{
+			"error": err,
+		})
+		return err
+	}
+	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s%s", question.QuestionId, userId, question.FileExtension), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		b.log.Errorc(ctx, "error while creating file", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	defer f.Close()
+	err = tmplt.Execute(f, question)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (b *Business) createCodeTemplate(ctx context.Context, question Question, userId string) error {
 	tmplt, err := template.New("code").Parse(question.ExecTemplate)
 	if err != nil {
@@ -244,7 +397,7 @@ func (b *Business) createCodeTemplate(ctx context.Context, question Question, us
 		})
 		return err
 	}
-	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s.py", question.QuestionId, userId), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	f, err := os.OpenFile(fmt.Sprintf("./static/code_%s_%s%s", question.QuestionId, userId, question.FileExtension), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	if err != nil {
 		b.log.Errorc(ctx, "error while creating file", map[string]interface{}{
 			"error": err.Error(),
@@ -265,7 +418,7 @@ func decodeSnippet(snippet string) (string, error) {
 	}
 	return string(snipByte), nil
 }
-func startExecution(exec execpb.ExecutorServiceClient, path string) (*execpb.ExecutionResponse, error) {
+func startExecution(exec execpb.ExecutorServiceClient, path, lang, ext string) (*execpb.ExecutionResponse, error) {
 	stream, err := exec.HandleExecution(context.Background())
 	if err != nil {
 		return nil, err
@@ -286,8 +439,7 @@ func startExecution(exec execpb.ExecutorServiceClient, path string) (*execpb.Exe
 		if err != nil {
 			return nil, err
 		}
-
-		err = stream.Send(&execpb.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123"})
+		err = stream.Send(&execpb.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123", Lang: lang, FileExt: ext})
 		if err != nil {
 			return nil, err
 		}
@@ -311,4 +463,10 @@ func (b *Business) GetAllAnswers(ctx context.Context) ([]Answer, error) {
 }
 func (b *Business) GetAnswerByQuestion(ctx context.Context, id string) (Answer, error) {
 	return b.storer.GetAnswerById(ctx, id)
+}
+func (b *Business) GetAllAllowedLanguages(ctx context.Context) ([]*Language, error) {
+	return b.storer.GetLanguages(ctx)
+}
+func (b *Business) GetAllQuestTemplates(ctx context.Context) ([]Question, error) {
+	return b.storer.GetQuestionTemplates(ctx)
 }

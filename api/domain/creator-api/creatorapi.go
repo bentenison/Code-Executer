@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	creatorapp "github.com/bentenison/microservice/app/domain/creator-app"
+	"github.com/bentenison/microservice/business/sdk/page"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -103,26 +104,48 @@ func (a *api) getQuestionsBylang(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
-func (a *api) qcQuestion(c *gin.Context) {
+func (a *api) query(c *gin.Context) {
 	// var questions []creatorapp.Question
-	var questions creatorapp.Question
-	if err := c.Bind(&questions); err != nil {
-		a.log.Errorc(c.Request.Context(), "error binding data", map[string]interface{}{
+	qp := parseQueryParams(c)
+	page, err := page.Parse(qp.Rows, qp.Page)
+	if err != nil {
+		a.log.Errorc(c.Request.Context(), "error in required params:", map[string]interface{}{
 			"error": err.Error(),
 		})
 		c.JSON(http.StatusExpectationFailed, err.Error())
 		return
 	}
+	quests, err := a.creatorapp.Query(c.Request.Context(), page, creatorapp.QueryParams(qp))
+	if err != nil {
+		a.log.Errorc(c.Request.Context(), "error while getting query results:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, quests)
+}
+func (a *api) qcQuestion(c *gin.Context) {
+	// var questions []creatorapp.Question
 
-	// res, err := a.creatorapp.GetQuestionsByLang(c.Request.Context(), lang)
+	// var submissionPayload SubmissionPayload
+	// if err := c.Bind(&submissionPayload); err != nil {
+	// 	api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// 	c.JSON(http.StatusExpectationFailed, err.Error())
+	// 	return
+	// }
+	// submission := toAppSubmission(submissionPayload)
+	// template, err := api.brokerapp.HandleCodeRun(c.Request.Context(), submission)
 	// if err != nil {
-	// 	a.log.Errorc(c.Request.Context(), "error adding data", map[string]interface{}{
+	// 	api.logger.Errorc(c.Request.Context(), "error while getting template data:", map[string]interface{}{
 	// 		"error": err.Error(),
 	// 	})
 	// 	c.JSON(http.StatusInternalServerError, err.Error())
 	// 	return
 	// }
-	// c.JSON(http.StatusOK, res)
+	// c.JSON(http.StatusOK, template)
 }
 func (a *api) getSingleQuestion(c *gin.Context) {
 	// var questions []creatorapp.Question
@@ -159,6 +182,26 @@ func (a *api) deleteSelectedQuestion(c *gin.Context) {
 	res, err := a.creatorapp.DeleteSelectedQuestions(c.Request.Context(), ids)
 	if err != nil {
 		a.log.Errorc(c.Request.Context(), "error adding data", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (a *api) getAllLanguageConcepts(c *gin.Context) {
+	// var questions []creatorapp.Question
+	// if err := c.Bind(&questions); err != nil {
+	// 	a.log.Errorc(c.Request.Context(), "error binding data", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// 	c.JSON(http.StatusExpectationFailed, err.Error())
+	// 	return
+	// }
+
+	res, err := a.creatorapp.GetAllProgrammingConcepts(c.Request.Context())
+	if err != nil {
+		a.log.Errorc(c.Request.Context(), "error getting data", map[string]interface{}{
 			"error": err.Error(),
 		})
 		c.JSON(http.StatusInternalServerError, err.Error())

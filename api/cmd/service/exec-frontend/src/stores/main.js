@@ -19,4 +19,7 @@ export const useMainStore = defineStore("main", {
       this.isBlocked = !this.isBlocked;
     },
   },
+  persist: {
+    storage: sessionStorage, // data in sessionStorage is cleared when the page session ends.
+  },
 });

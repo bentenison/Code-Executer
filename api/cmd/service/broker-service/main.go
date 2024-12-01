@@ -16,8 +16,7 @@ import (
 	"github.com/bentenison/microservice/business/sdk/sqldb"
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
-	"github.com/bentenison/microservice/foundation/otel"
-	"go.opentelemetry.io/otel/sdk/trace"
+	"github.com/bentenison/microservice/foundation/monitoring"
 )
 
 const apiType = "all"
@@ -37,23 +36,23 @@ func main() {
 	}
 	// // -------------------------------------------------------------------------
 	// // INITIALIZE TRACER OTEL
-	trace, err := otel.NewTracer()
-	if err != nil {
-		log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
-			"error": err.Error(),
-		})
-	}
-	defer func() {
-		otel.ShutDownTracer(trace)
-	}()
+	// trace, err := otel.NewTracer()
+	// if err != nil {
+	// 	log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
+	// 		"error": err.Error(),
+	// 	})
+	// }
+	// defer func() {
+	// 	otel.ShutDownTracer(trace)
+	// }()
 	log.Infoc(context.TODO(), "config", map[string]interface{}{"config": config})
-	if err := run(log, trace, config); err != nil {
+	if err := run(log, config); err != nil {
 		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
 }
-func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Config) error {
+func run(log *logger.CustomLogger, cfg *conf.Config) error {
 	//starting sql database connection
 	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.User,
@@ -102,7 +101,8 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	// 		})
 	// 	}
 	// }()
-
+	monitoring.StartMetricsForService("Broker")
+	monitoring.CollectSystemMetrics()
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
@@ -110,7 +110,6 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		Build:     "develop",
 		Log:       log,
 		DB:        ds,
-		Tracer:    tracer,
 		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())

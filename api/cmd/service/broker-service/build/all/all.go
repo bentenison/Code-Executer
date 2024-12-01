@@ -26,7 +26,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	brokerapi.Routes(app, brokerapi.Config{
 		Log:       cfg.Log,
 		BrokerBus: brokerbus,
-		Tracer:    cfg.Tracer,
+		// Tracer:    cfg.Tracer,
 		AppConfig: cfg.AppConfig,
 	})
 

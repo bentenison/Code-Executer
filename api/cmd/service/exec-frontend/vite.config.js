@@ -14,12 +14,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/server/, '')
       },
-      '/creator': {
+      '/creatorapi': {
         target: 'http://localhost:8005',
         ws: true,
         secure: false,
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/creator/, '')
+        rewrite: (p) => p.replace(/^\/creatorapi/, '')
       },
     }
   },

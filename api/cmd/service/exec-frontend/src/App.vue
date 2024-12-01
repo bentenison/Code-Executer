@@ -5,6 +5,7 @@
   </div> -->
 <template>
   <div>
+    <menubar />
     <div id="app-loader" v-if="mainStore.isBlocked">
       <ProgressSpinner></ProgressSpinner>
     </div>
@@ -19,16 +20,25 @@ import { $t, updatePreset, updateSurfacePalette } from "@primevue/themes";
 import { useLayout } from "./components/layout";
 import ProgressSpinner from "primevue/progressspinner";
 import { useMainStore } from "./stores/main";
-
-// import { layoutConfig, setPrimary, setSurface, setPreset, isDarkTheme, setMenuMode } = useLayout();
+import { useEditorStore } from "./stores/editor";
+import Aura from "@primevue/themes/aura";
+import Lara from "@primevue/themes/lara";
+import Menubar from "./components/Menubar.vue";
 export default {
-  components: { ProgressSpinner },
+  components: { ProgressSpinner, Menubar },
   data() {
     return {
       mainStore: useMainStore(),
+      editorStore: useEditorStore(),
     };
   },
   mounted() {
+    const { toggleDarkMode, setSurface } = useLayout();
+    updatePreset(Lara);
+    toggleDarkMode();
+    // updateSurfacePalette({
+    //   surfaceBackground: 'red'
+    // });
     // this.$nextTick(function () {
     //   if (localStorage.getItem("simple-code-editor-theme")) {
     //     localStorage.getItem("simple-code-editor-theme") == "light"
@@ -38,6 +48,28 @@ export default {
     //     document.body.className = "dark";
     //   }
     // });
+    this.editorStore
+      .getAllLanguages()
+      .then((res) => {})
+      .catch((err) => {
+        this.$toast.add({
+          severity: "error",
+          summary: "broker service is down! contact administrator.",
+          detail: err,
+          life: 3000,
+        });
+      });
+    this.editorStore
+      .getQuestTemplates()
+      .then((res) => {})
+      .catch((err) => {
+        this.$toast.add({
+          severity: "error",
+          summary: "broker service is down! contact administrator.",
+          detail: err,
+          life: 3000,
+        });
+      });
   },
   methods: {
     switchTheme() {

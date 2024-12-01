@@ -30,7 +30,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	executorapi.Routes(app, executorapi.Config{
 		Log:         cfg.Log,
 		ExecutorBus: execbus,
-		Tracer:      cfg.Tracer,
 		AppConfig:   cfg.AppConfig,
 		// DockerClient: cli,
 	})

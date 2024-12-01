@@ -16,7 +16,7 @@
           size="large"
         /> -->
       </div>
-      <TieredMenu ref="menu" id="overlay_tmenu" :model="menuitems" popup />
+      <!-- <TieredMenu ref="menu" id="overlay_tmenu" :model="menuitems" popup /> -->
       <TieredMenu ref="menu1" id="overlay_tmenu1" :model="reportItems" popup />
       <TieredMenu ref="menu2" id="overlay_tmenu2" :model="userItems" popup />
       <TieredMenu ref="menu3" id="overlay_tmenu3" :model="licenceItems" popup />
@@ -25,13 +25,11 @@
         class="menu-icons mt-8 mb-5 flex h-20rem flex-column align-items-center justify-content-between"
       >
         <Button
-          @click="toggle"
+          @click="$router.push('/qc')"
           icon="pi pi-check"
           text
           rounded
-          aria-label="Filter"
-          aria-haspopup="true"
-          aria-controls="overlay_tmenu"
+          v-tooltip="'QC Question'"
         />
         <Button
           icon="pi pi-bookmark"
@@ -119,7 +117,7 @@
                   />
                 </g>
               </svg>
-              <span class="font-semibold text-2xl text-primary">FASTQ</span>
+              <span class="font-semibold text-2xl text-primary"></span>
             </span>
             <span>
               <Button
@@ -385,21 +383,24 @@ export default {
       visible: false,
       reportItems: [
         {
-          label: "Reports",
+          label: "QC",
           icon: "pi pi-chart-bar",
           shortcut: "⌘+R",
-          items: [
-            {
-              label: "Sales",
-              icon: "pi pi-chart-line",
-              badge: 3,
-            },
-            {
-              label: "Products",
-              icon: "pi pi-list",
-              badge: 6,
-            },
-          ],
+          command: () => {
+            this.$router.push("/qc");
+          },
+          // items: [
+          //   {
+          //     label: "Sales",
+          //     icon: "pi pi-chart-line",
+          //     badge: 3,
+          //   },
+          //   {
+          //     label: "Products",
+          //     icon: "pi pi-list",
+          //     badge: 6,
+          //   },
+          // ],
         },
       ],
       licenceItems: [
@@ -454,55 +455,58 @@ export default {
         {
           label: "File",
           icon: "pi pi-file",
-          items: [
-            {
-              label: "New",
-              icon: "pi pi-plus",
-              items: [
-                {
-                  label: "Document",
-                  icon: "pi pi-file",
-                  shortcut: "⌘+N",
-                },
-                {
-                  label: "Image",
-                  icon: "pi pi-image",
-                  shortcut: "⌘+I",
-                },
-                {
-                  label: "Video",
-                  icon: "pi pi-video",
-                  shortcut: "⌘+L",
-                },
-              ],
-            },
-            {
-              label: "Open",
-              icon: "pi pi-folder-open",
-              shortcut: "⌘+O",
-            },
-            {
-              label: "Print",
-              icon: "pi pi-print",
-              shortcut: "⌘+P",
-            },
-          ],
+          command: () => {
+            this.$router.push("/qc");
+          },
+          // items: [
+          //   {
+          //     label: "New",
+          //     icon: "pi pi-plus",
+          //     items: [
+          //       {
+          //         label: "Document",
+          //         icon: "pi pi-file",
+          //         shortcut: "⌘+N",
+          //       },
+          //       {
+          //         label: "Image",
+          //         icon: "pi pi-image",
+          //         shortcut: "⌘+I",
+          //       },
+          //       {
+          //         label: "Video",
+          //         icon: "pi pi-video",
+          //         shortcut: "⌘+L",
+          //       },
+          //     ],
+          //   },
+          //   {
+          //     label: "Open",
+          //     icon: "pi pi-folder-open",
+          //     shortcut: "⌘+O",
+          //   },
+          //   {
+          //     label: "Print",
+          //     icon: "pi pi-print",
+          //     shortcut: "⌘+P",
+          //   },
+          // ],
         },
         {
           label: "Edit",
           icon: "pi pi-file-edit",
-          items: [
-            {
-              label: "Copy",
-              icon: "pi pi-copy",
-              shortcut: "⌘+C",
-            },
-            {
-              label: "Delete",
-              icon: "pi pi-times",
-              shortcut: "⌘+D",
-            },
-          ],
+          // items: [
+          //   {
+          //     label: "Copy",
+          //     icon: "pi pi-copy",
+          //     shortcut: "⌘+C",
+          //   },
+          //   {
+          //     label: "Delete",
+          //     icon: "pi pi-times",
+          //     shortcut: "⌘+D",
+          //   },
+          // ],
         },
         {
           label: "Search",
@@ -515,18 +519,6 @@ export default {
         {
           label: "Share",
           icon: "pi pi-share-alt",
-          items: [
-            {
-              label: "Slack",
-              icon: "pi pi-slack",
-              badge: 2,
-            },
-            {
-              label: "Whatsapp",
-              icon: "pi pi-whatsapp",
-              badge: 3,
-            },
-          ],
         },
       ],
     };

@@ -22,11 +22,25 @@ type Question struct {
 	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
 	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
 	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
-	TestCases         string
-	Answer            Answer `json:"answer,omitempty" bson:"answer" db:"answer"`
-	IsQC              bool   `json:"is_qc,omitempty" bson:"is_qc" db:"is_qc"`
+	Answer            Answer            `json:"answer,omitempty" bson:"answer" db:"answer"`
+	IsQC              bool              `json:"is_qc,omitempty" bson:"is_qc" db:"is_qc"`
+	TestCases         string            `json:"-"`
+	ClassName         string            `json:"-"`
 }
-
+type Submission struct {
+	ID              string    `json:"id"`
+	UserID          string    `json:"user_id"`
+	LanguageID      string    `json:"language_id"`
+	CodeSnippet     string    `json:"code_snippet"`
+	SubmissionTime  time.Time `json:"submission_time"`
+	ExecutionStatus string    `json:"execution_status"`
+	ResultID        string    `json:"result_id,omitempty"`
+	IsPublic        bool      `json:"is_public"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	QuestionId      string    `json:"question_id"`
+	FileExtension   string    `json:"file_extension,omitempty"`
+}
 type Input struct {
 	Description string `json:"description" bson:"description"`
 	Expected    string `json:"expected" bson:"expected"`
@@ -37,8 +51,9 @@ type Output struct {
 }
 
 type UserLogicTemplate struct {
-	Description string `json:"description" bson:"description"`
-	Code        string `json:"code" bson:"code"`
+	Description     string `json:"description" bson:"description"`
+	Code            string `json:"code" bson:"code"`
+	CodeRunTemplate string `json:"code_run_template,omitempty" bson:"code_run_template"`
 }
 
 type TestcaseTemplate struct {
@@ -57,6 +72,20 @@ type Answer struct {
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	TestCases []Testcase `json:"testcases"`
+}
+type FilterPayload struct {
+}
+type QueryParams struct {
+	Page             string
+	Rows             string
+	OrderBy          string
+	ID               string
+	UserID           string
+	Lang             string
+	Tags             string
+	StartCreatedDate string
+	EndCreatedDate   string
+	IsQC             bool
 }
 
 func toBusQuestion(q Question) creatorbus.Question {

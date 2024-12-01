@@ -1,0 +1,21 @@
+# Elasticsearch configuration file
+
+# Disable security features (authentication, authorization, etc.)
+xpack.security.enabled: false
+
+# Run Elasticsearch as a single node (for development or testing)
+discovery.type: single-node
+
+# Network settings
+network.host: 0.0.0.0   # Bind to all network interfaces (for external access)
+
+# Set the cluster name
+cluster.name: my-elasticsearch-cluster
+
+# Set the node name (optional)
+node.name: elasticsearch-node
+
+
+# JVM settings for memory (optional, reduce memory usage for testing)
+# You can adjust these settings if needed
+bootstrap.memory_lock: true

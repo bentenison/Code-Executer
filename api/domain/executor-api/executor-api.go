@@ -9,7 +9,6 @@ import (
 	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/app/domain/executorapp"
 	"github.com/bentenison/microservice/foundation/logger"
-	"github.com/bentenison/microservice/foundation/version"
 	"github.com/gin-gonic/gin"
 
 	"google.golang.org/grpc"
@@ -50,7 +49,8 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 			return err
 		}
 	}
-	filePath := filepath.Join("static", fmt.Sprintf("code_%s.py", stream.Context().Value("tracectx")))
+	var questionId, userId, Lang, Ext string
+	filePath := filepath.Join("static", fmt.Sprintf("code_%s%s", stream.Context().Value("tracectx"), Ext))
 	file, err := os.Create(filePath)
 	if err != nil {
 		s.log.Errorc(stream.Context(), "error while creating file", map[string]interface{}{
@@ -59,38 +59,39 @@ func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequ
 		return err
 	}
 	defer file.Close()
-	var questionId, userId string
 	for {
 		chunk, err := stream.Recv()
 		qid := chunk.GetQid()
 		uid := chunk.GetUid()
+		lang := chunk.GetLang()
+		ext := chunk.GetFileExt()
 		if uid != "" && qid != "" {
 			questionId = qid
 			userId = uid
+		}
+		if lang != "" && ext != "" {
+			Lang = lang
+			Ext = ext
 		}
 		s.log.Errorc(stream.Context(), "questionID", map[string]interface{}{
 			"quid": qid,
 			"uid":  uid,
 		})
+
 		if err == io.EOF {
-			if version.BuildInfo.LanguageName == "" {
-				res, err := s.app.HandleExecution(stream.Context(), filePath, "python", questionId, userId)
-				if err != nil {
-					s.log.Errorc(stream.Context(), "error while executing the code", map[string]interface{}{
-						"error": err.Error(),
-					})
-					return err
-				}
-				return stream.SendAndClose(res)
-				// return stream.SendAndClose(&pb.ExecutionResponse{
-				// 	Message: "File uploaded successfully",
-				// 	Success: true,
+			res, err := s.app.HandleExecution(stream.Context(), filePath, Lang, questionId, userId, Ext)
+			if err != nil {
+				s.log.Errorc(stream.Context(), "error while executing the code", map[string]interface{}{
+					"error": err.Error(),
+				})
+				return err
 			}
+			return stream.SendAndClose(res)
+			// return stream.SendAndClose(&pb.ExecutionResponse{
+			// 	Message: "File uploaded successfully",
+			// 	Success: true,
+			// }
 		}
-		// if chunk.Qid != "" && chunk.Uid != "" {
-		// }
-		// log.Println(chunk.Qid)
-		// log.Println(chunk.Uid)
 		if err != nil {
 			return err
 		}

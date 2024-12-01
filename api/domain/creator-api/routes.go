@@ -22,7 +22,7 @@ func Routes(app *web.App, cfg Config) {
 	// authcli := authpb.NewAuthServiceClient(authcliConn)
 	// executorcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.GRPCPort)
 	// execcli := execpb.NewExecutorServiceClient(executorcliConn)
-	api := newAPI(cfg.Log, creatorapp.NewApp(cfg.Log, cfg.CreatorBus, cfg.Tracer))
+	api := newAPI(cfg.Log, creatorapp.NewApp(cfg.Log, cfg.CreatorBus))
 	// api.execcli = execcli
 	// api.authcli = authcli
 
@@ -36,5 +36,7 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("GET", "/creator/getsingleQuestion/:id", api.getSingleQuestion)
 	app.Handle("GET", "/creator/getquestion/:lang", api.getQuestionsBylang)
 	app.Handle("POST", "/creator/deleteQuestions", api.deleteSelectedQuestion)
+	app.Handle("GET", "/creator/query", api.query)
+	app.Handle("GET", "/creator/languageConcepts", api.getAllLanguageConcepts)
 	// app.Handle("POST", "/creator/deleteselected", api.createNewQuestions)
 }

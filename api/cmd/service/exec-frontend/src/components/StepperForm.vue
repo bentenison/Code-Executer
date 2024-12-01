@@ -52,12 +52,18 @@
     </form>
 
     <div class="flex m-2 w-full justify-content-center">
-      <Textarea v-model="finalPrompt" rows="10" cols="30"></Textarea>
+      <Textarea v-model="finalPrompt" rows="10" cols="30" disabled></Textarea>
     </div>
+    <p class="text-center" style="color: var(--p-primary-600)">
+      <strong>NOTE: </strong>Copy the above prompt and paste it into chatGPT
+    </p>
   </div>
 </template>
 
 <script>
+import { useCreatorStore } from "../stores/creator";
+import { useEditorStore } from "../stores/editor";
+
 export default {
   data() {
     return {
@@ -87,6 +93,7 @@ export default {
         { label: "C++", value: "cpp" },
         { label: "Ruby", value: "ruby" },
         { label: "C#", value: "csharp" },
+        { label: "C", value: "c" },
         { label: "PHP", value: "php" },
         { label: "Swift", value: "swift" },
         { label: "Go", value: "go" },
@@ -107,6 +114,8 @@ export default {
       ],
       formData: null, // Store the submitted form data
       finalPrompt: null,
+      editorStore: useEditorStore(),
+      creatorStore: useCreatorStore(),
     };
   },
   methods: {
@@ -117,86 +126,84 @@ export default {
         number: this.numberInput,
         language: this.selectedLanguage,
       };
-      console.log("FormDATA>>>>>>>>>>>>>", this.formData);
-      let part = `You are tasked with generating ${this.numberInput} programming question and its corresponding answer in JSON format for ${this.selectedLanguage} languages. The topic to generate the questions on is ${this.selectedTopic}. The question and answer should contain the following fields:`;
-      let sampleQuest = `{
-  "title": "Check Leap Year",
-  "description": "Write a function that determines whether a given year is a leap year.",
-  "input": {
-    "description": "You will receive a single integer year as input.",
-    "expected": "The function should return a boolean value, True if the year is a leap year, False otherwise."
-  },
-  "output": {
-    "description": "The output will be a boolean indicating whether the year is a leap year."
-  },
-  "template_code": "def main(year):\n    # User's main logic starts here\n    {{ .Logic }}\n    # User's main logic ends here\n\nif __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (2020,),\n        (1900,),\n        (2000,),\n        (2024,)\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        True\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)",
-  "language": "python",
-  "language_code": "py",
-  "difficulty": "easy",
-  "tags": [
-    "leap year",
-    "beginner"
-  ],
-  "user_logic_template": {
-    "description": "Insert your logic below:",
-    "code": "def main(year):\n    # Your code here\n\nif __name__ == '__main__':\n    main(2020)"
-  },
-  "testcase_template": {
-    "description": "You can use the following test case structure to validate your function:",
-    "code": "if __name__ == '__main__':\n    all_passed = True\n    test_cases = [\n        (2020,),\n        (1900,),\n        (2000,),\n        (2024,)\n    ]\n    expected_outputs = [\n        True,\n        False,\n        True,\n        True\n    ]\n    for test_input, expected in zip(test_cases, expected_outputs):\n        result = main(test_input[0])\n        if result != expected:\n            all_passed = False\n            print(f'Failed for Input: {test_input}. Expected: {expected}, Got: {result}')\n    print(all_passed)"
-  },
-  "testcases": [
-    {
-      "input": 2020,
-      "expectedOutput": true
-    },
-    {
-      "input": 1900,
-      "expectedOutput": false
-    },
-    {
-      "input": 2000,
-      "expectedOutput": true
-    },
-    {
-      "input": 2024,
-      "expectedOutput": true
-    }
-  ],
-  "answer": {
-    "id": "2",
-    "logic": "def main(year):\n    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):\n        return True\n    return False",
-    "created_at": "2023-10-20T00:00:00Z",
-    "updated_at": "2023-10-20T00:00:00Z",
-    "testcases": [
-      {
-        "input": 2020,
-        "expectedOutput": true
-      },
-      {
-        "input": 1900,
-        "expectedOutput": false
-      },
-      {
-        "input": 2000,
-        "expectedOutput": true
-      },
-      {
-        "input": 2024,
-        "expectedOutput": true
+      let sampleQuest = ``;
+      for (
+        let index = 0;
+        index < this.editorStore.questionTemplates.length;
+        index++
+      ) {
+        const element = this.editorStore.questionTemplates[index];
+        // console.log("element----------------",this.selectedLanguage)
+        if (element.language === this.selectedLanguage) {
+          console.log("element----------------", element);
+          sampleQuest = JSON.stringify(element, null, 2);
+        }
       }
-    ]
-  },
-  "id": "2"
-}
-`;
+      //   console.log("FormDATA>>>>>>>>>>>>>", this.formData);
+      let part = `You are tasked with generating ${this.numberInput} programming question and its corresponding answer in JSON format for ${this.selectedLanguage} language. The topic to generate the questions on is ${this.selectedTopic}. The question and answer should contain the following fields:`;
+
       this.finalPrompt =
         part +
         " " +
         sampleQuest +
         " " +
-        "follow the format correctly and generate questions accurately by analyzing the given sample format.user_logic_template.code should contain if __name__ == '__main__': to run the user function for debugging before submitting. There should not be the solution written already in the main function. The output should be single file.";
+        `You are tasked with generating programming questions in JSON format based on the following structure:
+
+    Title: A descriptive title of the question.
+
+    Description: A brief explanation of what the user needs to implement.
+
+    Input:
+        Description: Description of the input format.
+        Expected: The type of output that the function should return.
+
+    Output:
+        Description: A description of what the function should output.
+
+    Template Code: A code template for the function with placeholders for user logic.
+
+    Language: The programming language used for the question.
+
+    Language Code: The language code (e.g., py for Python, java for Java, etc.).
+
+    Difficulty: The difficulty level of the question (e.g., easy, medium, hard).
+
+    Tags: Relevant tags for the question (e.g., leap year, beginner, conditionals).
+
+    User Logic Template:
+        Description: Provide a description of where the user should place their code logic.
+        Code: A code snippet where the user can add their implementation. The main function should not already contain any logic. Instead, use placeholders to mark where the user should implement their solution. If the language is Python, for example, use if __name__ == '__main__': to run the user's function.
+        CodeRunTemplate : A skeleton with a signle test case and placeholder for user function
+
+    Test Case Template:
+        Description: Description of how the user can validate the function with test cases.
+        Code: A skeleton code that allows the user to run multiple test cases to validate the logic.
+    
+    Testcases: A list of test cases with inputs and expected outputs.
+    ExecTemplate: A template with placeholders for UserLogic and TestCases
+    Answer:
+        ID: A unique identifier for the solution.
+        Logic: The correct solution for the problem.
+        Created At: The timestamp of when the answer was created.
+        Updated At: The timestamp of when the answer was last updated.
+        Testcases: A list of test cases that were used to validate the solution
+the testcase_template.code should be a function where define one variable loop trough the testcases and pass input to the user defined function and compare the function output to extectedOutput if all testcases matches the expectedOutput then return true else return false. 
+The code in answer.logic and testcase_template.code make sure for every question it should be correct.
+`;
     },
+  },
+  mounted() {
+    this.creatorStore
+      .getAllConcepts()
+      .then((res) => {})
+      .catch((err) => {
+        this.$toast.add({
+          severity: "error",
+          summary: "error in getting programming concepts",
+          detail: err,
+          life: 3000,
+        });
+      });
   },
 };
 </script>

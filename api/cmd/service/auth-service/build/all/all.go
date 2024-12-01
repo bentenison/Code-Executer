@@ -19,9 +19,9 @@ func (a add) Add(app *web.App, cfg mux.Config) {
 	delegate := delegate.New(cfg.Log)
 	authbus := authbus.NewBusiness(cfg.Log, delegate, cfg.DB, authdb.NewStore(cfg.Log, cfg.DB))
 	authapi.Routes(app, authapi.Config{
-		Log:       cfg.Log,
-		AuthBus:   authbus,
-		Tracer:    cfg.Tracer,
+		Log:     cfg.Log,
+		AuthBus: authbus,
+		// Tracer:    cfg.Tracer,
 		AppConfig: cfg.AppConfig,
 	})
 }

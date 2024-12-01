@@ -1,5 +1,6 @@
 <template>
   <div
+  
     :theme="theme"
     class="code-editor"
     :class="{
@@ -123,6 +124,7 @@ import Dropdown from "./Dropdown.vue";
 import CopyCode from "./CopyCode.vue";
 import "./themes/themes-base16.css";
 import "./themes/themes.css";
+import { useEditorStore } from "../stores/editor";
 
 export default {
   components: {
@@ -194,7 +196,6 @@ export default {
       default: function () {
         return [
           // ["javascript", "JS"],
-          ["python", "PY"],
           // ["java", "JAVA"],
           // ["c", "C"],
           // ["cpp", "C++"],
@@ -202,7 +203,7 @@ export default {
           // ["ruby", "RUBY"],
           // ["php", "PHP"],
           // ["swift", "SWIFT"],
-          // ["go", "GO"],
+           ["go", "GO"],
           // ["html", "HTML"],
           // ["css", "CSS"],
           // ["typescript", "TS"],
@@ -280,11 +281,12 @@ export default {
   },
   data() {
     return {
+      editorStore: useEditorStore(),
       scrollBarWidth: 0,
       scrollBarHeight: 0,
       top: 0,
       left: 0,
-      languageClass: "hljs language-" + this.languages[0][0],
+      languageClass: "hljs language-" + this.languages[0][1],
       languageTitle: this.languages[0][1]
         ? this.languages[0][1]
         : this.languages[0][0],
@@ -355,6 +357,7 @@ export default {
     changeLang(lang) {
       this.languageTitle = lang[1] ? lang[1] : lang[0];
       this.languageClass = "language-" + lang[0];
+      console.log("languages in event emit ", lang);
       this.$emit("lang", lang[0]);
     },
     tab() {
@@ -477,8 +480,13 @@ export default {
     // let code = document.getElementsByClassName("hljs")[0];
     // console.log("code", styles.background);
   },
+  beforeUnmount() {
+    this.emitter.off("changeLang");
+    this.emitter.off("ThemeChanged");
+  },
   created() {
     this.emitter.on("ThemeChanged", this.alertThemeChange);
+    this.emitter.on("changeLang", this.changeLang);
   },
   updated() {
     if (this.insertTab) {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bentenison/microservice/business/sdk/delegate"
+	"github.com/bentenison/microservice/business/sdk/page"
 	"github.com/bentenison/microservice/foundation/logger"
 )
 
@@ -21,6 +22,8 @@ type Storer interface {
 	AddAnswer(ctx context.Context, ans []Answer) ([]interface{}, error)
 	SearchQuestionByTag(ctx context.Context, tag string) ([]Question, error)
 	SearchQuestionByLang(ctx context.Context, lang string) ([]Question, error)
+	Query(ctx context.Context, filter QueryFilter, page page.Page) ([]Question, error)
+	GetAllLanguageConcepts(ctx context.Context) ([]LanguageConcept, error)
 }
 
 type Business struct {
@@ -60,4 +63,10 @@ func (b *Business) GetQuestionsByTag(ctx context.Context, tag string) ([]Questio
 }
 func (b *Business) GetQuestionsByLang(ctx context.Context, lang string) ([]Question, error) {
 	return b.storer.SearchQuestionByLang(ctx, lang)
+}
+func (b *Business) Query(ctx context.Context, filter QueryFilter, page page.Page) ([]Question, error) {
+	return b.storer.Query(ctx, filter, page)
+}
+func (b *Business) GetAllLanguageConcepts(ctx context.Context) ([]LanguageConcept, error) {
+	return b.storer.GetAllLanguageConcepts(ctx)
 }

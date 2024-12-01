@@ -1,0 +1,11 @@
+groups:
+  - name: system_alerts
+    rules:
+      - alert: HighMemoryUsage
+        expr: external_service_metrics_collected{metric_name="system_memory_usage_bytes"} > (0.8 * 1024 * 1024 * 1024) # 80% of 1 GB
+        for: 5m # Alert if this condition is true for 5 minutes
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory usage is above 80% for service {{ $labels.service_name }}"
+          description: "The memory usage for service {{ $labels.service_name }} is at {{ $value }} bytes."

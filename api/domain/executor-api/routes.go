@@ -10,6 +10,8 @@ import (
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/web"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc/reflection"
 )
@@ -23,10 +25,11 @@ type Config struct {
 }
 
 func Routes(app *web.App, conf Config) {
-	api := newAPI(executorapp.NewApp(conf.ExecutorBus, conf.Log, conf.Tracer), conf.Log)
+	api := newAPI(executorapp.NewApp(conf.ExecutorBus, conf.Log), conf.Log)
 	// ENABLE GRPC SERVER
 	go RunGRPCServer(conf.AppConfig.GRPCPort, conf.Log, api)
 	app.Handle("POST", "executor/handlesubmission", api.handleSubmission)
+	app.Handle("GET", "/metrics", gin.WrapH(promhttp.Handler()))
 }
 
 func RunGRPCServer(GRPCPort string, log *logger.CustomLogger, api *api) {

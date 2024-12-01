@@ -9,6 +9,8 @@ message ExecutionRequest {
     bytes content = 1;
     string uid =2;
     string qid =3;
+    string lang=4;
+    string fileExt=5;
 }
 message ExecutionResponse {
     string output = 1;
@@ -17,4 +19,5 @@ message ExecutionResponse {
     string cpuStats =4;
     string totalRAM =5;
     string percetRAMUsage=6;
+    string containerID = 7;
 }

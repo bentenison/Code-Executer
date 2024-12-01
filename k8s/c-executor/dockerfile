@@ -1,0 +1,15 @@
+# Use the smallest Alpine image
+FROM alpine:3.18
+
+LABEL maintainer="tanvirs"
+LABEL app="c-executor"
+LABEL language="c"
+
+# Install GCC (C compiler) and libc (C standard libraries)
+RUN apk update && apk add --no-cache gcc libc-dev
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Default command to keep the container running
+CMD ["tail", "-f", "/dev/null"]

@@ -10,6 +10,8 @@ import (
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/web"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -27,15 +29,17 @@ func Routes(app *web.App, cfg Config) {
 	authcli := authpb.NewAuthServiceClient(authcliConn)
 	executorcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.GRPCPort)
 	execcli := execpb.NewExecutorServiceClient(executorcliConn)
-	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, cfg.Tracer, execcli, authcli), cfg.Log)
+	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, execcli, authcli), cfg.Log)
 	api.execcli = execcli
 	api.authcli = authcli
 
 	app.Use(mid.TraceIdMiddleware())
 
 	// cfg.Log.Errorc("started serving ")
+	app.Handle("GET", "/metrics", gin.WrapH(promhttp.Handler()))
 	app.Handle("POST", "/broker/submission", api.newSubmissionHandler)
 	app.Handle("POST", "/broker/run", api.codeRunHandler)
+	app.Handle("POST", "/broker/qcquestion", api.qcQuestion)
 	app.Handle("POST", "/broker/batchProcess", api.newSubmissionHandler)
 	app.Handle("POST", "/broker/authenticate", api.authenticateHandler)
 	app.Handle("POST", "/broker/authorize", api.authorizeHandler)
@@ -44,8 +48,9 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("POST", "/broker/getquestion/:id", api.getQuestionHandler)
 	app.Handle("POST", "/broker/getanswer/:id", api.getAnswerHandler)
 	app.Handle("POST", "/broker/getallanswer", api.getAllAnswersHandler)
-	app.Handle("GET", "/broker/getlanguages", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/getlanguages", api.getallLanguages)
 	app.Handle("GET", "/broker/getallowedlanguages", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/conf", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/updateconf", api.newSubmissionHandler)
+	app.Handle("GET", "/broker/gettemplates", api.getAllQuestionTemplates)
 }

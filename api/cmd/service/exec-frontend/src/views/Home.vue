@@ -39,7 +39,7 @@
             ['scss', 'SCSS'],
           ]"
         ></CodeEditor> -->
-      <div class="flex flex-column">
+      <div class="flex flex-column mt-2">
         <CodeEditor
           v-if="currQuestion"
           :line-nums="true"
@@ -52,9 +52,13 @@
           :fontSize="fontSize"
           @content="getContent"
           @lang="getLanguage"
+          :languages="editorStore.langArr"
         ></CodeEditor>
         <terminal />
         <div class="flex align-items-center justify-content-end">
+          <p class="w-full">
+            code executed by <strong>{{ executedBy }}</strong>
+          </p>
           <div class="flex gap-5">
             <Button
               type="button"
@@ -89,7 +93,7 @@
             label="Run"
             class="text-lg font-medium"
             icon="pi pi-play"
-            :loading="loading"
+            :loading="runBtnLoading"
             @click="handlecodeRun"
             severity="success"
             outlined
@@ -106,7 +110,7 @@
           />
         </div>
         <!-- </div> -->
-        <Tabs value="0" class="w-full" v-if="currQuestion">
+        <Tabs value="0" class="w-full shadow-3" v-if="currQuestion">
           <TabList>
             <Tab value="0" as="div" class="flex align-items-center gap-2">
               <i class="pi pi-info-circle" style="font-size: 1.5rem"></i>
@@ -227,18 +231,32 @@
                 v-show="slotProps.active"
                 :class="slotProps.class"
                 v-bind="slotProps.a11yAttrs"
-                class="h-44rem"
+                class="h-full"
               >
+                <h2 class="text-center m-0 mb-2">Challange IDE</h2>
                 <p class="m-0">
-                  At vero eos et accusamus et iusto odio dignissimos ducimus qui
-                  blanditiis praesentium voluptatum deleniti atque corrupti quos
-                  dolores et quas molestias excepturi sint occaecati cupiditate
-                  non provident, similique sunt in culpa qui officia deserunt
-                  mollitia animi, id est laborum et dolorum fuga. Et harum
-                  quidem rerum facilis est et expedita distinctio. Nam libero
-                  tempore, cum soluta nobis est eligendi optio cumque nihil
-                  impedit quo minus.
+                  The code challenge IDE provides an in-browser IDE for editing,
+                  testing, and running assessments.
                 </p>
+                <h2 class="text-center m-0 my-3">Quick Intro</h2>
+                <hr />
+                <ul class="flex flex-column gap-2">
+                  <li class="text-lg">
+                    Read through the provided Instructions.
+                  </li>
+                  <li class="text-lg">
+                    Edit the provided files, and optionally add your own, to
+                    solve the given problem.
+                  </li>
+                  <li class="text-lg">
+                    Run your solution against the provided tests using
+                    <strong>RUN TESTS</strong>, unless this is a web-only
+                    challenge without tests.
+                  </li>
+                  <li class="text-lg">
+                    Results will be shown in the Run Output pane.
+                  </li>
+                </ul>
               </div>
             </TabPanel>
           </TabPanels>
@@ -292,6 +310,11 @@ export default {
       currQuestion: null,
       currIndex: 0,
       content: null,
+      lang: [],
+      langArr: [],
+      executedBy: null,
+      langId: null,
+      runBtnLoading: false,
       items: [
         { route: "/dashboard", label: "Dashboard", icon: "pi pi-home" },
         {
@@ -343,7 +366,6 @@ class TestCase:
       this.editorStore.encode(content).then((res) => {
         this.content = res;
       });
-      // console.log("The content after is: " + this.content);
     },
     getTextarea(node) {
       console.log("The textarea is: " + node);
@@ -352,28 +374,33 @@ class TestCase:
       this.isMenuDisplayed = this.isMenuDisplayed ? false : true;
     },
     changeFontSize(e) {
-      console.log("Font Size Updated>>>>>>>>>>>>>", e);
       this.fontSize = e + "px";
     },
     handlecodeRun() {
       // this.editorStore.encode();
       this.mainStore.togglePageBlock();
+      this.runBtnLoading = true
+      // var payload = {};
       let payload = {
-        language_code: "05ee39ba-8c47-4a4a-b700-3453e2b73284",
-        language: "python",
+        language_code: this.langId.id,
+        language: this.currQuestion.language,
         code_snippet: this.content,
-        question_id: "1",
+        question_id: this.currQuestion.id,
         user_id: "51fc3552-45e0-4982-9adb-50d8cc46c46d",
+        file_extension: this.langId.file_extension,
       };
+      // console.log("langIDDDDDDDDDDD",this.langId);
       this.editorStore
         .runCode(payload)
         .then((res) => {
-          console.log("result>>>>>>>>>>>>>>>", res);
-          this.emitter.emit("showMessage",res.data.output)
+          this.executedBy = res.data.containerID;
+          this.emitter.emit("showMessage", res.data.output);
+          this.runBtnLoading = false
           this.mainStore.togglePageBlock();
         })
         .catch((err) => {
           this.mainStore.togglePageBlock();
+          this.runBtnLoading = false
           this.$toast.add({
             severity: "error",
             summary: "service is down! contact administrator.",
@@ -387,10 +414,18 @@ class TestCase:
         .getAllQuestions()
         .then((res) => {
           this.currQuestion = this.questions[this.currIndex];
-          // console.log(
-          //   "from store::::::::::",
-          //   this.currQuestion.user_logic_template.code
-          // );
+          this.editorStore
+            .getLanguageID(this.currQuestion.language.toLowerCase())
+            .then((res) => {
+              // console.log("results>>>>>", res);
+              this.langId = res;
+              this.lang = [];
+              this.lang.push(this.currQuestion.language);
+              this.lang.push(this.currQuestion.language_code.toUpperCase());
+              this.editorStore.changeLanguage(this.lang);
+              // this.emitter.emit("changeLang", this.lang);
+              // this.emitter.emit("changeLang", this.editorStore.langArr);
+            });
 
           this.$toast.add({
             severity: "success",
@@ -409,20 +444,45 @@ class TestCase:
         });
     },
     next() {
-      if (this.currIndex == this.questions.length - 1) {
+      if (this.currIndex === this.questions.length - 1) {
         this.currIndex = 0;
       }
       this.currIndex++;
       this.currQuestion = this.questions[this.currIndex];
+      this.editorStore
+        .getLanguageID(this.currQuestion.language.toLowerCase())
+        .then((res) => {
+          this.langId = res;
+        });
+      this.lang = [];
+      this.lang.push(this.currQuestion.language);
+      this.lang.push(this.currQuestion.language_code.toUpperCase());
+      this.editorStore.changeLanguage(this.lang);
+      // this.emitter.emit("changeLang", this.editorStore.langArr);
       // console.log("next", this.currIndex);
     },
     previous() {
-      if (this.currIndex == 0) {
+      if (this.currIndex === 0) {
         this.currIndex = this.questions.length;
       }
       this.currIndex--;
       this.currQuestion = this.questions[this.currIndex];
-      // console.log("previous", this.currIndex);
+      this.editorStore
+        .getLanguageID(this.currQuestion.language.toLowerCase())
+        .then((res) => {
+          // console.log("results>>>>>", res);
+          this.langId = res;
+        });
+      this.lang = [];
+      this.lang.push(this.currQuestion.language);
+      this.lang.push(this.currQuestion.language_code.toUpperCase());
+      // this.langArr.push(this.lang)
+      console.log("languages", this.lang);
+      this.editorStore.changeLanguage(this.lang);
+      // this.emitter.emit("changeLang", this.lang);
+    },
+    toggleLineNums(e) {
+      console.log("LineNums", e);
     },
   },
   mounted() {
@@ -439,6 +499,7 @@ class TestCase:
     this.emitter.on("ThemeChangeSettings", this.switchTheme);
     this.emitter.on("increaseFont", this.changeFontSize);
     this.emitter.on("decreaseFont", this.changeFontSize);
+    this.emitter.on("lineNums", this.toggleLineNums);
     this.setupEditor();
   },
 };
@@ -454,7 +515,8 @@ class TestCase:
   font-display: swap;
 }
 .p-tabpanel.p-tabpanel-active {
-  min-height: 44rem !important;
+  min-height: 44.5rem !important;
+  // border-radius: 10px !important;
 }
 // .tab-height{
 //   min-height: 100% !important;

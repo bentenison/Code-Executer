@@ -15,6 +15,7 @@ type Config struct {
 	ResponseTimeOut int
 	RequestTimeOut  int
 	BookAPIPort     string
+	AdminAPIPort    string
 	AuthAPIPort     string
 	BrokerAPIPort   string
 	ExecutorAPIPort string
@@ -54,6 +55,7 @@ func LoadConfig() (*Config, error) {
 		BrokerAPIPort:   getEnv("BROKER_PORT", ":8003"),
 		ExecutorAPIPort: getEnv("EXECUTOR_PORT", ":8004"),
 		CreatorAPIPort:  getEnv("CREATOR_PORT", ":8005"),
+		AdminAPIPort:    getEnv("ADMIN_PORT", ":8006"),
 		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
 		AuthGRPCPort:    getEnv("AUTH_GRPC_PORT", ":50002"),
 		DBDSN:           getEnv("DBDSN", "postgres://epic:password@localhost:5432"),

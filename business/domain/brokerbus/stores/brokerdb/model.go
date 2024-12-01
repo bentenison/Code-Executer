@@ -39,6 +39,8 @@ type Question struct {
 	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
 	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
 	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
+	Answer            Answer            `json:"answer,omitempty" bson:"answer" db:"answer"`
+	IsQC              bool              `json:"is_qc,omitempty" bson:"is_qc" db:"is_qc"`
 }
 
 type Input struct {
@@ -51,8 +53,9 @@ type Output struct {
 }
 
 type UserLogicTemplate struct {
-	Description string `json:"description" bson:"description"`
-	Code        string `json:"code" bson:"code"`
+	Description     string `json:"description,omitempty" bson:"description" db:"description"`
+	Code            string `json:"code,omitempty" bson:"code" db:"code"`
+	CodeRunTemplate string `json:"code_run_template,omitempty" bson:"code_run_template"`
 }
 
 type TestcaseTemplate struct {
@@ -85,6 +88,7 @@ type SubmissionDB struct {
 	IsPublic        sql.NullBool   `db:"is_public"`
 	CreatedAt       sql.NullTime   `db:"created_at"`
 	UpdatedAt       sql.NullTime   `db:"updated_at"`
+	FileExtension   sql.NullString `json:"file_extension,omitempty" db:"file_extension"`
 }
 
 // PerformanceMetrics struct for the 'performance_metrics' table
@@ -138,6 +142,7 @@ type LanguageDB struct {
 	IsActive         sql.NullBool   `db:"is_active"`
 	CreatedAt        sql.NullTime   `db:"created_at"`
 	UpdatedAt        sql.NullTime   `db:"updated_at"`
+	FileExtension    sql.NullString `db:"file_extension"`
 }
 
 func toBusQuestion(q Question) brokerbus.Question {
@@ -156,6 +161,8 @@ func toBusQuestion(q Question) brokerbus.Question {
 	busQuestion.Tags = q.Tags
 	busQuestion.Testcases = addTestCases(q.Testcases)
 	busQuestion.ExecTemplate = q.ExecTemplate
+	busQuestion.Answer = toBusAnswer(q.Answer)
+	busQuestion.IsQC = q.IsQC
 	return busQuestion
 }
 func addTestCases(cases []Testcase) []brokerbus.Testcase {
@@ -177,6 +184,7 @@ func toBusLanguage(lang *LanguageDB) *brokerbus.Language {
 	lg.IsActive = lang.IsActive.Bool
 	lg.UpdatedAt = lang.UpdatedAt.Time
 	lg.CreatedAt = lang.UpdatedAt.Time
+	lg.FileExtension = lang.FileExtension.String
 	return &lg
 }
 func toBusLanguages(lang []LanguageDB) []*brokerbus.Language {

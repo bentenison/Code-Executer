@@ -28,8 +28,8 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	creatorapi.Routes(app, creatorapi.Config{
 		Log:        cfg.Log,
 		CreatorBus: creatorbus,
-		Tracer:     cfg.Tracer,
-		AppConfig:  cfg.AppConfig,
+		// Tracer:     cfg.Tracer,
+		AppConfig: cfg.AppConfig,
 		// DockerClient: cli,
 	})
 

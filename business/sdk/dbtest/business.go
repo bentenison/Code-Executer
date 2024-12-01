@@ -19,6 +19,7 @@ func newBusDomain(log *logger.CustomLogger, db DS) BusDomain {
 	ds := mux.DataSource{
 		MGO: db.MGO,
 		SQL: db.SQL,
+		RDB: db.Rdb,
 	}
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

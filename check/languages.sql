@@ -27,6 +27,11 @@ VALUES
   ('PHP', 'PHP', 'php_7_4', 'php:7.4', '7.4', 'https://www.php.net/docs.php', TRUE),
   ('RUST', 'Rust', 'rust_1_55', 'rust:1.55', '1.55', 'https://doc.rust-lang.org/', TRUE),
   ('CS', 'C#', 'dotnet_5', 'mcr.microsoft.com/dotnet/sdk:5.0', '5.0', 'https://docs.microsoft.com/en-us/dotnet/csharp/', TRUE);
+INSERT INTO languages (code, name, container_id, container_name, version, documentation_url, is_active)
+VALUES
+  ('C', 'C', 'gcc_9_3', 'gcc:9.3', '9.3', 'https://gcc.gnu.org', TRUE);
+
+
 
 -- Optional: Insert more languages as needed
 

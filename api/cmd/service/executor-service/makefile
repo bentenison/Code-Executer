@@ -9,7 +9,7 @@ CONTAINER_ID := $(shell hostname)
 CONTAINER_NAME := $(shell cat /proc/1/cpuset | sed 's/\///g')
 
 # Binary output name
-BINARY_NAME := myapp
+BINARY_NAME := executor-service
 
 # LDFLAGS to inject the values into the version.BuildInfo struct
 LDFLAGS := -X 'version.BuildInfo.Version=$(VERSION)' \

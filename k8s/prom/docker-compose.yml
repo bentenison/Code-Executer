@@ -1,0 +1,28 @@
+version: '3'
+services:
+  prometheus:
+    image: prom-server
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alerts.yml:/etc/prometheus/alerts.yml
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # set the admin password
+    depends_on:
+      - prometheus  # Wait for Prometheus to start first
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge

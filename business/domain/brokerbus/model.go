@@ -37,7 +37,11 @@ type Question struct {
 	TestcaseTemplate  TestcaseTemplate  `json:"testcase_template" bson:"testcase_template"`
 	Testcases         []Testcase        `json:"testcases" bson:"testcases"`
 	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
-	TestCases         string
+	TestCases         string            `json:"tstcsc,omitempty" bson:"tstcsc" db:"tstcsc"`
+	Answer            Answer            `json:"answer,omitempty" bson:"answer" db:"answer"`
+	IsQC              bool              `json:"is_qc,omitempty" bson:"is_qc" db:"is_qc"`
+	FileExtension     string            `json:"file_extension,omitempty" db:"file_extension"`
+	ClassName         string            `json:"clsnm,omitempty" bson:"clsnm" db:"clsnm"`
 }
 
 type Input struct {
@@ -50,8 +54,9 @@ type Output struct {
 }
 
 type UserLogicTemplate struct {
-	Description string `json:"description" bson:"description"`
-	Code        string `json:"code" bson:"code"`
+	Description     string `json:"description" bson:"description"`
+	Code            string `json:"code" bson:"code"`
+	CodeRunTemplate string `json:"code_run_template,omitempty" bson:"code_run_template"`
 }
 
 type TestcaseTemplate struct {
@@ -85,6 +90,7 @@ type Submission struct {
 	CreatedAt       time.Time `json:"created_at,omitempty" db:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at,omitempty" db:"updated_at"`
 	QuestionId      string    `json:"question_id,omitempty" db:"question_id"`
+	FileExtension   string    `json:"file_extension,omitempty" db:"file_extension"`
 }
 
 // PerformanceMetrics struct for returning performance metrics
@@ -140,6 +146,7 @@ type Language struct {
 	IsActive         bool      `json:"is_active"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
+	FileExtension    string    `json:"file_extension"`
 }
 
 type UserPayload struct {

@@ -4,7 +4,7 @@
 // - protoc             v3.12.4
 // source: executor.proto
 
-package __
+package proto
 
 import (
 	context "context"

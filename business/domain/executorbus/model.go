@@ -73,3 +73,25 @@ type CodeExecutionStat struct {
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`
 }
+type Language struct {
+	ID               string    `json:"id"`
+	Code             string    `json:"code"`
+	Name             string    `json:"name"`
+	ContainerID      string    `json:"container_id"`
+	ContainerName    string    `json:"container_name"`
+	Version          string    `json:"version"`
+	DocumentationURL string    `json:"documentation_url,omitempty"`
+	IsActive         bool      `json:"is_active"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	FileExtension    string    `json:"file_extension"`
+}
+type LanguageSpecification struct {
+	ID            int       `json:"id,omitempty" db:"id"`
+	LanguageName  string    `json:"language_name,omitempty" db:"language_name"`
+	FileExtension string    `json:"file_extension,omitempty" db:"file_extension"`
+	DockerImage   string    `json:"docker_image,omitempty" db:"docker_image"`
+	Command       string    `json:"command,omitempty" db:"command"`
+	CreatedAt     time.Time `json:"created_at,omitempty" db:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at,omitempty" db:"updated_at"`
+}

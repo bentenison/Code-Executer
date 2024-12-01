@@ -244,3 +244,44 @@ func (api *api) getAllAnswersHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, answers)
 }
+func (api *api) getAllQuestionTemplates(c *gin.Context) {
+	quests, err := api.brokerapp.HandleGetAllTemplates(c.Request.Context())
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in HandleGetAllTemplates  API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, quests)
+}
+func (api *api) getallLanguages(c *gin.Context) {
+	languages, err := api.brokerapp.GetAllLanguages(c.Request.Context())
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in GetAllLanguages API:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, languages)
+}
+func (api *api) qcQuestion(c *gin.Context) {
+	var qcPayload brokerapp.Question
+	if err := c.Bind(&qcPayload); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusExpectationFailed, err.Error())
+		return
+	}
+	res, err := api.brokerapp.HandleQCQuestion(c.Request.Context(), qcPayload)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while doing question QC:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}

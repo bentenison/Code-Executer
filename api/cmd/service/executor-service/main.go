@@ -13,9 +13,11 @@ import (
 	"github.com/bentenison/microservice/api/sdk/http/debug"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
+	"github.com/bentenison/microservice/business/sdk/redisdb"
 	"github.com/bentenison/microservice/business/sdk/sqldb"
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/monitoring"
 	"github.com/bentenison/microservice/foundation/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -85,9 +87,14 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	if err != nil {
 		return err
 	}
+	rdb, err := redisdb.OpenRDB(redisdb.Config{})
+	if err != nil {
+		return err
+	}
 	ds := mux.DataSource{
 		MGO: mongo,
 		SQL: db,
+		RDB: rdb,
 	}
 
 	// ENABLE DEBUG SERVER
@@ -102,7 +109,9 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 			})
 		}
 	}()
-
+	//start scrapping metrics
+	monitoring.StartMetricsForService("Executor")
+	monitoring.CollectSystemMetrics()
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
@@ -110,7 +119,6 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		Build:     "develop",
 		Log:       log,
 		DB:        ds,
-		Tracer:    tracer,
 		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())

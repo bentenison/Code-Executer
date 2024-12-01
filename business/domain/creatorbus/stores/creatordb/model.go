@@ -23,6 +23,8 @@ type Question struct {
 	ExecTemplate      string            `json:"exec_template" bson:"exec_template"`
 	Answer            Answer            `json:"answer,omitempty" bson:"answer" db:"answer"`
 	IsQC              bool              `json:"is_qc,omitempty" bson:"is_qc" db:"is_qc"`
+	TestCases         string            `json:"tstcsc,omitempty" bson:"tstcsc" db:"tstcsc"`
+	ClassName         string            `json:"clsnm,omitempty" bson:"clsnm" db:"clsnm"`
 }
 
 type Input struct {
@@ -35,8 +37,9 @@ type Output struct {
 }
 
 type UserLogicTemplate struct {
-	Description string `json:"description" bson:"description"`
-	Code        string `json:"code" bson:"code"`
+	Description     string `json:"description" bson:"description"`
+	Code            string `json:"code" bson:"code"`
+	CodeRunTemplate string `json:"code_run_template,omitempty" bson:"code_run_template"`
 }
 
 type TestcaseTemplate struct {
@@ -47,6 +50,16 @@ type TestcaseTemplate struct {
 type Testcase struct {
 	Input          interface{} `json:"input" bson:"input"`
 	ExpectedOutput interface{} `json:"expectedOutput" bson:"expectedOutput"`
+}
+type Concept struct {
+	Label string `bson:"label" json:"label,omitempty" db:"label"`
+	Value string `bson:"value" json:"value,omitempty" db:"value"`
+}
+
+// Define the LanguageConcept struct to represent each language with its concepts
+type LanguageConcept struct {
+	Language string    `bson:"language" json:"language,omitempty" db:"language"`
+	Concepts []Concept `bson:"concepts" json:"concepts,omitempty" db:"concepts"`
 }
 
 type Answer struct {
@@ -83,6 +96,27 @@ func addTestCases(cases []Testcase) []creatorbus.Testcase {
 		out = append(out, creatorbus.Testcase(v))
 	}
 	return out
+}
+func toBuslanguageConcept(c LanguageConcept) creatorbus.LanguageConcept {
+	var concepts creatorbus.LanguageConcept
+	concepts.Language = c.Language
+	concepts.Concepts = createConcepts(c.Concepts)
+	return concepts
+}
+func createConcepts(cnspts []Concept) []creatorbus.Concept {
+	var outConcepts []creatorbus.Concept
+	for _, v := range cnspts {
+		outConcepts = append(outConcepts, creatorbus.Concept(v))
+	}
+	return outConcepts
+}
+func toBuslanguageConcepts(c []LanguageConcept) []creatorbus.LanguageConcept {
+	var res []creatorbus.LanguageConcept
+	for _, v := range c {
+		out := toBuslanguageConcept(v)
+		res = append(res, out)
+	}
+	return res
 }
 
 //	func toBusLanguage(lang *LanguageDB) *creatorbus.Language {

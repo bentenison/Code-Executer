@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"  # Reduce memory usage (optional)
+    ports:
+      - "9200:9200"
+    volumes:
+      - /home/tanvirs/golang/Code-Executer/k8s/elasticsearch/:/usr/share/elasticsearch/data  # Mount host directory to container data directory
+      - /home/tanvirs/golang/Code-Executer/k8s/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml # Mount host directory to container data directory
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s"]
+      interval: 30s
+      retries: 5
+
+# No need for 'volumes' block anymore, as we're using a bind mount

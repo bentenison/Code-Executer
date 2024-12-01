@@ -9,6 +9,9 @@ export const useEditorStore = defineStore("editor", {
     language: "javascript",
     isRunning: false,
     questions: null,
+    questionTemplates: null,
+    languages: null,
+    langArr: [],
   }),
 
   getters: {
@@ -48,12 +51,50 @@ export const useEditorStore = defineStore("editor", {
           .post("/broker/getllquestions")
           .then((res) => {
             resolve(res);
-            console.log("results:::::", res);
+            // console.log("results:::::", res);
             this.questions = res.data;
           })
           .catch((err) => {
             reject(err);
           });
+      });
+    },
+    getQuestTemplates() {
+      return new Promise((resolve, reject) => {
+        axios
+          .get("/broker/gettemplates")
+          .then((res) => {
+            resolve(res);
+            // console.log("results:::::", res);
+            this.questionTemplates = res.data;
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+    },
+    getAllLanguages() {
+      return new Promise((resolve, reject) => {
+        axios
+          .get("/broker/getlanguages")
+          .then((res) => {
+            // console.log("results:::::", res);
+            this.languages = res.data;
+            resolve(res);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+    },
+    getLanguageID(lang) {
+      console.log("language", lang);
+      return new Promise((resolve, reject) => {
+        var result = this.languages.find((obj) => {
+          return obj.name.toLowerCase() === lang;
+          // console.log("language", obj);
+        });
+        resolve(result);
       });
     },
     getAllAnswers() {
@@ -108,6 +149,19 @@ export const useEditorStore = defineStore("editor", {
           });
       });
     },
+    qcQuestion(data) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/broker/qcquestion", data)
+          .then((res) => {
+            resolve(res);
+            // console.log("results:::::", res);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+    },
     addSubmission(data) {
       return new Promise((resolve, reject) => {
         axios
@@ -127,15 +181,22 @@ export const useEditorStore = defineStore("editor", {
         resolve(res);
       });
     },
+    changeLanguage(lang) {
+      this.langArr = [];
+      this.langArr.push(lang);
+    },
+  },
+  persist: {
+    storage: sessionStorage, // data in sessionStorage is cleared when the page session ends.
   },
 });
 
-// Mock API function
-async function fakeApiRunCode(code, language) {
-  // Replace with actual API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ output: `Output for ${language}: ${code}` });
-    }, 1000);
-  });
-}
+// // Mock API function
+// async function fakeApiRunCode(code, language) {
+//   // Replace with actual API call
+//   return new Promise((resolve) => {
+//     setTimeout(() => {
+//       resolve({ output: `Output for ${language}: ${code}` });
+//     }, 1000);
+//   });
+// }

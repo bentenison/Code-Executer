@@ -2,10 +2,12 @@ package creatorapp
 
 import (
 	"context"
+	"time"
 
 	"github.com/bentenison/microservice/business/domain/creatorbus"
+	"github.com/bentenison/microservice/business/sdk/page"
 	"github.com/bentenison/microservice/foundation/logger"
-	tp "go.opentelemetry.io/otel/sdk/trace"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -17,10 +19,18 @@ type App struct {
 	// execcli   execpb.ExecutorServiceClient
 }
 
-func NewApp(logger *logger.CustomLogger, bus *creatorbus.Business, tp *tp.TracerProvider) *App {
-	return &App{logger: logger, creatorbus: bus, tracer: tp.Tracer("Q-CREATOR")}
+func NewApp(logger *logger.CustomLogger, bus *creatorbus.Business) *App {
+	return &App{logger: logger, creatorbus: bus}
 }
 func (a *App) AddNewQuestions(ctx context.Context, qts []Question) ([]interface{}, error) {
+	for i := 0; i < len(qts); i++ {
+		genId := uuid.NewString()
+		qts[i].QuestionId = genId
+		qts[i].Answer.ID = genId
+		qts[i].Answer.CreatedAt = time.Now()
+		qts[i].Answer.UpdatedAt = time.Now()
+		qts[i].IsQC = false
+	}
 	return a.creatorbus.AddNewQuestions(ctx, toBusQuestions(qts))
 }
 
@@ -43,4 +53,24 @@ func (a *App) GetQuestionsByTag(ctx context.Context, tag string) ([]creatorbus.Q
 }
 func (a *App) GetQuestionsByLang(ctx context.Context, lang string) ([]creatorbus.Question, error) {
 	return a.creatorbus.GetQuestionsByLang(ctx, lang)
+}
+func (a *App) Query(ctx context.Context, page page.Page, qp QueryParams) ([]creatorbus.Question, error) {
+	filter, err := parseFilter(qp)
+	if err != nil {
+		a.logger.Errorc(ctx, "error while parsing filter", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	return a.creatorbus.Query(ctx, filter, page)
+}
+func (a *App) GetAllProgrammingConcepts(ctx context.Context) ([]creatorbus.LanguageConcept, error) {
+	res, err := a.creatorbus.GetAllLanguageConcepts(ctx)
+	if err != nil {
+		a.logger.Errorc(ctx, "error in GetAllProgrammingConcepts", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	return res, nil
 }

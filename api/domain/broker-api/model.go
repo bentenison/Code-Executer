@@ -14,14 +14,16 @@ type SubmissionPayload struct {
 	UserId         string `json:"user_id,omitempty"`
 	QuestionId     string `json:"question_id,omitempty"`
 	SubmissionTime string `json:"submission_time,omitempty"`
+	FileExtension  string `json:"file_extension,omitempty" db:"file_extension"`
 }
 
 func toAppSubmission(payload SubmissionPayload) brokerapp.Submission {
 	submission := brokerapp.Submission{
-		LanguageID:  payload.LanguageCode,
-		UserID:      payload.UserId,
-		CodeSnippet: payload.CodeSnippet,
-		QuestionId:  payload.QuestionId,
+		LanguageID:    payload.LanguageCode,
+		UserID:        payload.UserId,
+		CodeSnippet:   payload.CodeSnippet,
+		QuestionId:    payload.QuestionId,
+		FileExtension: payload.FileExtension,
 	}
 	submission.ID = uuid.NewString()
 	submission.SubmissionTime = time.Now()

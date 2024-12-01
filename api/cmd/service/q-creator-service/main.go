@@ -17,7 +17,6 @@ import (
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/otel"
-	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 const apiType = "all"
@@ -47,13 +46,13 @@ func main() {
 		otel.ShutDownTracer(trace)
 	}()
 	log.Infoc(context.TODO(), "config", map[string]interface{}{"config": config})
-	if err := run(log, trace, config); err != nil {
+	if err := run(log, config); err != nil {
 		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
 }
-func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Config) error {
+func run(log *logger.CustomLogger, cfg *conf.Config) error {
 	//starting sql database connection
 	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.User,
@@ -107,10 +106,10 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:     "develop",
-		Log:       log,
-		DB:        ds,
-		Tracer:    tracer,
+		Build: "develop",
+		Log:   log,
+		DB:    ds,
+		// Tracer:    tracer,
 		AppConfig: cfg,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())

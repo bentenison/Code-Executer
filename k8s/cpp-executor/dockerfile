@@ -1,0 +1,14 @@
+FROM alpine:3.18
+
+LABEL maintainer="tanvirs"
+LABEL app="cpp-executor"
+LABEL language="cpp"
+
+# Install build tools: g++ (C++ compiler) and libc (standard C++ libraries)
+RUN apk update && apk add --no-cache g++ libc-dev
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Define the default command to run the container
+CMD ["tail", "-f", "/dev/null"]
