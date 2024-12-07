@@ -45,6 +45,11 @@ const router = createRouter({
       name: "access denied",
       component: () => import("../views/auth.vue"),
     },
+    {
+      path: "/editor",
+      name: "editor",
+      component: () => import("../views/Editor.vue"),
+    },
     // {
     //     path: '/pages/notfound',
     //     name: 'notfound',

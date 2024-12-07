@@ -1,13 +1,17 @@
 package adminapp
 
-// type App struct {
-// 	brokerbus *brokerbus.Business
-// 	logger    *logger.CustomLogger
-// 	tracer    trace.Tracer
-// 	authcli   authpb.AuthServiceClient
-// 	execcli   execpb.ExecutorServiceClient
-// }
+import (
+	"github.com/bentenison/microservice/business/domain/adminbus"
+	"github.com/bentenison/microservice/foundation/logger"
+	"go.opentelemetry.io/otel/trace"
+)
 
-// func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient) *App {
-// 	return &App{logger: logger, brokerbus: bus, authcli: authcli, execcli: execcli}
-// }
+type App struct {
+	adminbus *adminbus.Business
+	logger   *logger.CustomLogger
+	tracer   trace.Tracer
+}
+
+func NewApp(logger *logger.CustomLogger, bus *adminbus.Business) *App {
+	return &App{logger: logger, adminbus: bus}
+}

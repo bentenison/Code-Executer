@@ -7,6 +7,8 @@ import (
 	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
 	"github.com/bentenison/microservice/business/domain/brokerbus"
 	"github.com/bentenison/microservice/foundation/logger"
+	"go.mongodb.org/mongo-driver/mongo"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -18,8 +20,8 @@ type App struct {
 	execcli   execpb.ExecutorServiceClient
 }
 
-func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient) *App {
-	return &App{logger: logger, brokerbus: bus, authcli: authcli, execcli: execcli}
+func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient, tp *sdktrace.TracerProvider) *App {
+	return &App{logger: logger, brokerbus: bus, tracer: tp.Tracer(""), authcli: authcli, execcli: execcli}
 }
 
 func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
@@ -58,4 +60,17 @@ func (a *App) HandleQCQuestion(ctx context.Context, q Question) (*execpb.Executi
 }
 func (a *App) HandleGetAllTemplates(ctx context.Context) ([]brokerbus.Question, error) {
 	return a.brokerbus.GetAllQuestTemplates(ctx)
+}
+func (a *App) HandleCreateSnippet(ctx context.Context, snippet CodeSnippet) (*mongo.InsertOneResult, error) {
+	brokerBusCodeSnippet := brokerbus.CodeSnippet(snippet)
+	return a.brokerbus.CreateCodeSnippet(ctx, &brokerBusCodeSnippet)
+}
+func (a *App) HandleGetAllSnippets(ctx context.Context, userId string) ([]brokerbus.CodeSnippet, error) {
+	return a.brokerbus.GetAllSnippetsByUser(ctx, userId)
+}
+func (a *App) HandleGetSnippetById(ctx context.Context, id string) (*brokerbus.CodeSnippet, error) {
+	return a.brokerbus.GetSnippetById(ctx, id)
+}
+func (a *App) FormatCode(ctx context.Context, payload FormatterRequest) (*brokerbus.FormatterResponse, error) {
+	return a.brokerbus.FormatCode(ctx, brokerbus.FormatterRequest(payload))
 }

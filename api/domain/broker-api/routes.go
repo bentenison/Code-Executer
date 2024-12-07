@@ -29,11 +29,11 @@ func Routes(app *web.App, cfg Config) {
 	authcli := authpb.NewAuthServiceClient(authcliConn)
 	executorcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.GRPCPort)
 	execcli := execpb.NewExecutorServiceClient(executorcliConn)
-	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, execcli, authcli), cfg.Log)
+	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, execcli, authcli, cfg.Tracer), cfg.Log)
 	api.execcli = execcli
 	api.authcli = authcli
 
-	app.Use(mid.TraceIdMiddleware())
+	app.Use(mid.TraceIdMiddleware(), mid.Otel(cfg.Tracer.Tracer("")), mid.ErrorMiddleware())
 
 	// cfg.Log.Errorc("started serving ")
 	app.Handle("GET", "/metrics", gin.WrapH(promhttp.Handler()))
@@ -53,4 +53,8 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("GET", "/broker/conf", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/updateconf", api.newSubmissionHandler)
 	app.Handle("GET", "/broker/gettemplates", api.getAllQuestionTemplates)
+	app.Handle("GET", "/broker/addsnippet", api.createSnippet)
+	app.Handle("GET", "/broker/getsnippet/:id", api.getSnippetById)
+	app.Handle("GET", "/broker/getAllsnippets", api.getAllSnippetsByUser)
+	app.Handle("POST", "/broker/formatCode", api.formatCode)
 }

@@ -20,6 +20,7 @@ type Config struct {
 	BrokerAPIPort   string
 	ExecutorAPIPort string
 	CreatorAPIPort  string
+	ExamAPIPort     string
 	GRPCPort        string
 	AuthGRPCPort    string
 	DebugPort       string
@@ -37,6 +38,8 @@ type Config struct {
 	MongoDbName     string
 	Language        string
 	JWTKey          string
+	TracerHost      string
+	TracerProb      float64
 	AllowDirect     bool
 	AllowGRPC       bool
 }
@@ -56,6 +59,7 @@ func LoadConfig() (*Config, error) {
 		ExecutorAPIPort: getEnv("EXECUTOR_PORT", ":8004"),
 		CreatorAPIPort:  getEnv("CREATOR_PORT", ":8005"),
 		AdminAPIPort:    getEnv("ADMIN_PORT", ":8006"),
+		ExamAPIPort:     getEnv("EXAM_PORT", ":8008"),
 		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
 		AuthGRPCPort:    getEnv("AUTH_GRPC_PORT", ":50002"),
 		DBDSN:           getEnv("DBDSN", "postgres://epic:password@localhost:5432"),
@@ -72,6 +76,8 @@ func LoadConfig() (*Config, error) {
 		MongoDbName:     getEnv("MONGO_DBNAME", "EXECUTOR"),
 		Language:        getEnv("CONTAINER_LANGUAGE", "python"),
 		JWTKey:          getEnv("JWT_KEY", "mysupersecret"),
+		TracerHost:      getEnv("TRACER_HOST", "http://localhost:14268/api/traces"),
+		// TracerProb:      getEnv("TRACER_PROB", "mysupersecret"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}
 	idleConns, _ := strconv.Atoi(getEnv("MAXIDLECONNS", "10"))
@@ -81,6 +87,7 @@ func LoadConfig() (*Config, error) {
 	responseTimeout, _ := strconv.Atoi(getEnv("RESPONSETIMEOUT_SEC", "1"))
 	allowDirect, _ := strconv.ParseBool(getEnv("ALLOW_DIRECT", "true"))
 	allowGRPC, _ := strconv.ParseBool(getEnv("ALLOW_GRPC", "true"))
+	tracerProb, _ := strconv.ParseFloat(getEnv("TRACER_PROB", "0.5"), 64)
 	config.AllowGRPC = allowGRPC
 	config.AllowDirect = allowDirect
 	config.MaxIdleConns = idleConns
@@ -88,6 +95,7 @@ func LoadConfig() (*Config, error) {
 	config.ResponseTimeOut = responseTimeout
 	config.RequestTimeOut = requestTimeout
 	config.ShutdownTimeout = shutdownTimeout
+	config.TracerProb = tracerProb
 	return config, nil
 }
 

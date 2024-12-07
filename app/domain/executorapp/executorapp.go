@@ -6,20 +6,22 @@ import (
 	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/business/domain/executorbus"
 	"github.com/bentenison/microservice/foundation/logger"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type App struct {
 	executorbus *executorbus.Business
 	log         *logger.CustomLogger
-	// tracer      trace.Tracer
+	tracer      trace.Tracer
 	// dockerClient *client.Client
 }
 
-func NewApp(executorbus *executorbus.Business, log *logger.CustomLogger) *App {
+func NewApp(executorbus *executorbus.Business, log *logger.CustomLogger, tracer *sdktrace.TracerProvider) *App {
 	return &App{
 		executorbus: executorbus,
 		log:         log,
-		// tracer:      tracer.Tracer("EXECUTOR"),
+		tracer:      tracer.Tracer("EXECUTOR"),
 		// dockerClient: cli,
 	}
 }

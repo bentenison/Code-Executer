@@ -10,6 +10,7 @@ import (
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/domain/executorbus"
 	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/otel"
 )
 
 type Store struct {
@@ -51,7 +52,7 @@ func (s *Store) GetLanguages(ctx context.Context) ([]*executorbus.Language, erro
 	return langs, nil
 }
 
-func (s *Store) GetAllLangSpecs() ([]executorbus.LanguageSpecification, error) {
+func (s *Store) GetAllLangSpecs(ctx context.Context) ([]executorbus.LanguageSpecification, error) {
 	// Query to fetch all languages
 	rows, err := s.db.SQL.Query(`SELECT * FROM language_specifications`)
 	if err != nil {
@@ -79,8 +80,9 @@ func (s *Store) GetAllLangSpecs() ([]executorbus.LanguageSpecification, error) {
 }
 
 // GetLanguageByID retrieves a language specification by its ID
-func (s *Store) GetLanguageSpecsByID(id int) (executorbus.LanguageSpecification, error) {
-
+func (s *Store) GetLanguageSpecsByID(ctx context.Context, id int) (executorbus.LanguageSpecification, error) {
+	_, span := otel.AddSpan(ctx, "executorbus.GetLanguageSpecsByID")
+	defer span.End()
 	row := s.db.SQL.QueryRow(`SELECT * FROM language_specifications WHERE id = $1`, id)
 
 	var language LanguageSpecification
@@ -96,6 +98,8 @@ func (s *Store) GetLanguageSpecsByID(id int) (executorbus.LanguageSpecification,
 }
 
 func (s *Store) Get(ctx context.Context, key string, res any) error {
+	_, span := otel.AddSpan(ctx, "executorbus.redis.GET")
+	defer span.End()
 	data, err := s.db.RDB.Get(ctx, key).Result()
 	if err != nil {
 		return err
@@ -107,6 +111,8 @@ func (s *Store) Get(ctx context.Context, key string, res any) error {
 	return nil
 }
 func (s *Store) Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error) {
+	_, span := otel.AddSpan(ctx, "executorbus.redis.SET")
+	defer span.End()
 	var data string
 	var err error
 	marshalledIn, err := s.MarshalBinary(val)

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bentenison/microservice/api/cmd/service/broker-service/build/all"
+	"github.com/bentenison/microservice/api/cmd/service/admin-service/build/all"
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/sdk/mongodb"
 	"github.com/bentenison/microservice/business/sdk/redisdb"

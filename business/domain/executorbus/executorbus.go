@@ -19,10 +19,12 @@ import (
 	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/otel"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/exp/rand"
 )
 
@@ -30,8 +32,8 @@ const maxRetries = 5
 
 type Storer interface {
 	GetLanguages(ctx context.Context) ([]*Language, error)
-	GetAllLangSpecs() ([]LanguageSpecification, error)
-	GetLanguageSpecsByID(id int) (LanguageSpecification, error)
+	GetAllLangSpecs(ctx context.Context) ([]LanguageSpecification, error)
+	GetLanguageSpecsByID(ctx context.Context, id int) (LanguageSpecification, error)
 	Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error)
 	Get(ctx context.Context, key string, res any) error
 }
@@ -77,7 +79,6 @@ func NewContainerLB(allowedLanguages []*Language, cli *client.Client, log *logge
 	return lb, nil
 }
 func UpdateLB(allowedLanguages []*Language, b *Business, t time.Time) {
-	// lb := make(map[string]*LoadBalancer)
 	for _, v := range allowedLanguages {
 		filters := filters.NewArgs()
 		filters.Add("label", fmt.Sprintf("app=%s-executor", strings.ToLower(v.Name)))
@@ -86,45 +87,46 @@ func UpdateLB(allowedLanguages []*Language, b *Business, t time.Time) {
 			Filters: filters,
 		})
 		if err != nil {
-			b.log.Errorc(context.TODO(), "Errorc listing containers:", map[string]interface{}{
+			b.log.Errorc(context.TODO(), "Error listing containers:", map[string]interface{}{
 				"error": err.Error(),
 			})
-			// return lb, err
+			continue // Skip this language if there's an error fetching containers
 		}
+
+		// log.Printf("Found containers are%v\n", containers)
+		// Lock the load balancer map for this language only
 		b.lbMutex.Lock()
-		defer b.lbMutex.Unlock()
+		// Ensure the load balancer for the language exists
 		if _, ok := b.lb[strings.ToLower(v.Name)]; !ok {
 			b.lb[strings.ToLower(v.Name)] = &LoadBalancer{}
 		}
-		// lb[strings.ToLower(v.Name)].mu = sync.Mutex{}
-		var uniqueContainers []string
+		// Update containers only if they are new
+		// var uniqueContainers []string
 		for _, container := range containers {
-			uniqueContainers = insertUnique(b.lb[strings.ToLower(v.Name)].containers, container.ID)
+			// Insert unique containers into the list
+			insertUnique(&b.lb[strings.ToLower(v.Name)].containers, container.ID)
+			// log.Printf("uniqueContainers%v\n", uniqueContainers)
 		}
-		b.lb[strings.ToLower(v.Name)].containers = uniqueContainers
+		// Assign the updated containers list to the load balancer
+		// b.lb[strings.ToLower(v.Name)].containers = uniqueContainers
+		b.lbMutex.Unlock()
 	}
-	// b.log.Infoc(context.TODO(), "the time this func called was", map[string]interface{}{
-	// 	"time": t,
-	// })
-	// return
-	// return lb, nil
-}
-func insertUnique(slice []string, value string) []string {
-	seen := make(map[string]struct{})
-	for _, v := range slice {
-		seen[v] = struct{}{} // Mark elements already in the slice
-	}
-	if _, exists := seen[value]; exists {
-		return slice
-	}
-	return append(slice, value)
+	// log.Printf("the containers are %v\n", b.lb["python"])
 }
 
-//	func (b *Business) doEvery(d time.Duration, f func(allowedLanguages []*Language, b *Business, t time.Time)) {
-//		for x := range time.Tick(d) {
-//			f(b.languages, b, x)
-//		}
-//	}
+func insertUnique(slice *[]string, value string) {
+	seen := make(map[string]struct{})
+	// First, build the set of seen values
+	// if len(*slice) > 0 {
+	for _, v := range *slice {
+		seen[v] = struct{}{}
+	}
+	// If the value doesn't exist in the set, append it to the slice
+	if _, exists := seen[value]; !exists {
+		*slice = append(*slice, value)
+	}
+
+}
 func (ds *Business) Run(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	for {
@@ -220,6 +222,9 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid, ex
 	// if err != nil {
 	// 	return "", err
 	// }
+	_, span := otel.AddSpan(ctx, "api.execution", attribute.String("grpc.Method", "executor.ExecuteCode"),
+		attribute.String("type", "grpc"))
+	defer span.End()
 	startTime := time.Now()
 	// res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{
 	// 	Tty: true,
@@ -271,22 +276,28 @@ func convertOutput(logBuf bytes.Buffer) string {
 	}
 	return string(result)
 }
-func (b *Business) ActualCodeExecution(containerID, path, cmd string) (bytes.Buffer, error) {
+func (b *Business) ActualCodeExecution(containerID, path, cmd string, timeout time.Duration) (bytes.Buffer, error) {
 	var execResponse bytes.Buffer
+
+	// Read the temporary file containing the code
 	buf, err := b.readTempFile(path)
 	if err != nil {
 		return execResponse, err
 	}
-	// Copy the file to the existing container
+
+	// Copy the file to the container
 	err = b.cli.CopyToContainer(context.Background(), containerID, "app/", buf, container.CopyToContainerOptions{})
 	if err != nil {
 		return execResponse, err
 	}
+
+	// Prepare the command to execute in the container
 	command, err := prepareCommand(cmd, filepath.Base(path))
 	if err != nil {
 		return execResponse, err
 	}
-	// // Execute the Python script in the existing container
+
+	// Create an exec configuration with the command to run in the container
 	execConfig := container.ExecOptions{
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
@@ -294,22 +305,80 @@ func (b *Business) ActualCodeExecution(containerID, path, cmd string) (bytes.Buf
 		Tty:          true,
 	}
 
-	execID, err := b.cli.ContainerExecCreate(context.Background(), containerID, execConfig)
+	// Create a timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel() // Ensure the cancel function is called when done
+
+	// Create an exec instance in the container
+	execID, err := b.cli.ContainerExecCreate(ctx, containerID, execConfig)
 	if err != nil {
 		return execResponse, err
 	}
 
-	res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{
+	// Attach to the exec instance to get the output
+	res, err := b.cli.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{
 		Tty: true,
 	})
 	if err != nil {
 		return execResponse, err
 	}
-	if _, err := execResponse.ReadFrom(res.Reader); err != nil {
+
+	// Read the output from the container's stdout/stderr
+	// This is where the timeout context comes into play, it will cancel if the timeout is exceeded
+	_, err = execResponse.ReadFrom(res.Reader)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			// Timeout has been reached
+			return execResponse, fmt.Errorf("code execution timed out")
+		}
 		return execResponse, err
 	}
+
+	// If everything worked fine, return the response
 	return execResponse, nil
 }
+
+// func (b *Business) ActualCodeExecution(containerID, path, cmd string) (bytes.Buffer, error) {
+// 	var execResponse bytes.Buffer
+// 	buf, err := b.readTempFile(path)
+// 	if err != nil {
+// 		return execResponse, err
+// 	}
+// 	// Copy the file to the existing container
+// 	err = b.cli.CopyToContainer(context.Background(), containerID, "app/", buf, container.CopyToContainerOptions{})
+// 	if err != nil {
+// 		return execResponse, err
+// 	}
+// 	command, err := prepareCommand(cmd, filepath.Base(path))
+// 	if err != nil {
+// 		return execResponse, err
+// 	}
+// 	// // Execute the Python script in the existing container
+// 	execConfig := container.ExecOptions{
+// 		Cmd:          []string{"sh", "-c", command},
+// 		AttachStdout: true,
+// 		AttachStderr: true,
+// 		Tty:          true,
+// 	}
+//     ctx, cancel := context.WithTimeout(context.Background(), timeout)
+// 	defer cancel()
+
+// 	execID, err := b.cli.ContainerExecCreate(context.Background(), containerID, execConfig)
+// 	if err != nil {
+// 		return execResponse, err
+// 	}
+
+//		res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{
+//			Tty: true,
+//		})
+//		if err != nil {
+//			return execResponse, err
+//		}
+//		if _, err := execResponse.ReadFrom(res.Reader); err != nil {
+//			return execResponse, err
+//		}
+//		return execResponse, nil
+//	}
 func prepareCommand(cmd, filename string) (string, error) {
 	var finalResult string
 	type CommandData struct {
@@ -472,14 +541,18 @@ func (b *Business) executeWithRetry(ctx context.Context, codeFilePath, language,
 		codeFilePath = fmt.Sprintf("%s%s", codeFilePath, ext)
 	}
 	for attempt := 1; attempt <= retries; attempt++ {
+		_, span := otel.AddSpan(ctx, fmt.Sprintf("attempt-%d-executeWithRetry", attempt), attribute.String("grpc.Method", "executor.ExecuteCode"),
+			attribute.String("type", "grpc"))
+		defer span.End()
 		containerID, err := b.lb[language].getNextContainer()
 		if err != nil {
 			return "", "", fmt.Errorf("no containers available: %v", err)
 		}
+		// log.Println("containerID", containerID)
 		specs := []LanguageSpecification{}
 		err = b.storer.Get(ctx, "langSpecs", &specs)
 		if err != nil {
-			specs, err = b.storer.GetAllLangSpecs()
+			specs, err = b.storer.GetAllLangSpecs(ctx)
 			if err != nil {
 				return "", containerID, err
 			}
@@ -495,7 +568,7 @@ func (b *Business) executeWithRetry(ctx context.Context, codeFilePath, language,
 			}
 		}
 		//TODO:get command of the specific language from here and pass it down
-		logBuf, err := b.ActualCodeExecution(containerID, codeFilePath, cmd)
+		logBuf, err := b.ActualCodeExecution(containerID, codeFilePath, cmd, 1*time.Second)
 		if err == nil {
 			out := convertOutput(logBuf)
 			return out, containerID, nil // Successful execution

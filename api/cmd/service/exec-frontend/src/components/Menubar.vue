@@ -33,12 +33,12 @@
         </svg>
       </template>
       <template>
-        <SplitButton
+        <!-- <SplitButton
           label="Save"
           class="text-primary"
           :model="items"
           @click="save"
-        ></SplitButton>
+        ></SplitButton> -->
       </template>
       <template #end>
         <div class="flex align-items-center gap-2">
@@ -411,9 +411,44 @@ export default {
           },
         },
         {
-          label: "Projects",
-          icon: "pi pi-search",
-          badge: 3,
+          label: "Run",
+          icon: "pi pi-arrow-right",
+          command: () => {
+            // this.visible = true;
+            this.$toast.add({
+              severity: "success",
+              summary: "Updated",
+              detail: "Data Updated",
+              life: 3000,
+            });
+          },
+        },
+        {
+          label: "Share",
+          icon: "pi pi-share-alt",
+          command: () => {
+            // this.visible = true;
+            this.$toast.add({
+              severity: "success",
+              summary: "Updated",
+              detail: "Data Updated",
+              life: 3000,
+            });
+          },
+        },
+        {
+          label: "Format",
+          icon: "pi pi-code",
+          command: () => {
+            // this.visible = true;
+            // this.$toast.add({
+            //   severity: "success",
+            //   summary: "Updated",
+            //   detail: "Data Updated",
+            //   life: 3000,
+            // });
+            this.formatCode()
+          },
         },
       ],
     };
@@ -434,6 +469,10 @@ export default {
     decreaseFontSize() {
       this.fontSize--;
       this.emitter.emit("decreaseFont", this.fontSize);
+    },
+    formatCode() {
+      // this.fontSize--;
+      this.emitter.emit("formatCode");
     },
   },
   created() {

@@ -17,6 +17,8 @@ import (
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/monitoring"
+	"github.com/bentenison/microservice/foundation/otel"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 const apiType = "all"
@@ -36,23 +38,28 @@ func main() {
 	}
 	// // -------------------------------------------------------------------------
 	// // INITIALIZE TRACER OTEL
-	// trace, err := otel.NewTracer()
-	// if err != nil {
-	// 	log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
-	// 		"error": err.Error(),
-	// 	})
-	// }
-	// defer func() {
-	// 	otel.ShutDownTracer(trace)
-	// }()
+	cfg := otel.Config{
+		Host:        config.TracerHost,
+		Probability: config.TracerProb,
+		ServiceName: "BROKER",
+	}
+	trace, err := otel.NewTracer(cfg)
+	if err != nil {
+		log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+	defer func() {
+		otel.ShutDownTracer(trace)
+	}()
 	log.Infoc(context.TODO(), "config", map[string]interface{}{"config": config})
-	if err := run(log, config); err != nil {
+	if err := run(log, config, trace); err != nil {
 		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
 }
-func run(log *logger.CustomLogger, cfg *conf.Config) error {
+func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvider) error {
 	//starting sql database connection
 	db, err := sqldb.Open(sqldb.Config{
 		User:         cfg.User,
@@ -111,6 +118,7 @@ func run(log *logger.CustomLogger, cfg *conf.Config) error {
 		Log:       log,
 		DB:        ds,
 		AppConfig: cfg,
+		Tracer:    tracer,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{

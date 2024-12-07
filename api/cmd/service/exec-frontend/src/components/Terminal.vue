@@ -9,6 +9,7 @@
     :drag-conf="dragConf"
     :title="title"
     :show-header="false"
+    :commands="commands"
   />
   <!-- :init-log="Messages" -->
 </template>
@@ -28,6 +29,61 @@ export default {
       context: "🖥️root@tanvirs:~$",
       title: "EPIC terminal",
       currentTheme: "github",
+      commands: {
+        pwd: {
+          key: "pwd",
+          title: "Print Working Directory",
+          description: "Prints the current working directory.",
+          usage: "pwd",
+          example: [{ input: "pwd", output: "/home/user" }],
+          action: this.pwdCommand,
+        },
+        ls: {
+          key: "ls",
+          title: "List Directory Contents",
+          description: "Lists files in the current directory.",
+          usage: "ls",
+          example: [{ input: "ls", output: "Desktop  Documents  Downloads" }],
+          action: this.lsCommand,
+        },
+        cd: {
+          key: "cd",
+          title: "Change Directory",
+          description: "Changes the current directory (simulation).",
+          usage: "cd <dir>",
+          example: [
+            {
+              input: "cd Documents",
+              output: "Changed directory to /home/user/Documents",
+            },
+          ],
+          action: this.cdCommand,
+        },
+        echo: {
+          key: "echo",
+          title: "Echo Command",
+          description: "Prints the string to the terminal.",
+          usage: "echo <string>",
+          example: [{ input: "echo Hello, World!", output: "Hello, World!" }],
+          action: this.echoCommand,
+        },
+        date: {
+          key: "date",
+          title: "Current Date and Time",
+          description: "Displays the current date and time.",
+          usage: "date",
+          example: [{ input: "date", output: "2024-12-01 14:30:45" }],
+          action: this.dateCommand,
+        },
+        clear: {
+          key: "clear",
+          title: "Clear Terminal",
+          description: "Clears the terminal screen.",
+          usage: "clear",
+          example: [{ input: "clear", output: "" }],
+          action: this.clearCommand,
+        },
+      },
       Messages: [
         {
           type: "normal",
@@ -103,13 +159,67 @@ export default {
     };
   },
   methods: {
+    helpCommand() {
+      return `
+      Available Commands:
+      help - Shows this message
+      pwd - Prints current directory
+      ls - Lists files in the directory
+      cd <dir> - Changes the directory
+      echo <string> - Echoes the string
+      clear - Clears the terminal screen
+      date - Displays the current date and time
+      `;
+    },
+
+    // Command to print current directory (simulated)
+    pwdCommand() {
+      return "/home/tanvirs";
+    },
+
+    // Simulated ls command
+    lsCommand() {
+      return `
+      Desktop  Documents  Downloads  Music  Pictures  Videos
+      `;
+    },
+
+    // Simulated cd command (does not change actual state in demo)
+    cdCommand(args) {
+      if (args.length > 0) {
+        return `Changed directory to ${args[0]}`;
+      }
+      return "Error: No directory specified.";
+    },
+
+    // Command to echo a string back
+    echoCommand(args) {
+      return args.join(" ");
+    },
+    // Command to show the current date and time
+    dateCommand() {
+      return new Date().toLocaleString();
+    },
+    // Optional method to execute commands
+    executeCommand(command) {},
     onExecCmd(key, command, success, failed) {
+      if (this.commands[command]) {
+        success({
+          type: "normal",
+          class: "success",
+          tag: "success",
+          content: this.commands[command].action(),
+        });
+        return;
+        // return this.commands[command].action();
+      }
       if (key === "fail") {
         failed("Something wrong!!!");
       } else {
         let allClass = ["success", "error", "system", "info", "warning"];
 
         let clazz = allClass[Math.floor(Math.random() * allClass.length)];
+
         success({
           type: "normal",
           class: clazz,

@@ -6,11 +6,12 @@ import (
 
 	"github.com/bentenison/microservice/api/sdk/grpc/mid"
 	"github.com/bentenison/microservice/foundation/logger"
+	"go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func CreateServer(grpcPort string, log *logger.CustomLogger) (*grpc.Server, net.Listener) {
+func CreateServer(grpcPort string, log *logger.CustomLogger, tp *trace.TracerProvider) (*grpc.Server, net.Listener) {
 	lis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Errorc(context.TODO(), "failed to listen:", map[string]interface{}{
@@ -19,8 +20,8 @@ func CreateServer(grpcPort string, log *logger.CustomLogger) (*grpc.Server, net.
 		panic(err)
 	}
 	reqMid := mid.NewRequestIDMiddleware(log)
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(reqMid.UnaryRequestIDInterceptor()),
-		grpc.StreamInterceptor(reqMid.StreamRequestIDInterceptor()))
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(reqMid.UnaryRequestIDInterceptor(), mid.UnaryOtelInterceptor(tp.Tracer(""))),
+		grpc.ChainStreamInterceptor(reqMid.StreamRequestIDInterceptor(), mid.StreamOtelInterceptor(tp.Tracer(""))))
 	return grpcServer, lis
 }
 

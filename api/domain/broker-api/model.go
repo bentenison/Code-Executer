@@ -62,3 +62,13 @@ type UserPayload struct {
 type token struct {
 	Token string `json:"token,omitempty"`
 }
+
+type FormatterRequest struct {
+	Lang string `json:"lang"`
+	Code string `json:"code"`
+}
+
+// Response structure for the formatted code
+type FormatterResponse struct {
+	FormattedCode string `json:"formatted_code"`
+}

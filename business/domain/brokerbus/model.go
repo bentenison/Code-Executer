@@ -163,6 +163,23 @@ type Claims struct {
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
+type CodeSnippet struct {
+	SnippetID string    `bson:"snippet_id,omitempty" json:"snippet_id,omitempty" db:"id"`
+	Code      string    `bson:"code" json:"code,omitempty" db:"code"`
+	Language  string    `bson:"language" json:"language,omitempty" db:"language"`
+	CreatedBy string    `bson:"created_by" json:"created_by,omitempty" db:"created_by"`
+	CreatedAt time.Time `bson:"createdAt" json:"created_at,omitempty" db:"created_at"`
+	UpdatedAt time.Time `bson:"updatedAt" json:"updated_at,omitempty" db:"updated_at"`
+}
+type FormatterRequest struct {
+	Lang string `json:"language"`
+	Code string `json:"code"`
+}
+
+// Response structure for the formatted code
+type FormatterResponse struct {
+	FormattedCode string `json:"formatted_code"`
+}
 
 func createCodeExecutionStats(pb *execpb.ExecutionResponse, id, uid, codesnippet, langId string) *CodeExecutionStats {
 	var codeExecutionStats CodeExecutionStats

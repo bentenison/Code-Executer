@@ -35,8 +35,14 @@ func main() {
 		})
 	}
 	// // -------------------------------------------------------------------------
-	// // INITIALIZE TRACER OTEL
-	trace, err := otel.NewTracer()
+	// // INITIALIZE TRACER OTEL// // INITIALIZE TRACER OTEL
+	cfg := otel.Config{
+		Host:        config.TracerHost,
+		Probability: config.TracerProb,
+		ServiceName: "BROKER",
+	}
+
+	trace, err := otel.NewTracer(cfg)
 	if err != nil {
 		log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
 			"error": err.Error(),

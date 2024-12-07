@@ -145,6 +145,15 @@ type LanguageDB struct {
 	FileExtension    sql.NullString `db:"file_extension"`
 }
 
+type CodeSnippet struct {
+	SnippetID string    `bson:"snippet_id,omitempty" json:"snippet_id,omitempty" db:"id"`
+	Code      string    `bson:"code" json:"code,omitempty" db:"code"`
+	Language  string    `bson:"language" json:"language,omitempty" db:"language"`
+	CreatedBy string    `bson:"created_by" json:"created_by,omitempty" db:"created_by"`
+	CreatedAt time.Time `bson:"createdAt" json:"created_at,omitempty" db:"created_at"`
+	UpdatedAt time.Time `bson:"updatedAt" json:"updated_at,omitempty" db:"updated_at"`
+}
+
 func toBusQuestion(q Question) brokerbus.Question {
 	busQuestion := brokerbus.Question{}
 	busQuestion.QuestionId = q.QuestionId

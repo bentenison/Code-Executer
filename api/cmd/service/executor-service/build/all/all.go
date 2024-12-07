@@ -31,6 +31,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:         cfg.Log,
 		ExecutorBus: execbus,
 		AppConfig:   cfg.AppConfig,
+		Tracer:      cfg.Tracer,
 		// DockerClient: cli,
 	})
 

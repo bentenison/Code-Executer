@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 type RouteAdder interface {
@@ -22,8 +23,8 @@ type Config struct {
 	Log   *logger.CustomLogger
 	// Auth       *auth.Auth
 	// AuthClient *authclient.Client
-	DB DataSource
-	// Tracer    *trace.TracerProvider
+	DB        DataSource
+	Tracer    *trace.TracerProvider
 	AppConfig *conf.Config
 }
 

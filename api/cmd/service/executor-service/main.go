@@ -42,7 +42,12 @@ func main() {
 
 	// // -------------------------------------------------------------------------
 	// // INITIALIZE TRACER OTEL
-	trace, err := otel.NewTracer()
+	cfg := otel.Config{
+		Host:        config.TracerHost,
+		Probability: config.TracerProb,
+		ServiceName: "EXECUTOR",
+	}
+	trace, err := otel.NewTracer(cfg)
 	if err != nil {
 		log.Errorc(context.TODO(), "error while initializing tracer", map[string]interface{}{
 			"error": err.Error(),
@@ -120,6 +125,7 @@ func run(log *logger.CustomLogger, tracer *trace.TracerProvider, cfg *conf.Confi
 		Log:       log,
 		DB:        ds,
 		AppConfig: cfg,
+		Tracer:    tracer,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{

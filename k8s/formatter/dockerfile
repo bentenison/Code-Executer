@@ -1,0 +1,46 @@
+# Step 1: Use an official Go image to build the application
+FROM golang:1.22-alpine3.20 AS builder
+
+# Step 2: Install dependencies for formatting tools (gofmt, google-java-format, clang-format, php-cs-fixer, black)
+RUN apk update && apk add --no-cache \
+    bash \
+    clang-dev \
+    php8 \
+    py3-pip \
+    openjdk11 \
+    curl \
+    && apt-get install black \
+    && curl -L https://github.com/google/google-java-format/releases/download/v1.15.0/google-java-format-1.15.0-all-deps.jar -o /usr/local/bin/google-java-format \
+    && chmod +x /usr/local/bin/google-java-format \
+    && curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/clang-format-14.0.6-x86_64-linux-gnu.tar.xz -o clang-format.tar.xz \
+    && tar -xvf clang-format.tar.xz -C /usr/local/bin --strip-components=3 clang-format-14.0.6-x86_64-linux-gnu/bin/clang-format \
+    && curl -L https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v3.9.3/php-cs-fixer.phar -o /usr/local/bin/php-cs-fixer \
+    && chmod +x /usr/local/bin/php-cs-fixer
+
+# Step 3: Set up the working directory for Go application
+WORKDIR /app
+
+# Step 4: Copy the Go service code into the container
+COPY ../api/cmd/tools/formatters/ ./
+
+# Step 5: Build the Go application
+RUN go mod tidy
+RUN go build -o code-formatter .
+
+# Step 6: Use a smaller runtime image to reduce the image size
+FROM alpine:latest
+
+# Step 7: Install dependencies for running the Go application (bash, etc.)
+RUN apk update && apk add --no-cache \
+    bash \
+    curl \
+    libstdc++
+
+# Step 8: Copy the built Go executable and other files from the builder stage
+COPY --from=builder /app/code-formatter /usr/local/bin/code-formatter
+
+# Step 9: Expose the necessary port
+EXPOSE 8010
+
+# Step 10: Run the Go application when the container starts
+CMD ["/usr/local/bin/code-formatter"]

@@ -1,11 +1,13 @@
 package brokerbus
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 	"text/template"
@@ -31,6 +33,9 @@ type Storer interface {
 	GetQuestionTemplates(ctx context.Context) ([]Question, error)
 	Get(ctx context.Context, key string, res any) error
 	Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error)
+	CreateSnippet(ctx context.Context, snippet *CodeSnippet) (*mongo.InsertOneResult, error)
+	GetSnippetById(ctx context.Context, id string) (*CodeSnippet, error)
+	GetAllByUser(ctx context.Context, userId string) ([]CodeSnippet, error)
 }
 
 type Business struct {
@@ -469,4 +474,59 @@ func (b *Business) GetAllAllowedLanguages(ctx context.Context) ([]*Language, err
 }
 func (b *Business) GetAllQuestTemplates(ctx context.Context) ([]Question, error) {
 	return b.storer.GetQuestionTemplates(ctx)
+}
+func (b *Business) CreateCodeSnippet(ctx context.Context, snippet *CodeSnippet) (*mongo.InsertOneResult, error) {
+	snippet.CreatedAt = time.Now()
+	snippet.UpdatedAt = time.Now()
+	return b.storer.CreateSnippet(ctx, snippet)
+}
+func (b *Business) GetSnippetById(ctx context.Context, id string) (*CodeSnippet, error) {
+	return b.storer.GetSnippetById(ctx, id)
+}
+func (b *Business) GetAllSnippetsByUser(ctx context.Context, userId string) ([]CodeSnippet, error) {
+	return b.storer.GetAllByUser(ctx, userId)
+}
+func (b *Business) FormatCode(ctx context.Context, req FormatterRequest) (*FormatterResponse, error) {
+	return b.CallFormatterService(ctx, req.Lang, req.Code)
+}
+
+func (b *Business) CallFormatterService(ctx context.Context, lang, code string) (*FormatterResponse, error) {
+	decodedSnippet, err := decodeSnippet(code)
+	if err != nil {
+		b.log.Errorc(ctx, "error while decoding base64 snippet", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	// Create the request body
+	requestBody := FormatterRequest{
+		Lang: lang,
+		Code: decodedSnippet,
+	}
+
+	// Marshal the request body to JSON
+	requestBodyJSON, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Send a POST request to the formatter service
+	resp, err := http.Post("http://localhost:8010/format", "application/json", bytes.NewBuffer(requestBodyJSON))
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request to formatter service: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the response status is OK
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("formatter service returned an error: %s", resp.Status)
+	}
+
+	// Decode the response
+	var formatterResponse FormatterResponse
+	if err := json.NewDecoder(resp.Body).Decode(&formatterResponse); err != nil {
+		return nil, fmt.Errorf("failed to decode response from formatter service: %v", err)
+	}
+
+	return &formatterResponse, nil
 }

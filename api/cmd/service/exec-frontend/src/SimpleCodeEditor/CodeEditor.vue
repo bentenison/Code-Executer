@@ -1,6 +1,5 @@
 <template>
   <div
-  
     :theme="theme"
     class="code-editor"
     :class="{
@@ -125,7 +124,13 @@ import CopyCode from "./CopyCode.vue";
 import "./themes/themes-base16.css";
 import "./themes/themes.css";
 import { useEditorStore } from "../stores/editor";
-
+import prettier from 'prettier';
+// import parserC from 'prettier-plugin-c';
+// import parserCPP from 'prettier-plugin-cpp';
+// import parserJava from 'prettier-plugin-java';
+// import parserPython from 'prettier-plugin-python';
+// import parserGo from 'prettier-plugin-go';
+// import parserPHP from 'prettier-plugin-php';
 export default {
   components: {
     Dropdown,

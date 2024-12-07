@@ -149,6 +149,19 @@ export const useEditorStore = defineStore("editor", {
           });
       });
     },
+    formatCode(data) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/broker/formatCode", data)
+          .then((res) => {
+            resolve(res);
+            // console.log("results:::::", res);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+    },
     qcQuestion(data) {
       return new Promise((resolve, reject) => {
         axios

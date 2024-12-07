@@ -9,7 +9,9 @@ import (
 	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
 	"github.com/bentenison/microservice/app/domain/executorapp"
 	"github.com/bentenison/microservice/foundation/logger"
+	"github.com/bentenison/microservice/foundation/otel"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
 
 	"google.golang.org/grpc"
 )
@@ -39,6 +41,8 @@ func newAPI(app *executorapp.App, log *logger.CustomLogger) *api {
 
 func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequest, pb.ExecutionResponse]) error {
 	// log.Println("context", stream.Context())
+	_, span := otel.AddSpan(stream.Context(), "api.handleexecution.start", attribute.KeyValue{Key: "executor", Value: attribute.Value{}})
+	defer span.End()
 	_, err := os.Stat("./static")
 	if err != nil {
 		err := os.MkdirAll("./static", 0755)

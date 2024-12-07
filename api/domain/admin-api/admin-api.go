@@ -1,15 +1,20 @@
 package adminapi
 
+import (
+	"github.com/bentenison/microservice/app/domain/adminapp"
+	"github.com/bentenison/microservice/foundation/logger"
+)
+
 type api struct {
-	// brokerapp *brokerapp.App
-	// logger    *logger.CustomLogger
+	adminapp *adminapp.App
+	logger   *logger.CustomLogger
 	// authcli   authpb.AuthServiceClient
 	// execcli   execpb.ExecutorServiceClient
 }
 
-// func newAPI(brokerApp *brokerapp.App, logger *logger.CustomLogger) *api {
-// 	return &api{
-// 		brokerapp: brokerApp,
-// 		logger:    logger,
-// 	}
-// }
+func newAPI(adminApp *adminapp.App, logger *logger.CustomLogger) *api {
+	return &api{
+		adminapp: adminApp,
+		logger:   logger,
+	}
+}

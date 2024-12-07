@@ -1,6 +1,8 @@
 # User function logic goes here
 def main(year):
-    # Your code here
+    if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
+        return True
+    return False
 
 # Test cases for the function
 if __name__ == '__main__':
