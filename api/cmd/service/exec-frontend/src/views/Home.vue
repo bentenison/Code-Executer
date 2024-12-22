@@ -47,7 +47,7 @@
           :theme="theme"
           :value="currQuestion.user_logic_template.code"
           width="80rem"
-          height="450px"
+          height="500px"
           lang-list-height="300px"
           :fontSize="fontSize"
           @content="getContent"
@@ -56,10 +56,10 @@
         ></CodeEditor>
         <terminal />
         <div class="flex align-items-center justify-content-end">
-          <p class="w-full">
+          <p class="w-full p-0 m-0">
             code executed by <strong>{{ executedBy }}</strong>
           </p>
-          <div class="flex gap-5">
+          <!-- <div class="flex gap-5">
             <Button
               type="button"
               label="Previous"
@@ -80,14 +80,23 @@
               :loading="loading"
               @click="next"
             />
-          </div>
+          </div> -->
         </div>
       </div>
       <div class="w-60rem pl-4">
         <!-- <div class="w-30rem flex"> -->
         <div
-          class="w-40rem gap-5 mb-2 flex align-items-center justify-content-end"
+          class="w-60rem gap-5 mb-2 flex align-items-center justify-content-end"
         >
+          <Button
+            v-for="(dt, index) in challengeStore.challengeQuestions"
+            :key="index"
+            raised
+            rounded
+            outlined
+            @click="gotoQuest(index)"
+            >{{ index + 1 }}</Button
+          >
           <Button
             type="button"
             label="Run"
@@ -110,7 +119,12 @@
           />
         </div>
         <!-- </div> -->
-        <Tabs value="0" class="w-full shadow-3" v-if="currQuestion">
+        <Tabs
+          value="0"
+          class="w-full"
+          style="margin-top: 1rem"
+          v-if="currQuestion"
+        >
           <TabList>
             <Tab value="0" as="div" class="flex align-items-center gap-2">
               <i class="pi pi-info-circle" style="font-size: 1.5rem"></i>
@@ -262,7 +276,6 @@
           </TabPanels>
         </Tabs>
       </div>
-      <ide-settings :visible="false" />
       <!-- <CodeEditor
           :read-only="true"
           v-model="themeDemo"
@@ -289,6 +302,8 @@ import IDEInstructions from "../components/IDEInstructions.vue";
 import { useEditorStore } from "../stores/editor";
 import { mapState } from "pinia";
 import { useMainStore } from "../stores/main";
+import { useChallengeStore } from "../stores/challenges";
+
 export default {
   name: "Home",
   components: {
@@ -341,6 +356,7 @@ class TestCase:
         self.expected_output = expected_output`,
       editorStore: useEditorStore(),
       mainStore: useMainStore(),
+      challengeStore: useChallengeStore(),
     };
   },
   computed: {
@@ -379,15 +395,16 @@ class TestCase:
     handlecodeRun() {
       // this.editorStore.encode();
       this.mainStore.togglePageBlock();
-      this.runBtnLoading = true
+      this.runBtnLoading = true;
+      console.log("payload", this.currQuestion);
       // var payload = {};
       let payload = {
-        language_code: this.langId.id,
+        language_code: this.challengeStore.selectedLanguage.id,
         language: this.currQuestion.language,
         code_snippet: this.content,
         question_id: this.currQuestion.id,
         user_id: "51fc3552-45e0-4982-9adb-50d8cc46c46d",
-        file_extension: this.langId.file_extension,
+        file_extension: this.challengeStore.selectedLanguage.file_extension,
       };
       // console.log("langIDDDDDDDDDDD",this.langId);
       this.editorStore
@@ -395,12 +412,12 @@ class TestCase:
         .then((res) => {
           this.executedBy = res.data.containerID;
           this.emitter.emit("showMessage", res.data.output);
-          this.runBtnLoading = false
+          this.runBtnLoading = false;
           this.mainStore.togglePageBlock();
         })
         .catch((err) => {
           this.mainStore.togglePageBlock();
-          this.runBtnLoading = false
+          this.runBtnLoading = false;
           this.$toast.add({
             severity: "error",
             summary: "service is down! contact administrator.",
@@ -410,31 +427,31 @@ class TestCase:
         });
     },
     setupEditor() {
-      this.editorStore
-        .getAllQuestions()
+      let questIds = [];
+      this.challengeStore.challenges.questions.forEach((element) => {
+        questIds.push(element.question_id);
+      });
+      console.log("challeges Questiopns", questIds);
+      this.challengeStore
+        .fetchChallengeQuests(questIds)
         .then((res) => {
-          this.currQuestion = this.questions[this.currIndex];
-          this.editorStore
-            .getLanguageID(this.currQuestion.language.toLowerCase())
-            .then((res) => {
-              // console.log("results>>>>>", res);
-              this.langId = res;
-              this.lang = [];
-              this.lang.push(this.currQuestion.language);
-              this.lang.push(this.currQuestion.language_code.toUpperCase());
-              this.editorStore.changeLanguage(this.lang);
-              // this.emitter.emit("changeLang", this.lang);
-              // this.emitter.emit("changeLang", this.editorStore.langArr);
-            });
-
-          this.$toast.add({
-            severity: "success",
-            summary: "fetched all question",
-            detail: "",
-            life: 3000,
+          // console.log("all questions", res);
+          this.challengeStore.challenges.questions.forEach((element, index) => {
+            // questIds.push(element.question_id);
+            if (!element.is_completed) {
+              this.currIndex = index;
+            }
           });
+          // console.log(res[this.currIndex])
+          this.currQuestion = res[this.currIndex];
+          // console.log("currentQuest",this.currQuestion)
+          this.lang = [];
+          this.lang.push(this.currQuestion.language);
+          this.lang.push(this.currQuestion.language_code.toUpperCase());
+          this.editorStore.changeLanguage(this.lang);
         })
         .catch((err) => {
+          console.log("error", err);
           this.$toast.add({
             severity: "error",
             summary: "broker service is down! contact administrator.",
@@ -442,18 +459,41 @@ class TestCase:
             life: 3000,
           });
         });
+      // this.editorStore
+      //   .getAllQuestions()
+      //   .then((res) => {
+      //     this.currQuestion = this.questions[this.currIndex];
+      //     this.editorStore
+      //       .getLanguageID(this.currQuestion.language.toLowerCase())
+      //       .then((res) => {
+      //         // console.log("results>>>>>", res);
+      //         this.langId = res;
+      //         this.lang = [];
+      //         this.lang.push(this.currQuestion.language);
+      //         this.lang.push(this.currQuestion.language_code.toUpperCase());
+      //         this.editorStore.changeLanguage(this.lang);
+      //         // this.emitter.emit("changeLang", this.lang);
+      //         // this.emitter.emit("changeLang", this.editorStore.langArr);
+      //       });
+
+      //     this.$toast.add({
+      //       severity: "success",
+      //       summary: "fetched all question",
+      //       detail: "",
+      //       life: 3000,
+      //     });
+      //   })
     },
     next() {
-      if (this.currIndex === this.questions.length - 1) {
+      this.currIndex++;
+      if (
+        this.currIndex ===
+        this.challengeStore.challengeQuestions.length - 1
+      ) {
         this.currIndex = 0;
       }
-      this.currIndex++;
-      this.currQuestion = this.questions[this.currIndex];
-      this.editorStore
-        .getLanguageID(this.currQuestion.language.toLowerCase())
-        .then((res) => {
-          this.langId = res;
-        });
+      this.currQuestion =
+        this.challengeStore.challengeQuestions[this.currIndex];
       this.lang = [];
       this.lang.push(this.currQuestion.language);
       this.lang.push(this.currQuestion.language_code.toUpperCase());
@@ -463,26 +503,29 @@ class TestCase:
     },
     previous() {
       if (this.currIndex === 0) {
-        this.currIndex = this.questions.length;
+        this.currIndex = this.challengeStore.challengeQuestions.length;
       }
       this.currIndex--;
-      this.currQuestion = this.questions[this.currIndex];
-      this.editorStore
-        .getLanguageID(this.currQuestion.language.toLowerCase())
-        .then((res) => {
-          // console.log("results>>>>>", res);
-          this.langId = res;
-        });
+      this.currQuestion =
+        this.challengeStore.challengeQuestions[this.currIndex];
       this.lang = [];
       this.lang.push(this.currQuestion.language);
       this.lang.push(this.currQuestion.language_code.toUpperCase());
-      // this.langArr.push(this.lang)
-      console.log("languages", this.lang);
       this.editorStore.changeLanguage(this.lang);
       // this.emitter.emit("changeLang", this.lang);
     },
+    gotoQuest(idx) {
+      this.currQuestion = this.challengeStore.challengeQuestions[idx];
+      this.lang = [];
+      this.lang.push(this.currQuestion.language);
+      this.lang.push(this.currQuestion.language_code.toUpperCase());
+      this.editorStore.changeLanguage(this.lang);
+    },
     toggleLineNums(e) {
       console.log("LineNums", e);
+    },
+    fetchQuests() {
+      console.log("challeges Questiopns", this.challengeStore.challenges);
     },
   },
   mounted() {
@@ -501,6 +544,7 @@ class TestCase:
     this.emitter.on("decreaseFont", this.changeFontSize);
     this.emitter.on("lineNums", this.toggleLineNums);
     this.setupEditor();
+    // this.
   },
 };
 </script>
@@ -508,14 +552,15 @@ class TestCase:
 <style lang="scss">
 @font-face {
   font-family: "Quicksand";
-  src: url("../assets/font/Quicksand-Regular.woff2") format("woff2"),
+  src:
+    url("../assets/font/Quicksand-Regular.woff2") format("woff2"),
     url("../assets/font/Quicksand-Regular.woff") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 .p-tabpanel.p-tabpanel-active {
-  min-height: 44.5rem !important;
+  min-height: 47.5rem !important;
   // border-radius: 10px !important;
 }
 // .tab-height{

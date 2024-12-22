@@ -264,11 +264,10 @@ export default {
     // document.documentElement.style.setProperty("--t-main-background-color", "red");
     // },
     // console.log(doc2.attributes);
-  },
-  created() {
     this.emitter.on("changeTerminalTheme", this.changeTheme);
     this.emitter.on("showMessage", this.showMessage);
   },
+  created() {},
 };
 </script>
 <style lang="scss">

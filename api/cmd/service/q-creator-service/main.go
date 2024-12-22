@@ -39,7 +39,7 @@ func main() {
 	cfg := otel.Config{
 		Host:        config.TracerHost,
 		Probability: config.TracerProb,
-		ServiceName: "BROKER",
+		ServiceName: "CREATOR",
 	}
 
 	trace, err := otel.NewTracer(cfg)

@@ -39,7 +39,7 @@ export const useCreatorStore = defineStore("creator", {
         axios
           .post("/creator/getallquestions")
           .then((res) => {
-            console.log("result is from creator ", res);
+            // console.log("result is from creator ", res);
             this.filteredQuestion = res.data;
             resolve(res.data);
           })
@@ -87,8 +87,8 @@ export const useCreatorStore = defineStore("creator", {
         axios
           .get(`/creator/query${query}`)
           .then((res) => {
-            // console.log("result is ", res);
-            this.filteredQuestion = res.data;
+            console.log("result is ", res);
+            // this.filteredQuestion = res.data;
             resolve(res.data);
           })
           .catch((err) => {

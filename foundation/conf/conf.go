@@ -23,6 +23,7 @@ type Config struct {
 	ExamAPIPort     string
 	GRPCPort        string
 	AuthGRPCPort    string
+	AdminGRPCPort   string
 	DebugPort       string
 	DBDSN           string
 	DBName          string
@@ -39,6 +40,8 @@ type Config struct {
 	Language        string
 	JWTKey          string
 	TracerHost      string
+	RabbitQueues    string
+	RabbitURL       string
 	TracerProb      float64
 	AllowDirect     bool
 	AllowGRPC       bool
@@ -62,6 +65,7 @@ func LoadConfig() (*Config, error) {
 		ExamAPIPort:     getEnv("EXAM_PORT", ":8008"),
 		GRPCPort:        getEnv("GRPC_PORT", ":50001"),
 		AuthGRPCPort:    getEnv("AUTH_GRPC_PORT", ":50002"),
+		AdminGRPCPort:   getEnv("ADMIN_GRPC_PORT", ":50003"),
 		DBDSN:           getEnv("DBDSN", "postgres://epic:password@localhost:5432"),
 		User:            getEnv("DBUSER", "epic"),
 		Password:        getEnv("DBPASSWORD", "admin#123"),
@@ -77,6 +81,8 @@ func LoadConfig() (*Config, error) {
 		Language:        getEnv("CONTAINER_LANGUAGE", "python"),
 		JWTKey:          getEnv("JWT_KEY", "mysupersecret"),
 		TracerHost:      getEnv("TRACER_HOST", "http://localhost:14268/api/traces"),
+		RabbitQueues:    getEnv("RABBIT_QUEUES", "user_performance,challenge_data,code_execution_stats"),
+		RabbitURL:       getEnv("RABBIT_URL", "amqp://guest:guest@localhost:5672/"),
 		// TracerProb:      getEnv("TRACER_PROB", "mysupersecret"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),
 	}

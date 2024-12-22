@@ -17,7 +17,7 @@
           <h3>Fun <span class="highlight">Quiz</span></h3>
           <p>Test your understanding with a short but fun quizzes!</p>
           <div class="card-footer flex justify-content-end">
-            <Button label="Start" severity="contrast" variant="text"></Button>
+            <Button label="Start" severity="contrast" raised></Button>
           </div>
         </template>
       </Card>
@@ -32,7 +32,7 @@
             science.
           </p>
           <div class="card-footer flex justify-content-end">
-            <Button label="Start" severity="contrast" variant="text"></Button>
+            <Button label="Start" severity="contrast" raised></Button>
           </div>
         </template>
       </Card>
@@ -44,7 +44,7 @@
           <h3>Learn with <span class="highlight">Challanges</span></h3>
           <p>Learn something new while your kids playing games!</p>
           <div class="card-footer flex justify-content-end">
-            <Button label="Start" severity="contrast" variant="text"></Button>
+            <Button label="Start" severity="contrast" raised @click="$router.push('/menu')"></Button>
           </div>
         </template>
       </Card>

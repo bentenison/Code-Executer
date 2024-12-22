@@ -2,6 +2,8 @@ package brokerdb
 
 import (
 	"database/sql"
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/bentenison/microservice/business/domain/brokerbus"
@@ -143,6 +145,9 @@ type LanguageDB struct {
 	CreatedAt        sql.NullTime   `db:"created_at"`
 	UpdatedAt        sql.NullTime   `db:"updated_at"`
 	FileExtension    sql.NullString `db:"file_extension"`
+	Description      sql.NullString `json:"description,omitempty" db:"description" bson:"description"` // Optional field
+	Tags             []byte         `json:"tags,omitempty" db:"tags" bson:"tags"`                      // Optional field (array of strings)
+	LogoURL          sql.NullString `json:"logo_url,omitempty" db:"logo_url" bson:"logo_url"`
 }
 
 type CodeSnippet struct {
@@ -152,6 +157,52 @@ type CodeSnippet struct {
 	CreatedBy string    `bson:"created_by" json:"created_by,omitempty" db:"created_by"`
 	CreatedAt time.Time `bson:"createdAt" json:"created_at,omitempty" db:"created_at"`
 	UpdatedAt time.Time `bson:"updatedAt" json:"updated_at,omitempty" db:"updated_at"`
+}
+type SubmissionQueryParams struct {
+	ID         string    `db:"id"`
+	QuestionID string    `db:"question_id"`
+	UpdatedAt  time.Time `db:"updated_at"`
+}
+type ExampleData struct {
+	ActorID    int       `json:"actor_id" bson:"actor_id"`
+	FirstName  string    `json:"first_name" bson:"first_name"`
+	LastName   string    `json:"last_name" bson:"last_name"`
+	LastUpdate time.Time `json:"last_update" bson:"last_update"`
+}
+
+type Table struct {
+	TableName        string                   `json:"table_name" bson:"table_name"`
+	CreateTableQuery string                   `json:"create_table_query" bson:"create_table_query"`
+	Columns          []string                 `json:"columns" bson:"columns"`
+	ExampleData      []map[string]interface{} `json:"example_data" bson:"example_data"`
+	RestoreQuery     string                   `json:"restore_query" bson:"restore_query"`
+}
+
+type DBQuestion struct {
+	QueryType         string                   `json:"query_type" bson:"query_type"`
+	QueryModifiesData bool                     `json:"query_modifies_data" bson:"query_modifies_data"`
+	QuestionText      string                   `json:"question_text" bson:"question_text"`
+	ExpectedResult    []map[string]interface{} `json:"expected_result" bson:"expected_result"`
+	Hints             []string                 `json:"hints" bson:"hints"`
+	ExpectedQuery     string                   `json:"expected_query" bson:"expected_query"`
+}
+
+type Validation struct {
+	StrictOrdering   bool `json:"strict_ordering" bson:"strict_ordering"`
+	IgnoreCase       bool `json:"ignore_case" bson:"ignore_case"`
+	IgnoreWhitespace bool `json:"ignore_whitespace" bson:"ignore_whitespace"`
+}
+
+type SQLQuestion struct {
+	ID          string     `json:"id" bson:"id"`
+	Title       string     `json:"title" bson:"title"`
+	Description string     `json:"description" bson:"description"`
+	Database    string     `json:"database" bson:"database"`
+	Difficulty  string     `json:"difficulty" bson:"difficulty"`
+	Tags        []string   `json:"tags" bson:"tags"`
+	Tables      []Table    `json:"tables" bson:"tables"`
+	DBQuestion  DBQuestion `json:"question" bson:"question"`
+	Validation  Validation `json:"validation" bson:"validation"`
 }
 
 func toBusQuestion(q Question) brokerbus.Question {
@@ -194,6 +245,14 @@ func toBusLanguage(lang *LanguageDB) *brokerbus.Language {
 	lg.UpdatedAt = lang.UpdatedAt.Time
 	lg.CreatedAt = lang.UpdatedAt.Time
 	lg.FileExtension = lang.FileExtension.String
+	lg.Description = lang.Description.String
+	lg.LogoURL = lang.LogoURL.String
+	tgs := []string{}
+	err := json.Unmarshal(lang.Tags, &tgs)
+	if err != nil {
+		log.Println("error in unmarshaling tags", err)
+	}
+	lg.Tags = tgs
 	return &lg
 }
 func toBusLanguages(lang []LanguageDB) []*brokerbus.Language {
@@ -227,4 +286,79 @@ func toBusAnswers(a []Answer) []brokerbus.Answer {
 		busAnswers = append(busAnswers, res)
 	}
 	return busAnswers
+}
+
+func toBusSQLQuestions(q []SQLQuestion) []brokerbus.SQLQuestion {
+	var quests []brokerbus.SQLQuestion
+	for _, v := range q {
+		quest := toBusSQLQuestion(v)
+		quests = append(quests, quest)
+	}
+	return quests
+}
+func toBusSQLQuestion(q SQLQuestion) brokerbus.SQLQuestion {
+	busQuestion := brokerbus.SQLQuestion{}
+	busQuestion.ID = q.ID
+	busQuestion.Title = q.Title
+	busQuestion.Description = q.Description
+	busQuestion.Database = q.Database
+	busQuestion.Difficulty = q.Difficulty
+	busQuestion.Tags = q.Tags
+	busQuestion.Tables = toBusTables(q.Tables)
+	busQuestion.DBQuestion.QuestionText = q.DBQuestion.QuestionText
+	busQuestion.DBQuestion.QueryType = q.DBQuestion.QueryType
+	busQuestion.DBQuestion.ExpectedResult = q.DBQuestion.ExpectedResult
+	busQuestion.DBQuestion.Hints = q.DBQuestion.Hints
+	busQuestion.DBQuestion.ExpectedQuery = q.DBQuestion.ExpectedQuery
+	busQuestion.Validation = toBusValidation(q.Validation)
+
+	return busQuestion
+}
+
+func toBusTables(tables []Table) []brokerbus.Table {
+	var busTables []brokerbus.Table
+	for _, table := range tables {
+		busTable := brokerbus.Table{}
+		busTable.TableName = table.TableName
+		busTable.CreateTableQuery = table.CreateTableQuery
+		busTable.Columns = table.Columns
+		busTable.ExampleData = table.ExampleData
+		busTable.RestoreQuery = table.RestoreQuery
+		busTables = append(busTables, busTable)
+	}
+	return busTables
+}
+
+func toBusExampleData(data []ExampleData) []brokerbus.ExampleData {
+	var busData []brokerbus.ExampleData
+	for _, row := range data {
+		busRow := brokerbus.ExampleData{}
+		busRow.ActorID = row.ActorID
+		busRow.FirstName = row.FirstName
+		busRow.LastName = row.LastName
+		busRow.LastUpdate = row.LastUpdate // Convert time to string format
+		busData = append(busData, busRow)
+	}
+	return busData
+}
+
+func toBusExpectedResult(result []ExampleData) []brokerbus.ExampleData {
+	var busResult []brokerbus.ExampleData
+	for _, row := range result {
+		busRow := brokerbus.ExampleData{}
+		busRow.ActorID = row.ActorID
+		busRow.FirstName = row.FirstName
+		busRow.LastName = row.LastName
+		busRow.LastUpdate = row.LastUpdate // Convert time to string format
+		busResult = append(busResult, busRow)
+	}
+	return busResult
+}
+
+func toBusValidation(v Validation) brokerbus.Validation {
+	busValidation := brokerbus.Validation{}
+	busValidation.StrictOrdering = v.StrictOrdering
+	busValidation.IgnoreCase = v.IgnoreCase
+	busValidation.IgnoreWhitespace = v.IgnoreWhitespace
+	return busValidation
 }

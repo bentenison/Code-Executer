@@ -3,8 +3,9 @@ package brokerapp
 import (
 	"context"
 
-	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
-	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/adminclient/proto/admClient"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto/authCli"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
 	"github.com/bentenison/microservice/business/domain/brokerbus"
 	"github.com/bentenison/microservice/foundation/logger"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,18 +17,19 @@ type App struct {
 	brokerbus *brokerbus.Business
 	logger    *logger.CustomLogger
 	tracer    trace.Tracer
-	authcli   authpb.AuthServiceClient
-	execcli   execpb.ExecutorServiceClient
+	authcli   authCli.AuthServiceClient
+	execcli   execClient.ExecutorServiceClient
+	admincli  admClient.AdminServiceClient
 }
 
-func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, execcli execpb.ExecutorServiceClient, authcli authpb.AuthServiceClient, tp *sdktrace.TracerProvider) *App {
-	return &App{logger: logger, brokerbus: bus, tracer: tp.Tracer(""), authcli: authcli, execcli: execcli}
+func NewApp(logger *logger.CustomLogger, bus *brokerbus.Business, tp *sdktrace.TracerProvider, admincli admClient.AdminServiceClient, execcli execClient.ExecutorServiceClient, authcli authCli.AuthServiceClient) *App {
+	return &App{logger: logger, brokerbus: bus, tracer: tp.Tracer(""), authcli: authcli, execcli: execcli, admincli: admincli}
 }
 
-func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
+func (a *App) HandleSubmisson(ctx context.Context, submission Submission) (*execClient.ExecutionResponse, error) {
 	return a.brokerbus.HandleSubmissonService(ctx, brokerbus.Submission(submission), a.authcli, a.execcli)
 }
-func (a *App) HandleCodeRun(ctx context.Context, submission Submission) (*execpb.ExecutionResponse, error) {
+func (a *App) HandleCodeRun(ctx context.Context, submission Submission) (*execClient.ExecutionResponse, error) {
 	return a.brokerbus.HandleCodeRun(ctx, brokerbus.Submission(submission), a.authcli, a.execcli)
 }
 func (a *App) Authenticate(ctx context.Context, up Credentials) (string, error) {
@@ -55,7 +57,7 @@ func (a *App) GetAnswerByQuestionId(ctx context.Context, id string) (brokerbus.A
 func (a *App) GetAllLanguages(ctx context.Context) ([]*brokerbus.Language, error) {
 	return a.brokerbus.GetAllAllowedLanguages(ctx)
 }
-func (a *App) HandleQCQuestion(ctx context.Context, q Question) (*execpb.ExecutionResponse, error) {
+func (a *App) HandleQCQuestion(ctx context.Context, q Question) (*execClient.ExecutionResponse, error) {
 	return a.brokerbus.HandleQcService(ctx, toBusQuestion(q), a.authcli, a.execcli)
 }
 func (a *App) HandleGetAllTemplates(ctx context.Context) ([]brokerbus.Question, error) {
@@ -73,4 +75,7 @@ func (a *App) HandleGetSnippetById(ctx context.Context, id string) (*brokerbus.C
 }
 func (a *App) FormatCode(ctx context.Context, payload FormatterRequest) (*brokerbus.FormatterResponse, error) {
 	return a.brokerbus.FormatCode(ctx, brokerbus.FormatterRequest(payload))
+}
+func (a *App) LoadDBQuest(ctx context.Context, questId string) (*brokerbus.SQLQuestion, error) {
+	return a.brokerbus.GetDBQuestById(ctx, questId)
 }

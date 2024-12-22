@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 node_modules
+k8s/elasticsearch
+api/cmd/service/executor-service/static

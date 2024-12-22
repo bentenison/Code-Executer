@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+option go_package = "./admin";
+package proto;
+
+import "google/protobuf/timestamp.proto";
+// UserMetrics represents user statistics.
+message UserMetrics {
+    string user_id = 1;
+    string username = 2;
+    int32 level = 3; // 1 = Easy, 2 = Medium, 3 = Hard
+    int32 total_score = 4;
+    double accuracy = 5; // Percentage of correct answers
+    double speed_avg = 6; // Average time (in seconds)
+    int32 penalty_points = 7;
+    int32 rank = 8;
+    string language = 9;
+    google.protobuf.Timestamp created_at = 10;
+}
+
+// GlobalUserPerformance represents overall performance metrics for a user.
+message GlobalUserPerformance {
+    string user_id = 1;
+    string username = 2;
+    int32 level = 3;
+    int32 total_score = 4;
+    double accuracy = 5;
+    double speed_avg = 6;
+    int32 penalty_points = 7;
+    int32 rank = 8;
+    google.protobuf.Timestamp created_at = 9;
+}
+
+// Question represents a challenge question.
+message Question {
+    string question_id = 1;
+    string title = 2;
+    string description = 3;
+    string logic = 4;
+    string difficulty = 5;
+    repeated string tags = 6;
+    string language = 7;
+    bool is_completed = 8;
+}
+
+// SubmissionStats holds statistics for a user submission.
+message SubmissionStats {
+    string submission_id = 1;
+    string user_id = 2; // Foreign key to User
+    string challenge_id = 3; // Foreign key to Challenge
+    bool is_correct = 4; // Whether the answer was correct
+    int32 attempts = 5; // Number of attempts made
+    int32 time_taken = 6; // Time in seconds to complete
+    double code_quality = 7; // 0 to 100 score for quality
+    int32 penalty_points = 8; // Penalties applied
+    google.protobuf.Timestamp created_at = 9; // Timestamp when submission was created
+}
+
+// Challenge represents a coding challenge.
+message Challenge {
+    string challenge_id = 1;
+    string user_id = 2;
+    repeated string tags = 3;
+    string difficulty = 4;
+    int32 user_rank = 5; // Rank assigned to the user for this challenge
+    int32 score = 6;
+    repeated Question questions = 7; // List of questions in this challenge
+    google.protobuf.Timestamp created_at = 8;
+    google.protobuf.Timestamp completion_date = 9;
+    google.protobuf.Timestamp started_at = 10;
+    string language = 11; // Language the challenge is created for
+    bool is_completed = 12;
+}
+
+// Request and Response messages
+message CompleteChallengeRequest {
+    string challenge_id = 1;
+}
+
+message CompleteChallengeResponse {
+    bool success = 1;
+}
+
+message CompleteQuestionRequest {
+    string question_id = 1;
+    string challenge_id = 2;
+}
+
+message CompleteQuestionResponse {
+    bool success = 1;
+}
+
+message UpdateUserMetricsRequest {
+    UserMetrics user_metrics = 1;
+}
+
+message UpdateUserMetricsResponse {
+    bool success = 1;
+}
+
+message UpdateUserPerformanceRequest {
+    GlobalUserPerformance performance = 1;
+}
+
+message UpdateUserPerformanceResponse {
+    bool success = 1;
+}
+
+message AddSubmissionStatsRequest {
+    SubmissionStats submission_stats = 1;
+}
+
+message AddSubmissionStatsResponse {
+    bool success = 1;
+}
+
+// AdminService defines the methods available.
+service AdminService {
+    rpc CompleteChallenge(CompleteChallengeRequest) returns (CompleteChallengeResponse);
+    rpc CompleteQuestion(CompleteQuestionRequest) returns (CompleteQuestionResponse);
+    rpc UpdateUserMetrics(UpdateUserMetricsRequest) returns (UpdateUserMetricsResponse);
+    rpc UpdateUserPerformance(UpdateUserPerformanceRequest) returns (UpdateUserPerformanceResponse);
+    rpc AddSubmissionStats(AddSubmissionStatsRequest) returns (AddSubmissionStatsResponse);
+}

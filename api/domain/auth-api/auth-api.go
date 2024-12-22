@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bentenison/microservice/api/domain/auth-api/grpc/proto"
+	"github.com/bentenison/microservice/api/domain/auth-api/grpc/proto/auth"
 	"github.com/bentenison/microservice/app/domain/authapp"
 	"github.com/bentenison/microservice/app/sdk/apperrors"
 	"github.com/bentenison/microservice/foundation/logger"
@@ -15,7 +15,7 @@ import (
 type api struct {
 	authapp *authapp.App
 	log     *logger.CustomLogger
-	proto.UnimplementedAuthServiceServer
+	auth.UnimplementedAuthServiceServer
 }
 
 func newAPI(log *logger.CustomLogger, authapp *authapp.App) *api {
@@ -93,7 +93,7 @@ func (s *api) authorizeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, id)
 }
 
-func (s *api) Authenticate(ctx context.Context, req *proto.LoginRequest) (*proto.LoginResponse, error) {
+func (s *api) Authenticate(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
 	credentials := protoToCred(req)
 	token, err := s.authapp.Authenticate(ctx, credentials)
 	if err != nil {
@@ -102,9 +102,9 @@ func (s *api) Authenticate(ctx context.Context, req *proto.LoginRequest) (*proto
 		})
 		return nil, err
 	}
-	return &proto.LoginResponse{Token: token}, nil
+	return &auth.LoginResponse{Token: token}, nil
 }
-func (s *api) CreateUser(ctx context.Context, req *proto.CreateAccountRequest) (*proto.CreateAccountResponse, error) {
+func (s *api) CreateUser(ctx context.Context, req *auth.CreateAccountRequest) (*auth.CreateAccountResponse, error) {
 	payload := protoToUser(req)
 	id, err := s.authapp.CreateUser(ctx, payload)
 	if err != nil {
@@ -114,12 +114,12 @@ func (s *api) CreateUser(ctx context.Context, req *proto.CreateAccountRequest) (
 		})
 		return nil, err
 	}
-	return &proto.CreateAccountResponse{
+	return &auth.CreateAccountResponse{
 		Id:      id,
 		Message: "user created",
 	}, nil
 
 }
-func (s *api) Authorize(ctx context.Context, req *proto.AuthorizeRequest) (*proto.AuthorizeResponse, error) {
+func (s *api) Authorize(ctx context.Context, req *auth.AuthorizeRequest) (*auth.AuthorizeResponse, error) {
 	return nil, nil
 }

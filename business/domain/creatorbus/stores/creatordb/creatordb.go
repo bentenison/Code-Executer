@@ -8,7 +8,8 @@ import (
 	"github.com/bentenison/microservice/business/sdk/page"
 	"github.com/bentenison/microservice/foundation/logger"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Store struct {
@@ -198,39 +199,87 @@ func (s *Store) SearchQuestionByTag(ctx context.Context, tag string) ([]creatorb
 
 	return toBusQuestions(results), nil
 }
-func (s *Store) Query(ctx context.Context, filter creatorbus.QueryFilter, page page.Page) ([]creatorbus.Question, error) {
+func (s *Store) Query(ctx context.Context, filter creatorbus.QueryFilter, page page.Page) (creatorbus.QueryResult, error) {
 	query := s.applyFilter(filter)
 
 	// Pagination logic
 	skip := (page.PageNumber() - 1) * page.RowsPerPage()
 	limit := page.RowsPerPage()
-
-	cursor, err := s.ds.MGO.Collection("qc_questions").Find(context.Background(), query, options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)))
+	pipeline := mongo.Pipeline{
+		{
+			{"$match", query}, // Match the filter
+		},
+		{
+			{"$facet", bson.M{
+				"documents": []bson.M{
+					{"$skip": skip},   // Pagination: Skip 0 documents
+					{"$limit": limit}, // Pagination: Limit to 10 documents
+				},
+				"totalCount": []bson.M{
+					{"$count": "count"}, // Count the total documents matching the filter
+				},
+			}},
+		},
+	}
+	s.logger.Infoc(ctx, "Query", map[string]interface{}{
+		"query": query,
+		"skip":  skip,
+		"limit": limit,
+	})
+	cursor, err := s.ds.MGO.Collection("qc_questions").Aggregate(ctx, pipeline)
+	// cursor, err := s.ds.MGO.Collection("qc_questions").Find(context.Background(), query, options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)))
 	if err != nil {
 		s.logger.Errorc(ctx, "error while getting data from DB", map[string]interface{}{
 			"error": err.Error(),
 		})
-		return nil, err
+		return creatorbus.QueryResult{}, err
 	}
 	defer cursor.Close(context.Background())
 
-	var results []Question
-	for cursor.Next(context.Background()) {
-		var question Question
-		if err := cursor.Decode(&question); err != nil {
-			s.logger.Errorc(ctx, "error in decoding question", map[string]interface{}{
-				"error": err.Error(),
-			})
-			continue
+	var aggregationResults []bson.M
+	if err := cursor.All(ctx, &aggregationResults); err != nil {
+		s.logger.Errorc(ctx, "Error in decoding aggregation result", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return creatorbus.QueryResult{}, err
+	}
+
+	// Extract the "documents" and "totalCount" from the aggregation result
+	// var questions []Question
+	totalCount := 0
+	var queryResult QueryResult
+	if len(aggregationResults) > 0 {
+		// Extract documents
+		// if docs, ok := aggregationResults[0]["documents"].(bson.A); ok {
+		// 	for _, doc := range docs {
+		// 		var question Question
+		// 		docBytes, err := bson.Marshal(doc)
+		// 		if err != nil {
+		// 			s.logger.Errorc(ctx, "Error marshaling document", map[string]interface{}{
+		// 				"error": err.Error(),
+		// 			})
+		// 			continue
+		// 		}
+		// 		if err := bson.Unmarshal(docBytes, &question); err != nil {
+		// 			s.logger.Errorc(ctx, "Error decoding question", map[string]interface{}{
+		// 				"error": err.Error(),
+		// 			})
+		// 			continue
+		// 		}
+		// 		questions = append(questions, question)
+		// 	}
+		// }
+		if counts, ok := aggregationResults[0]["totalCount"].(bson.A); ok && len(counts) > 0 {
+			if countMap, ok := counts[0].(bson.M); ok {
+				if countVal, ok := countMap["count"].(int32); ok {
+					totalCount = int(countVal)
+				}
+			}
 		}
-		results = append(results, question)
 	}
-
-	if err := cursor.Err(); err != nil {
-		return nil, err
-	}
-
-	return toBusQuestions(results), nil
+	queryResult.Count = int32(totalCount)
+	queryResult.Documents = aggregationResults[0]["documents"].(primitive.A)
+	return toBusQueryResult(queryResult), nil
 }
 
 func (s *Store) SearchQuestionByLang(ctx context.Context, lang string) ([]creatorbus.Question, error) {

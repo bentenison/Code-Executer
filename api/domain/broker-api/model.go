@@ -15,6 +15,8 @@ type SubmissionPayload struct {
 	QuestionId     string `json:"question_id,omitempty"`
 	SubmissionTime string `json:"submission_time,omitempty"`
 	FileExtension  string `json:"file_extension,omitempty" db:"file_extension"`
+	ChallengeID    string `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	IsChallenge    bool   `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
 }
 
 func toAppSubmission(payload SubmissionPayload) brokerapp.Submission {
@@ -24,6 +26,8 @@ func toAppSubmission(payload SubmissionPayload) brokerapp.Submission {
 		CodeSnippet:   payload.CodeSnippet,
 		QuestionId:    payload.QuestionId,
 		FileExtension: payload.FileExtension,
+		IsChallenge:   payload.IsChallenge,
+		ChallengeID:   payload.ChallengeID,
 	}
 	submission.ID = uuid.NewString()
 	submission.SubmissionTime = time.Now()

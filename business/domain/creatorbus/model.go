@@ -1,6 +1,10 @@
 package creatorbus
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Question struct {
 	QuestionId        string            `json:"id" bson:"id"`
@@ -75,4 +79,9 @@ type Concept struct {
 type LanguageConcept struct {
 	Language string    `bson:"language" json:"language,omitempty" db:"language"`
 	Concepts []Concept `bson:"concepts" json:"concepts,omitempty" db:"concepts"`
+}
+
+type QueryResult struct {
+	Documents primitive.A
+	Count     int32
 }

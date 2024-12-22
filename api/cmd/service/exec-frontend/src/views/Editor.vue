@@ -7,7 +7,7 @@
     <div class="flex justify-content-between">
       <div class="flex flex-column mt-2">
         <CodeEditor
-          v-if="currQuestion"
+          v-if="currQuestion && editorStore.langArr"
           :line-nums="true"
           :key="currQuestion.id"
           :theme="theme"
@@ -20,7 +20,7 @@
           @lang="getLanguage"
           :languages="editorStore.langArr"
         ></CodeEditor>
-        <terminal />
+        <terminal v-if="currQuestion && editorStore.langArr" />
         <div class="flex align-items-center justify-content-end p-0 m-0">
           <p class="w-full">
             code executed by <strong>{{ executedBy }}</strong>
@@ -171,26 +171,29 @@ export default {
       this.editorStore
         .getAllQuestions()
         .then((res) => {
-          this.currQuestion = this.questions[this.currIndex];
-          this.editorStore
-            .getLanguageID(this.currQuestion.language.toLowerCase())
-            .then((res) => {
-              // console.log("results>>>>>", res);
-              this.langId = res;
-              this.lang = [];
-              this.lang.push(this.currQuestion.language);
-              this.lang.push(this.currQuestion.language_code.toUpperCase());
-              this.editorStore.changeLanguage(this.lang);
-              // this.emitter.emit("changeLang", this.lang);
-              // this.emitter.emit("changeLang", this.editorStore.langArr);
-            });
+          if (this.questions.length > 0) {
+            this.currQuestion = this.questions[this.currIndex];
+            this.editorStore
+              .getLanguageID(this.currQuestion.language.toLowerCase())
+              .then((res) => {
+                console.log("results>>>>>", res);
+                this.langId = res;
+                this.lang = [];
+                this.lang.push(this.currQuestion.language);
+                this.lang.push(this.currQuestion.language_code.toUpperCase());
+                this.editorStore.changeLanguage(this.lang);
+                // this.emitter.emit("changeLang", this.lang);
+                // this.emitter.emit("changeLang", this.editorStore.langArr);
+                console.log(";angArray>>>>>", this.editorStore.langArr);
+              });
 
-          this.$toast.add({
-            severity: "success",
-            summary: "fetched all question",
-            detail: "",
-            life: 3000,
-          });
+            this.$toast.add({
+              severity: "success",
+              summary: "fetched all question",
+              detail: "",
+              life: 3000,
+            });
+          }
         })
         .catch((err) => {
           this.$toast.add({

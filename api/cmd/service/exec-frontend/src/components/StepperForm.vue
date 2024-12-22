@@ -188,7 +188,7 @@ export default {
         Updated At: The timestamp of when the answer was last updated.
         Testcases: A list of test cases that were used to validate the solution
 the testcase_template.code should be a function where define one variable loop trough the testcases and pass input to the user defined function and compare the function output to extectedOutput if all testcases matches the expectedOutput then return true else return false. 
-The code in answer.logic and testcase_template.code make sure for every question it should be correct.
+The code in answer.logic and testcase_template.code make sure for every question it should be correct.testcase_template.code should return True if all testcases pass False otherwise.
 `;
     },
   },

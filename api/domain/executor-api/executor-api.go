@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
+	"github.com/bentenison/microservice/api/domain/executor-api/grpc/proto/executor"
 	"github.com/bentenison/microservice/app/domain/executorapp"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/otel"
@@ -19,7 +19,7 @@ import (
 type api struct {
 	app *executorapp.App
 	log *logger.CustomLogger
-	pb.UnimplementedExecutorServiceServer
+	executor.UnimplementedExecutorServiceServer
 }
 
 // var grpcApi *api
@@ -39,7 +39,7 @@ func newAPI(app *executorapp.App, log *logger.CustomLogger) *api {
 // 	}
 // }
 
-func (s *api) HandleExecution(stream grpc.ClientStreamingServer[pb.ExecutionRequest, pb.ExecutionResponse]) error {
+func (s *api) HandleExecution(stream grpc.ClientStreamingServer[executor.ExecutionRequest, executor.ExecutionResponse]) error {
 	// log.Println("context", stream.Context())
 	_, span := otel.AddSpan(stream.Context(), "api.handleexecution.start", attribute.KeyValue{Key: "executor", Value: attribute.Value{}})
 	defer span.End()

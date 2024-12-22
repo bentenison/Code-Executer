@@ -75,8 +75,8 @@
             padding: !header
               ? padding
               : lineNums
-              ? '10px ' + padding + ' ' + padding
-              : '0 ' + padding + ' ' + padding,
+                ? '10px ' + padding + ' ' + padding
+                : '0 ' + padding + ' ' + padding,
             marginLeft: showLineNums ? lineNumsWidth + 'px' : '0',
             width: showLineNums
               ? 'calc(100% - ' + lineNumsWidth + 'px)'
@@ -123,14 +123,7 @@ import Dropdown from "./Dropdown.vue";
 import CopyCode from "./CopyCode.vue";
 import "./themes/themes-base16.css";
 import "./themes/themes.css";
-import { useEditorStore } from "../stores/editor";
-import prettier from 'prettier';
-// import parserC from 'prettier-plugin-c';
-// import parserCPP from 'prettier-plugin-cpp';
-// import parserJava from 'prettier-plugin-java';
-// import parserPython from 'prettier-plugin-python';
-// import parserGo from 'prettier-plugin-go';
-// import parserPHP from 'prettier-plugin-php';
+// import { useEditorStore } from "../stores/editor";
 export default {
   components: {
     Dropdown,
@@ -198,42 +191,8 @@ export default {
     },
     languages: {
       type: Array,
-      default: function () {
-        return [
-          // ["javascript", "JS"],
-          // ["java", "JAVA"],
-          // ["c", "C"],
-          // ["cpp", "C++"],
-          // ["csharp", "C#"],
-          // ["ruby", "RUBY"],
-          // ["php", "PHP"],
-          // ["swift", "SWIFT"],
-           ["go", "GO"],
-          // ["html", "HTML"],
-          // ["css", "CSS"],
-          // ["typescript", "TS"],
-          // ["kotlin", "KOTLIN"],
-          // ["scala", "SCALA"],
-          // ["rust", "RUST"],
-          // ["sql", "SQL"],
-          // ["bash", "BASH"],
-          // ["powershell", "POWERSHELL"],
-          // ["objectivec", "OBJECTIVE-C"],
-          // ["elixir", "ELIXIR"],
-          // ["haskell", "HASKELL"],
-          // ["lua", "LUA"],
-          // ["r", "R"],
-          // ["matlab", "MATLAB"],
-          // ["fortran", "FORTRAN"],
-          // ["dart", "DART"],
-          // ["assembly", "ASSEMBLY"],
-          // ["groovy", "GROOVY"],
-          // ["pascal", "PASCAL"],
-          // ["prolog", "PROLOG"],
-          // ["scheme", "SCHEME"],
-          // ["visualbasic", "VB.NET"],
-        ];
-      },
+      required: false,
+      default: () => [["javascript", "JavaScript"]],
     },
     langListWidth: {
       type: String,
@@ -286,15 +245,17 @@ export default {
   },
   data() {
     return {
-      editorStore: useEditorStore(),
+      // editorStore: useEditorStore(),
       scrollBarWidth: 0,
       scrollBarHeight: 0,
       top: 0,
       left: 0,
-      languageClass: "hljs language-" + this.languages[0][1],
-      languageTitle: this.languages[0][1]
-        ? this.languages[0][1]
-        : this.languages[0][0],
+      languageClass: null,
+      languageTitle: null,
+      // languageClass: "hljs language-" + this.languages[0][1],
+      // languageTitle: this.languages[0][1]
+      //   ? this.languages[0][1]
+      //   : this.languages[0][0],
       content: this.value,
       cursorPosition: 0,
       insertTab: false,
@@ -321,7 +282,26 @@ export default {
     scroll() {
       return this.height == "auto" ? false : true;
     },
+    // languageClass() {
+    //   return "language-" + this.languages[0][0];
+    // },
+    // languageTitle() {
+    //   return this.languages[0][1] ? this.languages[0][1] : this.languages[0][0];
+    // },
   },
+  watch: {
+    languages: {
+      immediate: true,
+      handler(newVal) {
+        console.log("watcher called", newVal);
+        if (newVal && newVal.length > 0) {
+          this.languageClass = "language-" + newVal[0][0];
+          this.languageTitle = newVal[0][1] || newVal[0][0];
+        }
+      },
+    },
+  },
+
   methods: {
     updateValue(e) {
       const value = e.target.value;
@@ -379,8 +359,11 @@ export default {
       }
     },
     calcScrollDistance(e) {
-      this.$refs.code.scrolling = true;
-      this.scrolling = true;
+      // this.$refs.code.scrolling = true;
+      if (this.$refs.code) {
+        this.scrolling = true;
+        this.$refs.code.scrolling = true;
+      }
       this.top = -e.target.scrollTop;
       this.left = -e.target.scrollLeft;
     },
@@ -428,8 +411,8 @@ export default {
         this.height == "auto"
           ? lineNum
           : lineNum > heightNum
-          ? lineNum
-          : heightNum;
+            ? lineNum
+            : heightNum;
     },
     autoFormat() {
       const formattedCode = this.formatPythonCode(this.content);
@@ -478,12 +461,12 @@ export default {
     },
   },
   mounted() {
-    this.$emit("lang", this.languages[0][0]);
+    // console.log("languages are here finally", this.languages);
     this.$emit("content", this.content);
     this.$emit("textarea", this.$refs.textarea);
     this.resizer();
+    // this.$emit("lang", this.languages[0][0]);
     // let code = document.getElementsByClassName("hljs")[0];
-    // console.log("code", styles.background);
   },
   beforeUnmount() {
     this.emitter.off("changeLang");
@@ -630,7 +613,9 @@ export default {
 }
 .code-editor .list > .lang-list > li {
   font-size: 13px;
-  transition: background 0.16s ease, color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
   box-sizing: border-box;
   padding: 0 12px;
   white-space: nowrap;

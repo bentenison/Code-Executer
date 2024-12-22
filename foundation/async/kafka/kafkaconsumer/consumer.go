@@ -12,7 +12,7 @@ type Consumer struct {
 }
 
 // NewConsumer creates a new Kafka consumer instance
-func NewConsumer(broker, groupID, topic string) (*Consumer, error) {
+func NewConsumer(broker, groupID, topics []string) (*Consumer, error) {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": broker,     // Kafka broker
 		"group.id":          groupID,    // Consumer group ID
@@ -23,7 +23,7 @@ func NewConsumer(broker, groupID, topic string) (*Consumer, error) {
 	}
 
 	// Subscribe to the topic
-	err = consumer.Subscribe(topic, nil)
+	err = consumer.SubscribeTopics(topics, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +43,6 @@ func (c *Consumer) ConsumeMessages() ([]string, error) {
 
 		messages = append(messages, string(msg.Value))
 	}
-
-	return messages, nil
 }
 
 // Close gracefully shuts down the consumer

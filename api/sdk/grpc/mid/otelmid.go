@@ -2,7 +2,6 @@ package mid
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/bentenison/microservice/foundation/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -17,7 +16,7 @@ func UnaryOtelInterceptor(tracer trace.Tracer) grpc.UnaryServerInterceptor {
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
 		// Retrieve request ID from incoming metadata or create a new on
-		fmt.Println("I am getting the requestId here", ctx.Value("tracectx"))
+		// fmt.Println("I am getting the requestId here", ctx.Value("tracectx"))
 		otel.InjectTracing(ctx, tracer)
 		// Add the request ID to the context
 

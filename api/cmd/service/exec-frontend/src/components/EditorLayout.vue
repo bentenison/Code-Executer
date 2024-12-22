@@ -11,7 +11,7 @@
           <home />
         </div>
 
-        <!-- <app-footer></app-footer> -->
+        <app-footer></app-footer>
       </div>
       <!-- <div class="layout-mask animate-fadein"></div> -->
     </div>

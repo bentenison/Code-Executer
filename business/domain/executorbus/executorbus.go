@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
+	"github.com/bentenison/microservice/api/domain/executor-api/grpc/proto/executor"
 	"github.com/bentenison/microservice/business/sdk/delegate"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/otel"
@@ -180,8 +180,8 @@ func NewBusiness(log *logger.CustomLogger, delegate *delegate.Delegate, storer S
 	// 	lb:            lb,
 	// }
 }
-func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid, ext string) (*pb.ExecutionResponse, error) {
-	var execResponse pb.ExecutionResponse
+func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid, ext string) (*executor.ExecutionResponse, error) {
+	var execResponse executor.ExecutionResponse
 	// get container spec
 	specs, err := b.getContainerSpec(language)
 	if err != nil {

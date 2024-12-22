@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
-	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/adminclient/proto/admClient"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto/authCli"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
 	brokerapp "github.com/bentenison/microservice/app/domain/broker-app"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/gin-gonic/gin"
@@ -14,14 +15,18 @@ import (
 type api struct {
 	brokerapp *brokerapp.App
 	logger    *logger.CustomLogger
-	authcli   authpb.AuthServiceClient
-	execcli   execpb.ExecutorServiceClient
+	authcli   authCli.AuthServiceClient
+	execcli   execClient.ExecutorServiceClient
+	admincli  admClient.AdminServiceClient
 }
 
-func newAPI(brokerApp *brokerapp.App, logger *logger.CustomLogger) *api {
+func newAPI(brokerApp *brokerapp.App, logger *logger.CustomLogger, authcli authCli.AuthServiceClient, execcli execClient.ExecutorServiceClient, admincli admClient.AdminServiceClient) *api {
 	return &api{
 		brokerapp: brokerApp,
 		logger:    logger,
+		authcli:   authcli,
+		execcli:   execcli,
+		admincli:  admincli,
 	}
 }
 
@@ -135,7 +140,7 @@ func (api *api) authenticate(c *gin.Context) {
 		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
-	res, err := api.authcli.Authenticate(c.Request.Context(), &authpb.LoginRequest{Username: cred.Username, Password: cred.Password})
+	res, err := api.authcli.Authenticate(c.Request.Context(), &authCli.LoginRequest{Username: cred.Username, Password: cred.Password})
 	if err != nil {
 		api.logger.Errorc(c.Request.Context(), "error in Authenticate GRPC API:", map[string]interface{}{
 			"error": err.Error(),
@@ -154,7 +159,7 @@ func (api *api) authorize(c *gin.Context) {
 		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
-	res, err := api.authcli.Authorize(c.Request.Context(), &authpb.AuthorizeRequest{Token: tkn.Token})
+	res, err := api.authcli.Authorize(c.Request.Context(), &authCli.AuthorizeRequest{Token: tkn.Token})
 	if err != nil {
 		api.logger.Errorc(c.Request.Context(), "error in Authorize GRPC API:", map[string]interface{}{
 			"error": err.Error(),
@@ -173,7 +178,7 @@ func (api *api) createUser(c *gin.Context) {
 		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
-	res, err := api.authcli.CreateAccount(c.Request.Context(), &authpb.CreateAccountRequest{Username: user.Username, Email: user.Email, Password: user.Password, Role: user.Role})
+	res, err := api.authcli.CreateAccount(c.Request.Context(), &authCli.CreateAccountRequest{Username: user.Username, Email: user.Email, Password: user.Password, Role: user.Role})
 	if err != nil {
 		api.logger.Errorc(c.Request.Context(), "error in CreateAccount GRPC API:", map[string]interface{}{
 			"error": err.Error(),
@@ -297,8 +302,7 @@ func (api *api) createSnippet(c *gin.Context) {
 		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
 			"error": err.Error(),
 		})
-		c.Error(err)
-		c.JSON(http.StatusExpectationFailed, err.Error())
+		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
 	res, err := api.brokerapp.HandleCreateSnippet(c.Request.Context(), snippet)
@@ -317,7 +321,7 @@ func (api *api) getSnippetById(c *gin.Context) {
 		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
 			"error": "id is required ",
 		})
-		c.JSON(http.StatusExpectationFailed, "id is required")
+		c.Error(fmt.Errorf("id is required")).SetMeta(http.StatusExpectationFailed)
 		return
 	}
 	res, err := api.brokerapp.HandleGetSnippetById(c.Request.Context(), id)
@@ -339,18 +343,139 @@ func (api *api) formatCode(c *gin.Context) {
 		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
 			"error": err.Error(),
 		})
-		c.JSON(http.StatusExpectationFailed, err.Error())
+		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
-	api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
-		"error": payload,
-	})
 	res, err := api.brokerapp.FormatCode(c.Request.Context(), payload)
 	if err != nil {
 		api.logger.Errorc(c.Request.Context(), "error in formatting code:", map[string]interface{}{
 			"error": err.Error(),
 		})
 		//c.JSON(http.StatusInternalServerError, err.Error())
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) loadDbQuestion(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.Error(fmt.Errorf("id is required")).SetMeta(http.StatusExpectationFailed)
+		// c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	res, err := api.brokerapp.LoadDBQuest(c.Request.Context(), id)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in loading db question:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (api *api) completeChallenge(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.Error(fmt.Errorf("id is required")).SetMeta(http.StatusExpectationFailed)
+		// c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	res, err := api.admincli.CompleteChallenge(c.Request.Context(), &admClient.CompleteChallengeRequest{ChallengeId: id})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in CompleteChallenge RPC:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) completeQuestion(c *gin.Context) {
+	var payload brokerapp.CompleteChallengeRequest
+	if err := c.Bind(&payload); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusExpectationFailed)
+		return
+	}
+	res, err := api.admincli.CompleteQuestion(c.Request.Context(), &admClient.CompleteQuestionRequest{QuestionId: payload.QuestionId, ChallengeId: payload.ChallengeId})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in CompleteQuestion RPC:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) updateUserMetrics(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.Error(fmt.Errorf("id is required")).SetMeta(http.StatusExpectationFailed)
+		// c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	res, err := api.brokerapp.LoadDBQuest(c.Request.Context(), id)
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in loading db question:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) updateUserPerformance(c *gin.Context) {
+	var payload brokerapp.GlobalUserPerformance
+	if err := c.Bind(&payload); err != nil {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusExpectationFailed)
+		return
+	}
+	res, err := api.admincli.UpdateUserPerformance(c.Request.Context(), &admClient.UpdateUserPerformanceRequest{
+		Performance: &admClient.GlobalUserPerformance{},
+	})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in loading db question:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+func (api *api) addSubmissionStats(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		api.logger.Errorc(c.Request.Context(), "error while binding the data:", map[string]interface{}{
+			"error": "id is required ",
+		})
+		c.Error(fmt.Errorf("id is required")).SetMeta(http.StatusExpectationFailed)
+		// c.JSON(http.StatusExpectationFailed, "id is required")
+		return
+	}
+	res, err := api.admincli.AddSubmissionStats(c.Request.Context(), &admClient.AddSubmissionStatsRequest{
+		SubmissionStats: &admClient.SubmissionStats{},
+	})
+	if err != nil {
+		api.logger.Errorc(c.Request.Context(), "error in loading db question:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		c.Error(err).SetMeta(http.StatusInternalServerError)
 		return
 	}
 	c.JSON(http.StatusOK, res)

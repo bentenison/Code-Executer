@@ -8,7 +8,7 @@ export const useEditorStore = defineStore("editor", {
     output: "",
     language: "javascript",
     isRunning: false,
-    questions: null,
+    questions: [],
     questionTemplates: null,
     languages: null,
     langArr: [],
@@ -50,9 +50,9 @@ export const useEditorStore = defineStore("editor", {
         axios
           .post("/broker/getllquestions")
           .then((res) => {
+            this.questions = res.data;
             resolve(res);
             // console.log("results:::::", res);
-            this.questions = res.data;
           })
           .catch((err) => {
             reject(err);
@@ -75,6 +75,7 @@ export const useEditorStore = defineStore("editor", {
     },
     getAllLanguages() {
       return new Promise((resolve, reject) => {
+        // axios.defaults.baseURL = "/server";
         axios
           .get("/broker/getlanguages")
           .then((res) => {
@@ -90,11 +91,13 @@ export const useEditorStore = defineStore("editor", {
     getLanguageID(lang) {
       console.log("language", lang);
       return new Promise((resolve, reject) => {
-        var result = this.languages.find((obj) => {
-          return obj.name.toLowerCase() === lang;
-          // console.log("language", obj);
-        });
-        resolve(result);
+        if (this.languages.length > 0) {
+          var result = this.languages.find((obj) => {
+            return obj.name.toLowerCase() === lang;
+            // console.log("language", obj);
+          });
+          resolve(result);
+        }
       });
     },
     getAllAnswers() {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -91,6 +91,9 @@ type Submission struct {
 	UpdatedAt       time.Time `json:"updated_at,omitempty" db:"updated_at"`
 	QuestionId      string    `json:"question_id,omitempty" db:"question_id"`
 	FileExtension   string    `json:"file_extension,omitempty" db:"file_extension"`
+	RunCount        int       `json:"run_count,omitempty" db:"run_count"`
+	IsChallenge     bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
+	ChallengeID     string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
 }
 
 // PerformanceMetrics struct for returning performance metrics
@@ -147,6 +150,9 @@ type Language struct {
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 	FileExtension    string    `json:"file_extension"`
+	Description      string    `json:"description,omitempty" db:"description" bson:"description"` // Optional field
+	Tags             []string  `json:"tags,omitempty" db:"tags" bson:"tags"`                      // Optional field (array of strings)
+	LogoURL          string    `json:"logo_url,omitempty" db:"logo_url" bson:"logo_url"`
 }
 
 type UserPayload struct {
@@ -180,8 +186,49 @@ type FormatterRequest struct {
 type FormatterResponse struct {
 	FormattedCode string `json:"formatted_code"`
 }
+type ExampleData struct {
+	ActorID    int       `json:"actor_id" bson:"actor_id"`
+	FirstName  string    `json:"first_name" bson:"first_name"`
+	LastName   string    `json:"last_name" bson:"last_name"`
+	LastUpdate time.Time `json:"last_update" bson:"last_update"`
+}
 
-func createCodeExecutionStats(pb *execpb.ExecutionResponse, id, uid, codesnippet, langId string) *CodeExecutionStats {
+type Table struct {
+	TableName        string                   `json:"table_name" bson:"table_name"`
+	CreateTableQuery string                   `json:"create_table_query" bson:"create_table_query"`
+	Columns          []string                 `json:"columns" bson:"columns"`
+	ExampleData      []map[string]interface{} `json:"example_data" bson:"example_data"`
+	RestoreQuery     string                   `json:"restore_query" bson:"restore_query"`
+}
+
+type DBQuestion struct {
+	QueryType         string                   `json:"query_type" bson:"query_type"`
+	QueryModifiesData bool                     `json:"query_modifies_data" bson:"query_modifies_data"`
+	QuestionText      string                   `json:"question_text" bson:"question_text"`
+	ExpectedResult    []map[string]interface{} `json:"expected_result" bson:"expected_result"`
+	Hints             []string                 `json:"hints" bson:"hints"`
+	ExpectedQuery     string                   `json:"expected_query" bson:"expected_query"`
+}
+
+type Validation struct {
+	StrictOrdering   bool `json:"strict_ordering" bson:"strict_ordering"`
+	IgnoreCase       bool `json:"ignore_case" bson:"ignore_case"`
+	IgnoreWhitespace bool `json:"ignore_whitespace" bson:"ignore_whitespace"`
+}
+
+type SQLQuestion struct {
+	ID          string     `json:"id" bson:"id"`
+	Title       string     `json:"title" bson:"title"`
+	Description string     `json:"description" bson:"description"`
+	Database    string     `json:"database" bson:"database"`
+	Difficulty  string     `json:"difficulty" bson:"difficulty"`
+	Tags        []string   `json:"tags" bson:"tags"`
+	Tables      []Table    `json:"tables" bson:"tables"`
+	DBQuestion  DBQuestion `json:"question" bson:"question"`
+	Validation  Validation `json:"validation" bson:"validation"`
+}
+
+func createCodeExecutionStats(pb *execClient.ExecutionResponse, id, uid, codesnippet, langId string) *CodeExecutionStats {
 	var codeExecutionStats CodeExecutionStats
 	cpuUsage, _ := strconv.Atoi(pb.CpuStats)
 	execTime, _ := ConvertToMilliseconds(pb.ExecTime)

@@ -30,7 +30,7 @@ type Stats struct {
 	} `json:"cpu_stats"`
 }
 
-const containerName = "dd70e795fd37" // Change this to your container name
+const containerName = "ae73938dce798" // Change this to your container name
 
 func runPythonCode(code string) (string, error) {
 
@@ -85,7 +85,7 @@ func runPythonCode(code string) (string, error) {
 	// 	}
 	// }
 	// Create a temporary file for the Python code
-	tmpFile, err := os.Create(fmt.Sprintf("%s.c", "code_1234"))
+	tmpFile, err := os.Create(fmt.Sprintf("%s.py", "code_1234"))
 	if err != nil {
 		return "", err
 	}
@@ -104,11 +104,11 @@ func runPythonCode(code string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cmd := "gcc" + " -o" + " /app/main " + filepath.Join("/app", filepath.Base(tmpFile.Name())) + " &&" + " ./main"
+	cmd := "python " + filepath.Join("/app", filepath.Base(tmpFile.Name()))
 	log.Println(cmd)
 	// Execute the Python script in the existing container
 	execConfig := container.ExecOptions{
-		Cmd:          []string{"sh", "-c", cmd, "&&", "./app/main"},
+		Cmd:          []string{"sh", "-c", cmd},
 		AttachStdout: true,
 		AttachStderr: true,
 	}
@@ -194,53 +194,11 @@ func uploadFile(client pb.ExecutorServiceClient, filePath string) {
 	// fmt.Printf("Upload status: %v, message: %s\n", res.Success, res.Message)
 }
 func ExecutionHandler(c *gin.Context) {
-	pythonCode := `#include <stdio.h>
-int findMax(int arr[], int n)
-{
-    int max = arr[0];
-    for (int i = 1; i < n; i++)
-    {
-        if (arr[i] > max)
-        {
-            max = arr[i];
-        }
-    }
-    return max;
-}
-int main()
-{
-    int test_cases[][6] = {
-        {1, 2, 3, 5},
-        {1, 3, 4, 5, 6},
-        {1, 2, 4, 5, 6},
-        {1, 3}};
-    int expected[] = {5, 6, 6, 3};
-    int all_passed = 1;
+	pythonCode := `import time, os, sys
 
-    for (int i = 0; i < 4; i++)
-    {
-        int n = sizeof(test_cases[i]) / sizeof(test_cases[i][0]);
-        int result = findMax(test_cases[i], n);
-        if (result != expected[i])
-        {
-            all_passed = 0;
-            printf("Failed for Input: ");
-            for (int j = 0; j < n; j++)
-                printf("%d ", test_cases[i][j]);
-            printf(". Expected: %d, Got: %d\n", expected[i], result);
-        }
-    }
-    if (all_passed)
-    {
-        printf("true");
-        return 1; // Return 1 to indicate true
-    }
-    else
-    {
-        printf("false");
-        return 0; // Return 0 to indicate false
-    }
-}
+print("Current Time:", time.ctime())
+print("Current Working Directory:", os.getcwd())
+print("Python Path:", sys.path)
 `
 	output, err := runPythonCode(pythonCode)
 	if err != nil {

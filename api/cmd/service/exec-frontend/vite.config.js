@@ -44,6 +44,13 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/creatorapi/, ""),
       },
+      "/adminapi": {
+        target: "http://localhost:8006",
+        ws: true,
+        secure: false,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/adminapi/, ""),
+      },
     },
   },
   productionSourceMap: false,

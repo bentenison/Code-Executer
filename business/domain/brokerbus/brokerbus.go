@@ -13,10 +13,11 @@ import (
 	"text/template"
 	"time"
 
-	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
-	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto/authCli"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
 	"github.com/bentenison/microservice/api/sdk/http/client"
 	"github.com/bentenison/microservice/business/sdk/delegate"
+	"github.com/bentenison/microservice/foundation/async/rabbit/rabbitproducer"
 	"github.com/bentenison/microservice/foundation/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -36,23 +37,26 @@ type Storer interface {
 	CreateSnippet(ctx context.Context, snippet *CodeSnippet) (*mongo.InsertOneResult, error)
 	GetSnippetById(ctx context.Context, id string) (*CodeSnippet, error)
 	GetAllByUser(ctx context.Context, userId string) ([]CodeSnippet, error)
+	GetDBQuestByID(ctx context.Context, questionID string) (*SQLQuestion, error)
 }
 
 type Business struct {
-	log      *logger.CustomLogger
-	delegate *delegate.Delegate
-	storer   Storer
+	log            *logger.CustomLogger
+	delegate       *delegate.Delegate
+	storer         Storer
+	rabbitProducer *rabbitproducer.Producer
 }
 
-func NewBusiness(logger *logger.CustomLogger, delegate *delegate.Delegate, storer Storer) *Business {
+func NewBusiness(logger *logger.CustomLogger, delegate *delegate.Delegate, storer Storer, rabbitProducer *rabbitproducer.Producer) *Business {
 	return &Business{
-		log:      logger,
-		delegate: delegate,
-		storer:   storer,
+		log:            logger,
+		delegate:       delegate,
+		storer:         storer,
+		rabbitProducer: rabbitProducer,
 	}
 }
 
-func (b *Business) HandleSubmissonService(ctx context.Context, submission Submission, authcli authpb.AuthServiceClient, execcli execpb.ExecutorServiceClient) (*execpb.ExecutionResponse, error) {
+func (b *Business) HandleSubmissonService(ctx context.Context, submission Submission, authcli authCli.AuthServiceClient, execcli execClient.ExecutorServiceClient) (*execClient.ExecutionResponse, error) {
 	//check if question exists in redis first
 	question := Question{}
 	err := b.storer.Get(ctx, submission.QuestionId, &question)
@@ -84,8 +88,18 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 		})
 		return nil, err
 	}
-	question.UserLogic = decodedSnippet
-	question.TestCases = question.TestcaseTemplate.Code
+	switch question.Language {
+	case "python":
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+	case "java":
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+		question.ClassName = "Main"
+	default:
+		question.UserLogic = decodedSnippet
+		question.TestCases = question.TestcaseTemplate.Code
+	}
 	err = b.createCodeTemplate(ctx, question, submission.UserID)
 	if err != nil {
 		b.log.Errorc(ctx, "error while ceating template for the question", map[string]interface{}{
@@ -115,7 +129,39 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 		})
 		return nil, err
 	}
+	if strings.ToLower(res.Output) != "" {
+		if strings.Contains(res.GetOutput(), "error") {
+			res.Output = "false"
+		}
+	}
+	if strings.Contains(strings.ToLower(res.Output), "true") {
+		//TODO add result modify the performnace, score, aacuracy mark question aatempted
+		// res, err := b.storer.UpdateQCQuestion(ctx, question.QuestionId)
+		// if err != nil {
+		// 	b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
+		// 		"error": err.Error(),
+		// 	})
+		// 	return nil, err
+		// }
+		// _ = res
+	}
+	// Output         string `protobuf:"bytes,1,opt,name=output,proto3" json:"output,omitempty"`
+	// ExecTime       string `protobuf:"bytes,2,opt,name=execTime,proto3" json:"execTime,omitempty"`
+	// RamUsed        string `protobuf:"bytes,3,opt,name=ramUsed,proto3" json:"ramUsed,omitempty"`
+	// CpuStats       string `protobuf:"bytes,4,opt,name=cpuStats,proto3" json:"cpuStats,omitempty"`
+	// TotalRAM       string `protobuf:"bytes,5,opt,name=totalRAM,proto3" json:"totalRAM,omitempty"`
+	// PercetRAMUsage string `protobuf:"bytes,6,opt,name=percetRAMUsage,proto3" json:"percetRAMUsage,omitempty"`
+	// ContainerID    string `protobuf:"bytes,7,opt,name=containerID,proto3" json:"containerID,omitempty"`
+
 	stats := createCodeExecutionStats(res, id, submission.UserID, submission.CodeSnippet, submission.LanguageID)
+	//TODO: After result from executor client add the perfromance metrics and code_execution stats to DB
+	err = b.rabbitProducer.ProduceMessage("code_execution_stats", *stats)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding code exec stats to elasticSearch", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// return nil, err
+	}
 	_, err = b.storer.AddExecutionStats(ctx, stats)
 	if err != nil {
 		b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
@@ -123,11 +169,10 @@ func (b *Business) HandleSubmissonService(ctx context.Context, submission Submis
 		})
 		return nil, err
 	}
-	//TODO: After result from executor client add the perfromance metrics and code_execution stats to DB
 	// b.storer.AddExecutionStats(ctx,)
 	return res, err
 }
-func (b *Business) HandleQcService(ctx context.Context, question Question, authcli authpb.AuthServiceClient, execcli execpb.ExecutorServiceClient) (*execpb.ExecutionResponse, error) {
+func (b *Business) HandleQcService(ctx context.Context, question Question, authcli authCli.AuthServiceClient, execcli execClient.ExecutorServiceClient) (*execClient.ExecutionResponse, error) {
 	//check if question exists in redis first
 	// question := Question{}
 	// err := b.storer.Get(ctx, submission.QuestionId, &question)
@@ -196,7 +241,7 @@ func (b *Business) HandleQcService(ctx context.Context, question Question, authc
 			res.Output = "false"
 		}
 	}
-	if strings.ToLower(res.Output) == "true" {
+	if strings.Contains(strings.ToLower(res.Output), "true") {
 		res, err := b.storer.UpdateQCQuestion(ctx, question.QuestionId)
 		if err != nil {
 			b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
@@ -218,7 +263,7 @@ func (b *Business) HandleQcService(ctx context.Context, question Question, authc
 	// b.storer.AddExecutionStats(ctx,)
 	return res, err
 }
-func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, authcli authpb.AuthServiceClient, execcli execpb.ExecutorServiceClient) (*execpb.ExecutionResponse, error) {
+func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, authcli authCli.AuthServiceClient, execcli execClient.ExecutorServiceClient) (*execClient.ExecutionResponse, error) {
 	question, err := b.storer.GetQuestionTemplate(ctx, submission.QuestionId)
 	if err != nil {
 		b.log.Errorc(ctx, "error while getting template", map[string]interface{}{
@@ -246,9 +291,9 @@ func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, aut
 		question.ClassName = "Main"
 	default:
 		question.UserLogic = decodedSnippet
-		question.TestCases = question.TestcaseTemplate.Code
+		// question.TestCases = question.TestcaseTemplate.Code
 	}
-	err = b.createCodeTemplate(ctx, question, submission.UserID)
+	err = b.createCodeTemplatetoRun(ctx, question, submission.UserID)
 	if err != nil {
 		b.log.Errorc(ctx, "error while ceating template for the question", map[string]interface{}{
 			"error": err.Error(),
@@ -279,6 +324,13 @@ func (b *Business) HandleCodeRun(ctx context.Context, submission Submission, aut
 		return nil, err
 	}
 	stats := createCodeExecutionStats(res, id, submission.UserID, submission.CodeSnippet, submission.LanguageID)
+	err = b.rabbitProducer.ProduceMessage("code_execution_stats", *stats)
+	if err != nil {
+		b.log.Errorc(ctx, "error in adding code exec stats to elasticSearch", map[string]interface{}{
+			"error": err.Error(),
+		})
+		// return nil, err
+	}
 	_, err = b.storer.AddExecutionStats(ctx, stats)
 	if err != nil {
 		b.log.Errorc(ctx, "error in adding code exec stats", map[string]interface{}{
@@ -373,7 +425,7 @@ func (b *Business) createCodeTemplateForQC(ctx context.Context, question Questio
 	return nil
 }
 func (b *Business) createCodeTemplatetoRun(ctx context.Context, question Question, userId string) error {
-	tmplt, err := template.New("code").Parse(question.ExecTemplate)
+	tmplt, err := template.New("code").Parse(question.UserLogicTemplate.CodeRunTemplate)
 	if err != nil {
 		b.log.Errorc(ctx, "error creating template from string", map[string]interface{}{
 			"error": err,
@@ -423,7 +475,7 @@ func decodeSnippet(snippet string) (string, error) {
 	}
 	return string(snipByte), nil
 }
-func startExecution(exec execpb.ExecutorServiceClient, path, lang, ext string) (*execpb.ExecutionResponse, error) {
+func startExecution(exec execClient.ExecutorServiceClient, path, lang, ext string) (*execClient.ExecutionResponse, error) {
 	stream, err := exec.HandleExecution(context.Background())
 	if err != nil {
 		return nil, err
@@ -444,7 +496,7 @@ func startExecution(exec execpb.ExecutorServiceClient, path, lang, ext string) (
 		if err != nil {
 			return nil, err
 		}
-		err = stream.Send(&execpb.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123", Lang: lang, FileExt: ext})
+		err = stream.Send(&execClient.ExecutionRequest{Content: buf[:n], Uid: "abc123", Qid: "pqr123", Lang: lang, FileExt: ext})
 		if err != nil {
 			return nil, err
 		}
@@ -485,6 +537,9 @@ func (b *Business) GetSnippetById(ctx context.Context, id string) (*CodeSnippet,
 }
 func (b *Business) GetAllSnippetsByUser(ctx context.Context, userId string) ([]CodeSnippet, error) {
 	return b.storer.GetAllByUser(ctx, userId)
+}
+func (b *Business) GetDBQuestById(ctx context.Context, questId string) (*SQLQuestion, error) {
+	return b.storer.GetDBQuestByID(ctx, questId)
 }
 func (b *Business) FormatCode(ctx context.Context, req FormatterRequest) (*FormatterResponse, error) {
 	return b.CallFormatterService(ctx, req.Lang, req.Code)

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      - KAFKA_KRAFT_MODE=true
+      - KAFKA_BROKER_ID=1
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_LOG_DIRS=/opt/bitnami/kafka/data
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - KAFKA_NUM_PARTITIONS=1
+      - KAFKA_REPLICATION_FACTOR=1
+      - KAFKA_DATA_DIR=/opt/bitnami/kafka/data  # Ensure this is set for KRaft mode
+    ports:
+      - '9092:9092'
+    volumes:
+      - /home/tanvirs/golang/Code-Executer/k8s/kafka/kafka-data:/opt/bitnami/kafka/data
+    # command: ["/bin/bash", "/opt/bitnami/kafka/create-topics.sh"]  # Uncomment to create topics
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    depends_on:
+      - kafka
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_SERVERS: kafka:9092
+
+volumes:
+  kafka-data:

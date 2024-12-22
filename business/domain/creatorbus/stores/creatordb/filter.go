@@ -33,11 +33,11 @@ func (s *Store) applyFilter(filter creatorbus.QueryFilter) bson.M {
 		data["tags"] = tg
 		// wc = append(wc, "tags = :tags")
 	}
-	if filter.IsQc {
-		// tg := strings.Split(filter.Tags, ",")
-		data["is_qc"] = filter.IsQc
-		// wc = append(wc, "tags = :tags")
-	}
+	// if filter.IsQc {
+	// tg := strings.Split(filter.Tags, ",")
+	data["is_qc"] = filter.IsQc
+	// wc = append(wc, "tags = :tags")
+	// }
 
 	query := bson.M{}
 
@@ -52,7 +52,7 @@ func (s *Store) applyFilter(filter creatorbus.QueryFilter) bson.M {
 			query[key] = bson.M{"$eq": v} // exact match for bool values
 		default:
 			// Handle other data types as needed (e.g., numbers, dates)
-			query[key] = bson.M{"$eq": v}
+			query[key] = v
 		}
 	}
 	return query

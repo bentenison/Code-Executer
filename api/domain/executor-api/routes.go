@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
+	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto/executor"
 	"github.com/bentenison/microservice/api/sdk/grpc/rpcserver"
 	"github.com/bentenison/microservice/app/domain/executorapp"
 	"github.com/bentenison/microservice/app/sdk/mid"

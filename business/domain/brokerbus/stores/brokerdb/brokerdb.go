@@ -44,44 +44,136 @@ func (s *Store) GetQuestionTemplate(ctx context.Context, id string) (brokerbus.Q
 	busQuest := toBusQuestion(question)
 	return busQuest, nil
 }
+
+// func (s *Store) AddSubmission(ctx context.Context, submission *brokerbus.Submission) (string, error) {
+// 	_, span := otel.AddSpan(ctx, "brokerbus.AddSubmission", attribute.String("db.insert", `INSERT INTO submissions (
+// 		user_id,
+// 		language_id,
+// 		code_snippet,
+// 		submission_time,
+// 		execution_status,
+// 		result_id,
+// 		is_public,
+// 		created_at,
+// 		updated_at,
+// 		question_id
+// 	)
+// 	VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status,
+// 			:result_id, :is_public, :created_at, :updated_at, :question_id)
+// 	RETURNING id`),
+// 		attribute.String("db.type", "pgsql"))
+// 	defer span.End()
+// 	query := `
+// 	INSERT INTO submissions (
+// 		user_id,
+// 		language_id,
+// 		code_snippet,
+// 		submission_time,
+// 		execution_status,
+// 		result_id,
+// 		is_public,
+// 		created_at,
+// 		updated_at,
+// 		question_id
+// 	)
+// 	VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status,
+// 			:result_id, :is_public, :created_at, :updated_at, :question_id)
+// 	RETURNING id
+// `
+
+// 	// Execute the named query
+// 	stmt, err := s.ds.SQL.PrepareNamed(query)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	var id string
+// 	err = stmt.Get(&id, submission)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+//		return id, nil
+//	}
 func (s *Store) AddSubmission(ctx context.Context, submission *brokerbus.Submission) (string, error) {
-	_, span := otel.AddSpan(ctx, "brokerbus.AddSubmission", attribute.String("db.insert", `INSERT INTO submissions (
-		user_id, 
-		language_id, 
-		code_snippet, 
-		submission_time, 
-		execution_status, 
-		result_id, 
-		is_public, 
-		created_at, 
-		updated_at, 
-		question_id
-	) 
-	VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status, 
-			:result_id, :is_public, :created_at, :updated_at, :question_id) 
-	RETURNING id`),
+	_, span := otel.AddSpan(ctx, "brokerbus.AddSubmission",
+		attribute.String("db.insert", `INSERT INTO submissions (
+			user_id, 
+			language_id, 
+			code_snippet, 
+			submission_time, 
+			execution_status, 
+			result_id, 
+			is_public, 
+			created_at, 
+			updated_at, 
+			question_id
+		) 
+		VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status, 
+				:result_id, :is_public, :created_at, :updated_at, :question_id) 
+		RETURNING id`),
 		attribute.String("db.type", "pgsql"))
 	defer span.End()
-	query := `
-	INSERT INTO submissions (
-		user_id, 
-		language_id, 
-		code_snippet, 
-		submission_time, 
-		execution_status, 
-		result_id, 
-		is_public, 
-		created_at, 
-		updated_at, 
-		question_id
-	) 
-	VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status, 
-			:result_id, :is_public, :created_at, :updated_at, :question_id) 
-	RETURNING id
-`
 
-	// Execute the named query
-	stmt, err := s.ds.SQL.PrepareNamed(query)
+	params := map[string]interface{}{
+		"question_id": submission.QuestionId,
+	}
+
+	// First, check if submission for this question_id already exists
+	var existingSubmission brokerbus.Submission
+	// Use PrepareNamed for SELECT query
+	stmt, err := s.ds.SQL.PrepareNamed(`SELECT id, run_count FROM submissions WHERE question_id = :question_id LIMIT 1`)
+	if err != nil {
+		return "", err
+	}
+
+	// Execute the query with parameters
+	err = stmt.Get(&existingSubmission, params)
+	if err != nil && err.Error() != "sql: no rows in result set" {
+		return "", err // Return error if it's something other than "no rows"
+	}
+
+	// If submission exists, increment run_count
+	if existingSubmission.ID != "" {
+		params["id"] = existingSubmission.ID
+		params["updated_at"] = time.Now()
+
+		// Prepare and execute the update query to increment run_count
+		updateStmt, err := s.ds.SQL.PrepareNamed(`UPDATE submissions SET run_count = run_count + 1, updated_at = :updated_at WHERE id = :id`)
+		if err != nil {
+			return "", err
+		}
+
+		// Execute the update statement with the parameters
+		_, err = updateStmt.Exec(params)
+		if err != nil {
+			return "", err
+		}
+
+		return existingSubmission.ID, nil
+	}
+
+	// If no existing submission, insert a new one
+	query := `
+		INSERT INTO submissions (
+			user_id, 
+			language_id, 
+			code_snippet, 
+			submission_time, 
+			execution_status, 
+			result_id, 
+			is_public, 
+			created_at, 
+			updated_at, 
+			question_id,
+			run_count
+		) 
+		VALUES (:user_id, :language_id, :code_snippet, :submission_time, :execution_status, 
+				:result_id, :is_public, :created_at, :updated_at, :question_id, 1) 
+		RETURNING id
+	`
+
+	// Execute the insert query
+	stmt, err = s.ds.SQL.PrepareNamed(query)
 	if err != nil {
 		return "", err
 	}
@@ -93,6 +185,7 @@ func (s *Store) AddSubmission(ctx context.Context, submission *brokerbus.Submiss
 
 	return id, nil
 }
+
 func (s *Store) AddExecutionStats(ctx context.Context, newStat *brokerbus.CodeExecutionStats) (string, error) {
 	_, span := otel.AddSpan(ctx, "brokerbus.AddExecutionStats", attribute.String("db.insert", `INSERT INTO code_execution_stats (
             user_id, 
@@ -156,7 +249,10 @@ func (s *Store) GetLanguages(ctx context.Context) ([]*brokerbus.Language, error)
             updated_at, 
             documentation_url, 
             is_active,
-			file_extension
+			file_extension,
+			description,
+			tags,
+			logo_url
         FROM languages WHERE is_active=true;`), attribute.String("db.type", "pgsql"))
 	defer span.End()
 	query := `
@@ -171,7 +267,10 @@ func (s *Store) GetLanguages(ctx context.Context) ([]*brokerbus.Language, error)
             updated_at, 
             documentation_url, 
             is_active,
-			file_extension
+			file_extension,
+			description,
+			tags,
+			logo_url
         FROM languages WHERE is_active=true;
     `
 
@@ -383,4 +482,49 @@ func (s *Store) GetAllByUser(ctx context.Context, userId string) ([]brokerbus.Co
 	}
 
 	return snippets, nil
+}
+func (s *Store) GetDBQuestByID(ctx context.Context, questionID string) (*brokerbus.SQLQuestion, error) {
+	// Create a filter to search for the question by its QuestionId
+	_, span := otel.AddSpan(ctx, "brokerbus.GetDBQuestByID", attribute.String("db.collection", "db_questions"), attribute.String("db.FindOne", fmt.Sprintf(`{"id": %s`, questionID)), attribute.String("db.type", `mongo`))
+	defer span.End()
+	filter := bson.D{{Key: "id", Value: questionID}}
+
+	var question SQLQuestion
+	err := s.ds.MGO.Collection("db_questions").FindOne(ctx, filter).Decode(&question)
+
+	if err == mongo.ErrNoDocuments {
+		return nil, fmt.Errorf("no question found with ID: %s", questionID)
+	} else if err != nil {
+		return nil, fmt.Errorf("error retrieving question from DB: %v", err)
+	}
+
+	// Return the found question
+	res := toBusSQLQuestion(question)
+	return &res, nil
+}
+func (s *Store) GetAllDBQuests(ctx context.Context, questionID string) ([]brokerbus.SQLQuestion, error) {
+	// Create a filter to search for the question by its QuestionId
+	_, span := otel.AddSpan(ctx, "brokerbus.GetAllDBQuests", attribute.String("db.collection", "db_questions"), attribute.String("db.FindOne", fmt.Sprintf(`{"id": %s`, questionID)), attribute.String("db.type", `mongo`))
+	defer span.End()
+	var quests []SQLQuestion
+	cursor, err := s.ds.MGO.Collection("db_questions").Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("error while fetching all db questions : %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var quest SQLQuestion
+		if err := cursor.Decode(&quest); err != nil {
+			return nil, fmt.Errorf("error decoding question: %v", err)
+		}
+		quests = append(quests, quest)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error: %v", err)
+	}
+	// Return the found question
+	res := toBusSQLQuestions(quests)
+	return res, nil
 }

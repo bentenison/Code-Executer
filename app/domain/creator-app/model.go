@@ -69,8 +69,8 @@ type Testcase struct {
 type Answer struct {
 	ID        string     `json:"id"`
 	Logic     string     `json:"logic"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 	TestCases []Testcase `json:"testcases"`
 }
 type FilterPayload struct {
@@ -86,6 +86,10 @@ type QueryParams struct {
 	StartCreatedDate string
 	EndCreatedDate   string
 	IsQC             bool
+}
+type QueryResult struct {
+	Documents []Question
+	Count     int32
 }
 
 func toBusQuestion(q Question) creatorbus.Question {
@@ -152,6 +156,8 @@ func toBusAnswer(a Answer) creatorbus.Answer {
 	busAnswer.ID = a.ID
 	busAnswer.Logic = a.Logic
 	busAnswer.TestCases = addTestCases(a.TestCases)
+	busAnswer.CreatedAt = *a.CreatedAt
+	busAnswer.UpdatedAt = *a.UpdatedAt
 	return busAnswer
 }
 func toBusAnswers(a []Answer) []creatorbus.Answer {

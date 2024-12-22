@@ -3,7 +3,7 @@ package executorapp
 import (
 	"context"
 
-	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto"
+	pb "github.com/bentenison/microservice/api/domain/executor-api/grpc/proto/executor"
 	"github.com/bentenison/microservice/business/domain/executorbus"
 	"github.com/bentenison/microservice/foundation/logger"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"

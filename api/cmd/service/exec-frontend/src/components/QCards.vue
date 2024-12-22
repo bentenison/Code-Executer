@@ -4,7 +4,7 @@
   >
     <div
       class="col-4 flex align-items-center flex-wrap"
-      style="width: 30rem; height: 18rem"
+    style="width: 30rem; height: 20rem"
       v-for="q in creatorStore.questions"
       :key="q.id"
     >

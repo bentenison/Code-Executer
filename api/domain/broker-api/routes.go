@@ -1,9 +1,12 @@
 package brokerapi
 
 import (
-	authpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto"
-	execpb "github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto"
-	"github.com/bentenison/microservice/api/sdk/grpc/rpcserver"
+	"context"
+	"log"
+
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/adminclient/proto/admClient"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto/authCli"
+	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
 	brokerapp "github.com/bentenison/microservice/app/domain/broker-app"
 	"github.com/bentenison/microservice/app/sdk/mid"
 	"github.com/bentenison/microservice/business/domain/brokerbus"
@@ -20,19 +23,16 @@ type Config struct {
 	BrokerBus      *brokerbus.Business
 	Tracer         *trace.TracerProvider
 	AppConfig      *conf.Config
-	AuthClient     authpb.AuthServiceClient
-	ExecutorClient execpb.ExecutorServiceClient
+	AuthClient     authCli.AuthServiceClient
+	ExecutorClient execClient.ExecutorServiceClient
+	AdminClient    admClient.AdminServiceClient
 }
 
 func Routes(app *web.App, cfg Config) {
-	authcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.AuthGRPCPort)
-	authcli := authpb.NewAuthServiceClient(authcliConn)
-	executorcliConn := rpcserver.CreateClient(cfg.Log, cfg.AppConfig.GRPCPort)
-	execcli := execpb.NewExecutorServiceClient(executorcliConn)
-	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, execcli, authcli, cfg.Tracer), cfg.Log)
-	api.execcli = execcli
-	api.authcli = authcli
-
+	api := newAPI(brokerapp.NewApp(cfg.Log, cfg.BrokerBus, cfg.Tracer, cfg.AdminClient, cfg.ExecutorClient, cfg.AuthClient), cfg.Log, cfg.AuthClient, cfg.ExecutorClient, cfg.AdminClient)
+	// api.execcli = execcli
+	// api.authcli = authcli
+	// api.admincli = admincli
 	app.Use(mid.TraceIdMiddleware(), mid.Otel(cfg.Tracer.Tracer("")), mid.ErrorMiddleware())
 
 	// cfg.Log.Errorc("started serving ")
@@ -57,4 +57,12 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("GET", "/broker/getsnippet/:id", api.getSnippetById)
 	app.Handle("GET", "/broker/getAllsnippets", api.getAllSnippetsByUser)
 	app.Handle("POST", "/broker/formatCode", api.formatCode)
+	app.Handle("GET", "/broker/loaddbQuest/:id", api.loadDbQuestion)
+	app.Handle("GET", "/text-rpc", func(ctx *gin.Context) {
+		res, err := api.admincli.CompleteQuestion(context.TODO(), &admClient.CompleteQuestionRequest{})
+		if err != nil {
+			log.Println(err)
+		}
+		_ = res
+	})
 }

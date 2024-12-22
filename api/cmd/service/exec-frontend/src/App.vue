@@ -4,7 +4,7 @@
     <Home></Home>
   </div> -->
 <template>
-  <div>
+  <div class="flex flex-column justify-content-center">
     <menubar />
     <div id="app-loader" v-if="mainStore.isBlocked">
       <ProgressSpinner></ProgressSpinner>
@@ -48,6 +48,8 @@ export default {
     //     document.body.className = "dark";
     //   }
     // });
+  },
+  created() {
     this.editorStore
       .getAllLanguages()
       .then((res) => {})

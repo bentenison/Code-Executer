@@ -4,7 +4,7 @@
     <div class="flex justify-content-center gap-5 align-items-center mb-3">
       <!-- Tags Filter -->
       <div class="p-field flex align-items-center">
-        <label  class="w-8rem" for="tagFilter">Filter by Tag</label>
+        <label class="w-8rem" for="tagFilter">Filter by Tag</label>
         <div class="tag-input-container">
           <div class="chips-input-wrapper">
             <!-- Chips inside the input field -->
@@ -55,10 +55,6 @@
     </div>
 
     <!-- Display Questions -->
-    <div v-if="creatorStore.filteredQuestion.length > 0"></div>
-    <div v-else class="mt-3 text-center">
-      <p>No questions found with the selected filters.</p>
-    </div>
   </div>
 </template>
 
@@ -66,7 +62,7 @@
 import { ref, computed } from "vue";
 import Checkbox from "primevue/checkbox";
 import Button from "primevue/button";
-import { useCreatorStore } from "../stores/creator";
+// import { useCreatorStore } from "../stores/creator";
 import { useEditorStore } from "../stores/editor";
 export default {
   name: "App",
@@ -79,7 +75,7 @@ export default {
       currentTag: "", // Current tag being typed
       tags: [],
       selectedTags: "",
-      creatorStore: useCreatorStore(),
+      // creatorStore: useCreatorStore(),
       editorStore: useEditorStore(),
       // Example questions data
       questions: [],
@@ -89,7 +85,7 @@ export default {
       ],
       selectedLanguage: null,
       showQCDoneOnly: false,
-      filteredQuestions: [],
+      // filteredQuestions: [],
     };
   },
   computed: {},
@@ -121,38 +117,13 @@ export default {
       this.tags.splice(index, 1); // Remove tag from the array
     },
     applyFilters() {
-      console.log("Filters Applied:", {
+      this.$emit("filtersChanged", {
         tags: this.selectedTags,
         lang: this.selectedLanguage.value,
         is_qc: this.showQCDoneOnly,
         page: 1,
-        row: 15,
+        row: 8,
       });
-      this.creatorStore
-        .queryWithFilters({
-          tags: this.selectedTags,
-          lang: this.selectedLanguage.value,
-          is_qc: this.showQCDoneOnly,
-          page: 1,
-          row: 15,
-        })
-        .then((res) => {
-          console.log("results>>>>>>>>>>>>>>", res);
-          this.$toast.add({
-            severity: "success",
-            summary: "questions fetched successfully.",
-            detail: "",
-            life: 3000,
-          });
-        })
-        .catch((err) => {
-          this.$toast.add({
-            severity: "error",
-            summary: "",
-            detail: err,
-            life: 3000,
-          });
-        });
     },
   },
 };

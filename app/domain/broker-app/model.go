@@ -19,6 +19,9 @@ type Submission struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 	QuestionId      string    `json:"question_id"`
 	FileExtension   string    `json:"file_extension,omitempty"`
+	RunCount        int       `json:"run_count,omitempty" db:"run_count"`
+	IsChallenge     bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
+	ChallengeID     string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
 }
 type Credentials struct {
 	Username string `json:"username"`
@@ -128,9 +131,47 @@ type FormatterRequest struct {
 	Lang string `json:"language"`
 	Code string `json:"code"`
 }
+type CompleteChallengeRequest struct {
+	ChallengeId string `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	QuestionId  string `json:"question_id,omitempty" db:"question_id" bson:"question_id"`
+}
 
 type FormatterResponse struct {
 	FormattedCode string `json:"formatted_code"`
+}
+type UserMetrics struct {
+	UserID        string    `json:"user_id,omitempty" bson:"user_id" db:"user_id"`
+	Username      string    `json:"username,omitempty" bson:"username" db:"username"`
+	Level         int       `json:"level,omitempty" bson:"level" db:"level"` // 1 = Easy, 2 = Medium, 3 = Hard
+	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	Rank          int       `json:"rank,omitempty" bson:"rank" db:"rank"`
+	Language      string    `json:"language,omitempty" db:"language" bson:"language"`
+	CreatedAt     time.Time `json:"created_at,omitempty" bson:"created_at" db:"created_at"`
+}
+type GlobalUserPerformance struct {
+	UserID        string    `json:"user_id,omitempty" bson:"user_id" db:"user_id"`
+	Username      string    `json:"username,omitempty" bson:"username" db:"username"`
+	Level         int       `json:"level,omitempty" bson:"level" db:"level"` // 1 = Easy, 2 = Medium, 3 = Hard
+	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	Rank          int       `json:"rank,omitempty" bson:"rank" db:"rank"`
+	CreatedAt     time.Time `json:"created_at,omitempty" bson:"created_at" db:"created_at"`
+}
+type SubmissionStats struct {
+	SubmissionID  string    `json:"submission_id,omitempty" bson:"submission_id" db:"submission_id"`
+	UserID        string    `json:"user_id,omitempty" bson:"user_id" db:"user_id"`                      // Foreign key to User
+	ChallengeID   string    `json:"challenge_id,omitempty" bson:"challenge_id" db:"challenge_id"`       // Foreign key to Challenge
+	IsCorrect     bool      `json:"is_correct,omitempty" bson:"is_correct" db:"is_correct"`             // Whether the answer was correct
+	Attempts      int       `json:"attempts,omitempty" bson:"attempts" db:"attempts"`                   // Number of attempts made
+	TimeTaken     int       `json:"time_taken,omitempty" bson:"time_taken" db:"time_taken"`             // Time in seconds to complete
+	CodeQuality   float64   `json:"code_quality,omitempty" bson:"code_quality" db:"code_quality"`       // 0 to 100 score for quality
+	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"` // Penalties applied
+	CreatedAt     time.Time `json:"created_at,omitempty" bson:"created_at" db:"created_at"`             // Timestamp when submission was created
 }
 
 func toBusQuestion(q Question) brokerbus.Question {

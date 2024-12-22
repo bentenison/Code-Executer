@@ -31,6 +31,11 @@ const router = createRouter({
       component: () => import("../views/Landing.vue"),
     },
     {
+      path: "/menu",
+      name: "menu",
+      component: () => import("../views/CardMenu.vue"),
+    },
+    {
       path: "/leaderboard",
       name: "leaderboard",
       component: () => import("../views/Leaderboard.vue"),
@@ -53,14 +58,19 @@ const router = createRouter({
     // {
     //     path: '/pages/notfound',
     //     name: 'notfound',
-    //     component: () => import('@/views/pages/NotFound.vue')
+    //     component: () => import('../views/')
     // },
 
-    // {
-    //     path: '/auth/login',
-    //     name: 'login',
-    //     component: () => import('@/views/pages/auth/Login.vue')
-    // },
+    {
+        path: '/auth/login',
+        name: 'login',
+        component: () => import('../views/login.vue')
+    },
+    {
+        path: '/auth/signup',
+        name: 'login',
+        component: () => import('../views/signup.vue')
+    },
     // {
     //     path: '/auth/access',
     //     name: 'accessDenied',

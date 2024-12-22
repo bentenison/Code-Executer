@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/bentenison/microservice/business/sdk/mongodb"
 	"github.com/bentenison/microservice/business/sdk/redisdb"
 	"github.com/bentenison/microservice/business/sdk/sqldb"
+	"github.com/bentenison/microservice/foundation/async/rabbit/rabbitproducer"
 	"github.com/bentenison/microservice/foundation/conf"
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/bentenison/microservice/foundation/monitoring"
@@ -108,17 +110,26 @@ func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvide
 	// 		})
 	// 	}
 	// }()
+	queues := strings.Split(cfg.RabbitQueues, ",")
+	rabbitProducer, err := rabbitproducer.NewProducer(cfg.RabbitURL, queues)
+	if err != nil {
+		log.Errorc(context.TODO(), "error while starting rabbit producer", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
 	monitoring.StartMetricsForService("Broker")
 	monitoring.CollectSystemMetrics()
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:     "develop",
-		Log:       log,
-		DB:        ds,
-		AppConfig: cfg,
-		Tracer:    tracer,
+		Build:          "develop",
+		Log:            log,
+		DB:             ds,
+		AppConfig:      cfg,
+		Tracer:         tracer,
+		RabbitProducer: rabbitProducer,
 	}
 	app := mux.WebAPI(cfgMux, buildRoutes())
 	api := http.Server{

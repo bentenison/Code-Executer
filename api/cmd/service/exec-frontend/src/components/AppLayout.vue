@@ -6,8 +6,8 @@
       <!-- <app-sidebar></app-sidebar> -->
       <!-- <AppSideBar /> -->
       <demo/>
-      <div class="layout-main-container">
-        <div class="layout-main flex-auto">
+      <div class="layout-main-container overflow-y-hidden">
+        <div class="layout-main overflow-y-hidden">
           <router-view></router-view>
         </div>
         <app-footer></app-footer>

@@ -1,7 +1,7 @@
 package authapi
 
 import (
-	"github.com/bentenison/microservice/api/domain/auth-api/grpc/proto"
+	"github.com/bentenison/microservice/api/domain/auth-api/grpc/proto/auth"
 	"github.com/bentenison/microservice/app/domain/authapp"
 )
 
@@ -14,7 +14,7 @@ type token struct {
 	Token string `json:"token,omitempty"`
 }
 
-func protoToUser(req *proto.CreateAccountRequest) authapp.UserPayload {
+func protoToUser(req *auth.CreateAccountRequest) authapp.UserPayload {
 	var u authapp.UserPayload
 	// u.ID = uuid.NewString()
 	// u.CreatedAt = time.Now()
@@ -25,7 +25,7 @@ func protoToUser(req *proto.CreateAccountRequest) authapp.UserPayload {
 	u.Role = req.Role
 	return u
 }
-func protoToCred(req *proto.LoginRequest) authapp.Credentials {
+func protoToCred(req *auth.LoginRequest) authapp.Credentials {
 	var u authapp.Credentials
 	u.Username = req.Username
 	u.Password = req.Password
