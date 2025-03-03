@@ -30,7 +30,7 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	execcli := execClient.NewExecutorServiceClient(executorcliConn)
 	admincli := admClient.NewAdminServiceClient(adminclient)
 	delegate := delegate.New(cfg.Log)
-	brokerbus := brokerbus.NewBusiness(cfg.Log, delegate, brokerdb.NewStore(cfg.DB, cfg.Log), cfg.RabbitProducer)
+	brokerbus := brokerbus.NewBusiness(cfg.Log, delegate, brokerdb.NewStore(cfg.DB, cfg.Log), cfg.RabbitProducer, admincli)
 	// Construct the business domain packages we need here so we are using the
 	// sames instances for the different set of domain apis.
 	brokerapi.Routes(app, brokerapi.Config{

@@ -20,7 +20,7 @@
           @lang="getLanguage"
           :languages="editorStore.langArr"
         ></CodeEditor>
-        <terminal v-if="currQuestion && editorStore.langArr" />
+        <terminal :key="$route.name" :isSingle="true" />
         <div class="flex align-items-center justify-content-end p-0 m-0">
           <p class="w-full">
             code executed by <strong>{{ executedBy }}</strong>

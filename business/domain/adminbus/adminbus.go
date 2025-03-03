@@ -16,26 +16,34 @@ import (
 )
 
 type Storer interface {
-	GetUserByUserId(userID, language string) (*User, error)
-	InsertUser(user User) (interface{}, error)
+	GetUserByUserId(ctx context.Context, userID, language string) (*User, error)
+	InsertUser(ctx context.Context, user User) (interface{}, error)
 	GetRankByID(ctx context.Context, rnk int64) (Rank, error)
-	InsertUserPerformance(userPerformance UserPerformance) (interface{}, error)
-	InsertChallengeData(challengeData Challenge) (interface{}, error)
-	InsertUserMetrics(userMetrics UserMetrics) (interface{}, error)
-	InsertGlobalUserPerformance(globalUserPerformance GlobalUserPerformance) (interface{}, error)
-	InsertUserChallenge(userChallenge UserChallenge) (interface{}, error)
-	GetGlobalUserPerformance(userID string) (*GlobalUserPerformance, error)
-	UpdateUserMetrics(userID string, userMetrics UserMetrics) (*UserMetrics, error)
-	UpdateGlobalUserPerformance(userID string, globalUserPerformance GlobalUserPerformance) (*GlobalUserPerformance, error)
-	UpdateChallengeData(challengeID string, challengeData Challenge) (*Challenge, error)
-	UpdateUserPerformance(userID string, userPerformance UserPerformance) (*UserPerformance, error)
-	GetUserMetrics(userID, language string) (*UserMetrics, error)
+	InsertUserPerformance(ctx context.Context, userPerformance UserPerformance) (interface{}, error)
+	InsertChallengeData(ctx context.Context, challengeData Challenge) (interface{}, error)
+	InsertUserMetrics(ctx context.Context, userMetrics UserMetrics) (interface{}, error)
+	InsertGlobalUserPerformance(ctx context.Context, globalUserPerformance GlobalUserPerformance) (interface{}, error)
+	InsertUserChallenge(ctx context.Context, userChallenge UserChallenge) (interface{}, error)
+	GetGlobalUserPerformance(ctx context.Context, userID string) (*GlobalUserPerformance, error)
+	UpdateGlobalUserPerformance(ctx context.Context, userID string, globalUserPerformance GlobalUserPerformance) (*GlobalUserPerformance, error)
+	UpdateChallengeData(ctx context.Context, challengeID string, challengeData Challenge) (*Challenge, error)
+	UpdateUserPerformance(ctx context.Context, userID string, userPerformance UserPerformance) (*UserPerformance, error)
+	GetUserMetrics(ctx context.Context, userID, language string) (*UserMetrics, error)
 	GetRandomQuestionsByDifficultyAndLanguageDAO(ctx context.Context, difficulty string, language string) ([]CodingQuestion, error)
 	GetUserChallengesByCompletionStatus(ctx context.Context, language string, userid string, isCompleted bool) (Challenge, error)
 	GetQuestionsByIDsDAO(ctx context.Context, ids []string) ([]CodingQuestion, error)
 	StoreCodeExecutionStatsES(ctx context.Context, codeStats []byte) error
 	StoreChallengeDataES(ctx context.Context, challengeData []byte) error
 	StorePerformanceDataES(ctx context.Context, performanceData []byte) error
+	GetAllRanks(ctx context.Context) ([]Rank, error)
+	Get(ctx context.Context, key string, res any) error
+	Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error)
+	UpdateUserStats(ctx context.Context, userID string, questionID string, language string, correct bool) error
+	// UpdateUserMetrics(ctx context.Context, userID string, correct bool, timeTaken float64, codeQualityScore float64) error
+	UpdateUserMetrics(ctx context.Context, userID, language string, correct bool, timeTaken, codeQualityScore float64, score int64) error
+
+	UpdateChallengeQuestion(ctx context.Context, challengeID string, questionID string, isCompleted bool, endedAt int64, scored int64) (*Question, error)
+	GetQuestionByID(ctx context.Context, challengeID string, questionID string) (*Question, error)
 	// GetAvailableQuestions(user *User, allQuestions []Question) ([]Question, error)
 	// CreateChallenge(user *User, allQuestions []Question) (*Challenge, error)
 }
@@ -121,14 +129,14 @@ func PredictRanking(userData []UserMetrics) {
 // 3) we will record accuracy score avd speed
 func (b *Business) AddPreRequisites(ctx context.Context, user User, language string) error {
 	// get user if not found insert with default
-	_, err := b.storer.GetGlobalUserPerformance(user.UserID)
+	_, err := b.storer.GetGlobalUserPerformance(ctx, user.UserID)
 	if err == mongo.ErrNoDocuments {
 		var perf GlobalUserPerformance
 		perf.CreatedAt = time.Now()
 		perf.UserID = user.UserID
 		perf.Username = user.Username
 		// perf.Level =
-		res, err := b.storer.InsertGlobalUserPerformance(perf)
+		res, err := b.storer.InsertGlobalUserPerformance(ctx, perf)
 		if err != nil {
 			b.log.Errorc(ctx, "error in inserting user", map[string]interface{}{
 				"error": err.Error(),
@@ -137,11 +145,11 @@ func (b *Business) AddPreRequisites(ctx context.Context, user User, language str
 		}
 		_ = res
 	}
-	u, err := b.storer.GetUserByUserId(user.UserID, user.SelectedLanguage)
+	u, err := b.storer.GetUserByUserId(ctx, user.UserID, user.SelectedLanguage)
 	if err == mongo.ErrNoDocuments {
 		user.CreatedAt = time.Now()
 		user.SelectedLanguage = language
-		res, err := b.storer.InsertUser(user)
+		res, err := b.storer.InsertUser(ctx, user)
 		if err != nil {
 			b.log.Errorc(ctx, "error in inserting user", map[string]interface{}{
 				"error": err.Error(),
@@ -151,14 +159,14 @@ func (b *Business) AddPreRequisites(ctx context.Context, user User, language str
 		_ = res
 	}
 	//add user_metrics
-	_, err = b.storer.GetUserMetrics(user.UserID, language)
+	_, err = b.storer.GetUserMetrics(ctx, user.UserID, language)
 	if err == mongo.ErrNoDocuments {
 		var userMetrics UserMetrics
 		userMetrics.UserID = user.UserID
 		userMetrics.Language = user.SelectedLanguage
 		userMetrics.CreatedAt = time.Now()
 		userMetrics.Username = user.Username
-		res, err := b.storer.InsertUserMetrics(userMetrics)
+		res, err := b.storer.InsertUserMetrics(ctx, userMetrics)
 		if err != nil {
 			b.log.Errorc(ctx, "error in inserting user", map[string]interface{}{
 				"error": err.Error(),
@@ -179,20 +187,44 @@ func (b *Business) AddPreRequisites(ctx context.Context, user User, language str
 func (b *Business) CreateChallengeService(ctx context.Context, user User, language string) (Challenge, error) {
 	// b.storer.GetUserByUserId()
 	var challange Challenge
-	u, err := b.storer.GetUserByUserId(user.UserID, user.SelectedLanguage)
+	u, err := b.storer.GetUserByUserId(ctx, user.UserID, user.SelectedLanguage)
 	if err != nil {
 		b.log.Errorc(ctx, "error in getting user from db", map[string]interface{}{
 			"error": err.Error(),
 		})
-		return challange, nil
+		return challange, err
 	}
-	_ = u
 	// get user attempted questions from users collection
 	// get challengeData from challenges collections and track if user challenge exists which is not completed if it exists then get that challenge by challenge id aand load it
 	challange, err = b.storer.GetUserChallengesByCompletionStatus(ctx, language, u.UserID, false)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			// if not create challenges based on the previous questions
+			// TODO get all ranks
+			var ranks []Rank
+			err := b.storer.Get(ctx, "ranks", &ranks)
+			if err != nil {
+				b.log.Errorc(ctx, "error while getting ranks redis!! going to set from mongo", map[string]interface{}{
+					"error": err.Error(),
+				})
+				ranks, err = b.storer.GetAllRanks(ctx)
+				if err != nil {
+					b.log.Errorc(ctx, "error while getting ranks from DB! aborting...", map[string]interface{}{
+						"error": err.Error(),
+					})
+					return Challenge{}, err
+				}
+				res, err := b.storer.Set(ctx, "ranks", &ranks, 0)
+				if err != nil {
+					b.log.Errorc(ctx, "error while setting ranks to Redis!", map[string]interface{}{
+						"error": err.Error(),
+						"res":   res,
+					})
+					return Challenge{}, err
+				}
+			}
+			rank := getRankById(u.Rank, ranks)
+			pts := float64(rank.PointsPerQuestion())
 			challengeQuestions, err := b.storer.GetRandomQuestionsByDifficultyAndLanguageDAO(ctx, getdifficultyFromRank(u.Rank), strings.ToLower(u.SelectedLanguage))
 			if err != nil {
 				b.log.Errorc(ctx, "error in getting sample questions from db", map[string]interface{}{
@@ -200,7 +232,8 @@ func (b *Business) CreateChallengeService(ctx context.Context, user User, langua
 				})
 				return challange, nil
 			}
-			quests, tagMap := createQuestionFromCodingQuestion(challengeQuestions)
+			//TODO get the ranks from DB and store to redis
+			quests, tagMap := createQuestionFromCodingQuestion(challengeQuestions, pts)
 			tags := extractTags(tagMap)
 			challange.ChallengeID = uuid.NewString()
 			challange.UserID = u.UserID
@@ -209,6 +242,7 @@ func (b *Business) CreateChallengeService(ctx context.Context, user User, langua
 			challange.CreatedAt = time.Now()
 			challange.Language = language
 			challange.Questions = quests
+			challange.MaxScore = rank.PointsPerChallenge
 			// 	ChallengeID    string     `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
 			// UserID         string     `json:"user_id,omitempty" bson:"user_id" db:"user_id"`
 			// Tags           []string   `json:"tags,omitempty" db:"tags" bson:"tags"`
@@ -220,7 +254,7 @@ func (b *Business) CreateChallengeService(ctx context.Context, user User, langua
 			// CompletionDate time.Time  `json:"completion_date,omitempty" db:"completion_date" bson:"completion_date"`
 			// Language       string     `json:"language,omitempty" db:"language" bson:"language"` // Language the challenge is created for
 			// IsCompleted    bool       `json:"is_completed,omitempty" db:"is_completed" bson:"is_completed"`
-			_, err = b.storer.InsertChallengeData(challange)
+			_, err = b.storer.InsertChallengeData(ctx, challange)
 			if err != nil {
 				b.log.Errorc(ctx, "error in adding user challenges", map[string]interface{}{
 					"error": err.Error(),
@@ -252,7 +286,7 @@ func getdifficultyFromRank(rank int) string {
 		return "hign"
 	}
 }
-func createQuestionFromCodingQuestion(codingQuestions []CodingQuestion) ([]Question, map[string]bool) {
+func createQuestionFromCodingQuestion(codingQuestions []CodingQuestion, score float64) ([]Question, map[string]bool) {
 	// Create and populate the Question struct from the CodingQuestion struct
 	questions := []Question{}
 	tags := make(map[string]bool)
@@ -265,6 +299,9 @@ func createQuestionFromCodingQuestion(codingQuestions []CodingQuestion) ([]Quest
 			Difficulty:  v.Difficulty,
 			Tags:        v.Tags,
 			Language:    v.Language,
+			StartedAt:   time.Now().UnixNano(),
+			EndedAt:     time.Now().UnixNano(),
+			MaxScore:    score,
 			IsCompleted: false, // Assuming that the question is not completed when created, can be modified based on your requirements
 		})
 		for _, tg := range v.Tags {
@@ -289,4 +326,157 @@ func (b *Business) FetchQuestionsByIds(ctx context.Context, ids []string) ([]Cod
 		return nil, err
 	}
 	return res, nil
+}
+
+func getRankById(rankId int, ranks []Rank) Rank {
+	if len(ranks) > 0 {
+		for _, v := range ranks {
+			if v.IntegerRank == rankId {
+				return v
+			}
+		}
+	}
+	return Rank{}
+}
+
+func (b *Business) MarkQuestionCompletion(ctx context.Context, payload UpdatePayload) error {
+	// get the challange id questionId and isCorrect from the request
+	//TODO add result modify the performnace, score, aacuracy mark question aatempted
+	// TODO correct answer modify
+	u, err := b.storer.GetUserByUserId(ctx, payload.UserId, payload.Language)
+	if err != nil {
+		b.log.Errorc(ctx, "error in getting user from db", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	var ranks []Rank
+	err = b.storer.Get(ctx, "ranks", &ranks)
+	if err != nil {
+		b.log.Errorc(ctx, "error while getting ranks redis!! going to set from mongo", map[string]interface{}{
+			"error": err.Error(),
+		})
+		ranks, err = b.storer.GetAllRanks(ctx)
+		if err != nil {
+			b.log.Errorc(ctx, "error while getting ranks from DB! aborting...", map[string]interface{}{
+				"error": err.Error(),
+			})
+			return err
+		}
+		res, err := b.storer.Set(ctx, "ranks", &ranks, 0)
+		if err != nil {
+			b.log.Errorc(ctx, "error while setting ranks to Redis!", map[string]interface{}{
+				"error": err.Error(),
+				"res":   res,
+			})
+			return err
+		}
+	}
+	rank := getRankById(u.Rank, ranks)
+	pts := float64(rank.PointsPerQuestion())
+	payload.Score = int64(pts)
+	ended_at := time.Now().UnixNano()
+	_, err = b.storer.UpdateChallengeQuestion(ctx, payload.ChallengeId, payload.QuestionId, true, ended_at, payload.Score)
+	if err != nil {
+		b.log.Errorc(ctx, "error in UpdateChallengeQuestion:", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	return nil
+}
+
+func (b *Business) UpdateUserMetrics(ctx context.Context, payload UpdatePayload) error {
+	// type GlobalUserPerformance struct {
+	// 	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	// 	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	// 	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	// 	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	// 	// New fields
+	// 	CorrectAnswers    int       `json:"correct_answers,omitempty" bson:"correct_answers" db:"correct_answers"`
+	// 	TotalQuestions    int       `json:"total_questions,omitempty" bson:"total_questions" db:"total_questions"`
+	// 	TotalTime         float64   `json:"total_time,omitempty" bson:"total_time" db:"total_time"`
+	// 	TotalSubmissions  int       `json:"total_submissions,omitempty" bson:"total_submissions" db:"total_submissions"`
+	// 	CodeQualityScores []float64 `json:"code_quality_scores,omitempty" bson:"code_quality_scores" db:"code_quality_scores"`
+	// }
+	// type UserMetrics struct {
+	// 	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	// 	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	// 	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	// 	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	// 	Rank          int       `json:"rank,omitempty" bson:"rank" db:"rank"`
+	// 	// New fields
+	// 	CorrectAnswers    int       `json:"correct_answers,omitempty" bson:"correct_answers" db:"correct_answers"`             // Total correct answers
+	// 	TotalQuestions    int       `json:"total_questions,omitempty" bson:"total_questions" db:"total_questions"`             // Total questions attempted
+	// 	TotalTime         float64   `json:"total_time,omitempty" bson:"total_time" db:"total_time"`                            // Total time taken in seconds
+	// 	TotalSubmissions  int       `json:"total_submissions,omitempty" bson:"total_submissions" db:"total_submissions"`       // Number of submissions
+	// 	CodeQualityScores []float64 `json:"code_quality_scores,omitempty" bson:"code_quality_scores" db:"code_quality_scores"` // Code quality scores for each submission
+	// }
+	u, err := b.storer.GetUserByUserId(ctx, payload.UserId, payload.Language)
+	if err != nil {
+		b.log.Errorc(ctx, "error in getting user from db", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	var ranks []Rank
+	err = b.storer.Get(ctx, "ranks", &ranks)
+	if err != nil {
+		b.log.Errorc(ctx, "error while getting ranks redis!! going to set from mongo", map[string]interface{}{
+			"error": err.Error(),
+		})
+		ranks, err = b.storer.GetAllRanks(ctx)
+		if err != nil {
+			b.log.Errorc(ctx, "error while getting ranks from DB! aborting...", map[string]interface{}{
+				"error": err.Error(),
+			})
+			return err
+		}
+		res, err := b.storer.Set(ctx, "ranks", &ranks, 0)
+		if err != nil {
+			b.log.Errorc(ctx, "error while setting ranks to Redis!", map[string]interface{}{
+				"error": err.Error(),
+				"res":   res,
+			})
+			return err
+		}
+	}
+	rank := getRankById(u.Rank, ranks)
+	pts := float64(rank.PointsPerQuestion())
+	payload.Score = int64(pts)
+	quest, err := b.storer.GetQuestionByID(ctx, payload.ChallengeId, payload.QuestionId)
+	if err != nil {
+		b.log.Errorc(ctx, "error in GetQuestionByID", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	differenceInNanoseconds := time.Now().UnixNano() - quest.StartedAt
+	differenceInSeconds := differenceInNanoseconds / 1_000_000_000
+	payload.TimeTaken = differenceInSeconds
+	err = b.storer.UpdateUserMetrics(ctx, payload.UserId, payload.Language, payload.IsCorrect, float64(payload.TimeTaken), payload.CodeQuality, payload.Score)
+	if err != nil {
+		b.log.Errorc(ctx, "error in UpdateUserMetrics", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	return nil
+}
+
+func (b *Business) UpdateUserStats(ctx context.Context, payload UpdatePayload) error {
+	// type OverAllUser struct {
+	// 	AttemptedQuestions []string  `json:"attempted_questions,omitempty" db:"attempted_questions" bson:"attempted_questions"` // List of question IDs user has faced
+	// 	NoAttempted        int64     `json:"no_attempted,omitempty" db:"no_attempted" bson:"no_attempted"`
+	// 	TotalCorrect       int64     `json:"total_correct,omitempty" db:"total_correct" bson:"total_correct"`
+	// 	TotalWrong         int64     `json:"total_wrong,omitempty" db:"total_wrong" bson:"total_wrong"`
+	// }
+	err := b.storer.UpdateUserStats(ctx, payload.UserId, payload.QuestionId, payload.Language, payload.IsCorrect)
+	if err != nil {
+		b.log.Errorc(ctx, "error in UpdateUserStats", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return err
+	}
+	return nil
 }

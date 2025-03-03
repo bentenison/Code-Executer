@@ -133,6 +133,7 @@ import { useLayout } from "../components/layout";
 import Appconfigurator from "./Appconfigurator.vue";
 import SelectButton from "primevue/selectbutton";
 import ThemeSelector from "./ThemeSelector.vue";
+import { useMainStore } from "../stores/main";
 export default {
   components: {
     Appconfigurator,
@@ -142,6 +143,7 @@ export default {
   data() {
     return {
       isDarkTheme: false,
+      mainStore: useMainStore(),
       visible: false,
       fontSize: 17,
       themes: [
@@ -447,7 +449,7 @@ export default {
             //   detail: "Data Updated",
             //   life: 3000,
             // });
-            this.formatCode()
+            this.formatCode();
           },
         },
       ],
@@ -461,6 +463,7 @@ export default {
       const { toggleDarkMode } = useLayout();
       toggleDarkMode();
       this.isDarkTheme = !this.isDarkTheme; // Sync with local state
+      this.mainStore.isDark = !this.isDarkTheme;
     },
     increaseFontSize() {
       this.fontSize++;

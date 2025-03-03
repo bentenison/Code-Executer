@@ -22,7 +22,7 @@ export const useCreatorStore = defineStore("creator", {
         axios
           .post("/creator/addquestions", qts)
           .then((res) => {
-            console.log("result is ", res);
+            // console.log("result is ", res);
             resolve(res.data);
           })
           .catch((err) => {
@@ -71,7 +71,7 @@ export const useCreatorStore = defineStore("creator", {
       return new Promise((resolve, reject) => {
         axios.defaults.baseURL = "/creatorapi";
         let objectLength = Object.keys(filters).length;
-        console.log(objectLength);
+        // console.log(objectLength);
         let query = "?";
         let count = 0;
         for (const [key, value] of Object.entries(filters)) {
@@ -83,12 +83,9 @@ export const useCreatorStore = defineStore("creator", {
           }
           // console.log(key, value);
         }
-        // console.log("Query is", query);
         axios
           .get(`/creator/query${query}`)
           .then((res) => {
-            console.log("result is ", res);
-            // this.filteredQuestion = res.data;
             resolve(res.data);
           })
           .catch((err) => {

@@ -2,8 +2,6 @@ package brokerdb
 
 import (
 	"database/sql"
-	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/bentenison/microservice/business/domain/brokerbus"
@@ -248,10 +246,10 @@ func toBusLanguage(lang *LanguageDB) *brokerbus.Language {
 	lg.Description = lang.Description.String
 	lg.LogoURL = lang.LogoURL.String
 	tgs := []string{}
-	err := json.Unmarshal(lang.Tags, &tgs)
-	if err != nil {
-		log.Println("error in unmarshaling tags", err)
-	}
+	// err := json.Unmarshal(lang.Tags, &tgs)
+	// if err != nil {
+	// 	log.Println("error in unmarshaling tags", err)
+	// }
 	lg.Tags = tgs
 	return &lg
 }

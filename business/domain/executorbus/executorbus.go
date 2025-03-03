@@ -142,11 +142,6 @@ func (ds *Business) Run(ctx context.Context) {
 	}
 }
 
-// periodic task
-func (ds *Business) task() {
-
-	// fmt.Printf("Ticker task, %v\n", time.Now())
-}
 func NewBusiness(log *logger.CustomLogger, delegate *delegate.Delegate, storer Storer, cli *client.Client) *Business {
 	business := &Business{}
 	langages, err := storer.GetLanguages(context.TODO())
@@ -194,34 +189,7 @@ func (b *Business) ExecuteCode(ctx context.Context, path, language, uid, qid, ex
 	b.log.Infoc(ctx, "container spec values", map[string]interface{}{
 		"containerSpec": specs,
 	})
-	// // create a tarfile from the temp file
-	// buf, err := b.readTempFile(path)
-	// if err != nil {
-	// 	return &execResponse, err
-	// }
-	// // Copy the file to the existing container
-	// err = b.cli.CopyToContainer(context.Background(), specs.ID, "app/", buf, container.CopyToContainerOptions{})
-	// if err != nil {
-	// 	return &execResponse, err
-	// }
 
-	// // // Execute the Python script in the existing container
-	// execConfig := container.ExecOptions{
-	// 	Cmd:          []string{"python", filepath.Join("/app", filepath.Base(path))},
-	// 	AttachStdout: true,
-	// 	AttachStderr: true,
-	// 	Tty:          true,
-	// }
-
-	// execID, err := b.cli.ContainerExecCreate(context.Background(), specs.ID, execConfig)
-	// if err != nil {
-	// 	return &execResponse, err
-	// }
-
-	// err = cli.ContainerExecStart(context.Background(), execID.ID, container.ExecStartOptions{})
-	// if err != nil {
-	// 	return "", err
-	// }
 	_, span := otel.AddSpan(ctx, "api.execution", attribute.String("grpc.Method", "executor.ExecuteCode"),
 		attribute.String("type", "grpc"))
 	defer span.End()
@@ -338,47 +306,6 @@ func (b *Business) ActualCodeExecution(containerID, path, cmd string, timeout ti
 	return execResponse, nil
 }
 
-// func (b *Business) ActualCodeExecution(containerID, path, cmd string) (bytes.Buffer, error) {
-// 	var execResponse bytes.Buffer
-// 	buf, err := b.readTempFile(path)
-// 	if err != nil {
-// 		return execResponse, err
-// 	}
-// 	// Copy the file to the existing container
-// 	err = b.cli.CopyToContainer(context.Background(), containerID, "app/", buf, container.CopyToContainerOptions{})
-// 	if err != nil {
-// 		return execResponse, err
-// 	}
-// 	command, err := prepareCommand(cmd, filepath.Base(path))
-// 	if err != nil {
-// 		return execResponse, err
-// 	}
-// 	// // Execute the Python script in the existing container
-// 	execConfig := container.ExecOptions{
-// 		Cmd:          []string{"sh", "-c", command},
-// 		AttachStdout: true,
-// 		AttachStderr: true,
-// 		Tty:          true,
-// 	}
-//     ctx, cancel := context.WithTimeout(context.Background(), timeout)
-// 	defer cancel()
-
-// 	execID, err := b.cli.ContainerExecCreate(context.Background(), containerID, execConfig)
-// 	if err != nil {
-// 		return execResponse, err
-// 	}
-
-//		res, err := b.cli.ContainerExecAttach(context.TODO(), execID.ID, container.ExecAttachOptions{
-//			Tty: true,
-//		})
-//		if err != nil {
-//			return execResponse, err
-//		}
-//		if _, err := execResponse.ReadFrom(res.Reader); err != nil {
-//			return execResponse, err
-//		}
-//		return execResponse, nil
-//	}
 func prepareCommand(cmd, filename string) (string, error) {
 	var finalResult string
 	type CommandData struct {
@@ -526,13 +453,7 @@ func tarFile(filePath string) (*bytes.Buffer, error) {
 // executeWithRetry executes a task with retry logic and exponential backoff
 func (b *Business) executeWithRetry(ctx context.Context, codeFilePath, language, ext string, retries int) (string, string, error) {
 	var lastError error
-	// specs, err := b.getContainerSpec(language)
-	// if err != nil {
-	// 	b.log.Errorc(ctx, "error in getting specs", map[string]interface{}{
-	// 		"error": err.Error(),
-	// 	})
-	// 	return "", err
-	// }
+
 	if !strings.Contains(codeFilePath, ext) {
 		err := os.Rename(codeFilePath, fmt.Sprintf("%s%s", codeFilePath, ext))
 		if err != nil {

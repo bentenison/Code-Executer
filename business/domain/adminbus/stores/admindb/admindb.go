@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/bentenison/microservice/api/sdk/http/mux"
 	"github.com/bentenison/microservice/business/domain/adminbus"
@@ -31,8 +32,10 @@ func NewStore(ds mux.DataSource, logger *logger.CustomLogger) *Store {
 	}
 }
 
-func (s *Store) GetUserByUserId(userID, language string) (*adminbus.User, error) {
+func (s *Store) GetUserByUserId(ctx context.Context, userID, language string) (*adminbus.User, error) {
 	// 51fc3552-45e0-4982-9adb-50d8cc46c46d
+	_, span := otel.AddSpan(context.TODO(), "BROKER.GetUserByUserId", attribute.String("db.Type", "mongo"), attribute.String("db.FindeOne", fmt.Sprintf("{user_id:%s,selected_language:%s}", userID, language)))
+	defer span.End()
 	filter := bson.M{"user_id": userID, "selected_language": language}
 	// Initialize an empty user struct to hold the result
 	var user adminbus.User
@@ -50,7 +53,8 @@ func (s *Store) GetUserByUserId(userID, language string) (*adminbus.User, error)
 	// Return the user
 	return &user, nil
 }
-func (s *Store) InsertUser(user adminbus.User) (interface{}, error) {
+func (s *Store) InsertUser(ctx context.Context, user adminbus.User) (interface{}, error) {
+	otel.AddSpan(context.TODO(), "BROKER.GetUserByUserId", attribute.String("db.Type", "mongo"), attribute.String("db.InsertOne", fmt.Sprintf("{%s}", user)))
 	// Get the collection from the database
 	usersCollection := s.ds.MGO.Collection("users")
 	// Attempt to find the user in the collection
@@ -61,7 +65,7 @@ func (s *Store) InsertUser(user adminbus.User) (interface{}, error) {
 	// Return the user (whether it was fetched or newly created)
 	return res.InsertedID, nil
 }
-func (s *Store) InsertUserPerformance(userPerformance adminbus.UserPerformance) (interface{}, error) {
+func (s *Store) InsertUserPerformance(ctx context.Context, userPerformance adminbus.UserPerformance) (interface{}, error) {
 	// Get the collection for user performances
 	userPerformanceCollection := s.ds.MGO.Collection("user_metrics")
 
@@ -74,7 +78,7 @@ func (s *Store) InsertUserPerformance(userPerformance adminbus.UserPerformance) 
 	// Return the inserted ID
 	return res.InsertedID, nil
 }
-func (s *Store) InsertChallengeData(challengeData adminbus.Challenge) (interface{}, error) {
+func (s *Store) InsertChallengeData(ctx context.Context, challengeData adminbus.Challenge) (interface{}, error) {
 	// Get the collection for challenge data
 	challengeDataCollection := s.ds.MGO.Collection("challenges")
 
@@ -87,7 +91,7 @@ func (s *Store) InsertChallengeData(challengeData adminbus.Challenge) (interface
 	// Return the inserted ID
 	return res.InsertedID, nil
 }
-func (s *Store) InsertUserMetrics(userMetrics adminbus.UserMetrics) (interface{}, error) {
+func (s *Store) InsertUserMetrics(ctx context.Context, userMetrics adminbus.UserMetrics) (interface{}, error) {
 	// Get the collection for user metrics
 	userMetricsCollection := s.ds.MGO.Collection("user_metrics")
 
@@ -100,7 +104,7 @@ func (s *Store) InsertUserMetrics(userMetrics adminbus.UserMetrics) (interface{}
 	// Return the inserted ID
 	return res.InsertedID, nil
 }
-func (s *Store) InsertGlobalUserPerformance(globalUserPerformance adminbus.GlobalUserPerformance) (interface{}, error) {
+func (s *Store) InsertGlobalUserPerformance(ctx context.Context, globalUserPerformance adminbus.GlobalUserPerformance) (interface{}, error) {
 	// Get the collection for global user performance
 	globalUserPerformanceCollection := s.ds.MGO.Collection("global_user_performance")
 
@@ -113,7 +117,7 @@ func (s *Store) InsertGlobalUserPerformance(globalUserPerformance adminbus.Globa
 	// Return the inserted ID
 	return res.InsertedID, nil
 }
-func (s *Store) InsertUserChallenge(userChallenge adminbus.UserChallenge) (interface{}, error) {
+func (s *Store) InsertUserChallenge(ctx context.Context, userChallenge adminbus.UserChallenge) (interface{}, error) {
 	// Get the collection for user challenges
 	userChallengeCollection := s.ds.MGO.Collection("user_challenge")
 
@@ -126,7 +130,7 @@ func (s *Store) InsertUserChallenge(userChallenge adminbus.UserChallenge) (inter
 	// Return the inserted ID
 	return res.InsertedID, nil
 }
-func (s *Store) GetGlobalUserPerformance(userID string) (*adminbus.GlobalUserPerformance, error) {
+func (s *Store) GetGlobalUserPerformance(ctx context.Context, userID string) (*adminbus.GlobalUserPerformance, error) {
 	// Get the collection for global user performance
 	globalUserPerformanceCollection := s.ds.MGO.Collection("global_user_performance")
 
@@ -168,24 +172,7 @@ func (s *Store) GetUserChallengesByCompletionStatus(ctx context.Context, languag
 
 	return userChallenges, nil
 }
-func (s *Store) UpdateUserMetrics(userID string, userMetrics adminbus.UserMetrics) (*adminbus.UserMetrics, error) {
-	// Get the collection for user metrics
-	userMetricsCollection := s.ds.MGO.Collection("user_metrics")
-
-	// Update the user metrics by userID
-	filter := bson.M{"user_id": userID}
-	update := bson.M{
-		"$set": userMetrics, // This will replace the document
-	}
-	_, err := userMetricsCollection.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update user metrics: %v", err)
-	}
-
-	// Return the updated user metrics
-	return &userMetrics, nil
-}
-func (s *Store) UpdateGlobalUserPerformance(userID string, globalUserPerformance adminbus.GlobalUserPerformance) (*adminbus.GlobalUserPerformance, error) {
+func (s *Store) UpdateGlobalUserPerformance(ctx context.Context, userID string, globalUserPerformance adminbus.GlobalUserPerformance) (*adminbus.GlobalUserPerformance, error) {
 	// Get the collection for global user performance
 	globalUserPerformanceCollection := s.ds.MGO.Collection("global_user_performance")
 
@@ -202,7 +189,7 @@ func (s *Store) UpdateGlobalUserPerformance(userID string, globalUserPerformance
 	// Return the updated global user performance
 	return &globalUserPerformance, nil
 }
-func (s *Store) UpdateChallengeData(challengeID string, challengeData adminbus.Challenge) (*adminbus.Challenge, error) {
+func (s *Store) UpdateChallengeData(ctx context.Context, challengeID string, challengeData adminbus.Challenge) (*adminbus.Challenge, error) {
 	// Get the collection for challenge data
 	challengeDataCollection := s.ds.MGO.Collection("challenges")
 
@@ -219,7 +206,7 @@ func (s *Store) UpdateChallengeData(challengeID string, challengeData adminbus.C
 	// Return the updated challenge data
 	return &challengeData, nil
 }
-func (s *Store) UpdateUserPerformance(userID string, userPerformance adminbus.UserPerformance) (*adminbus.UserPerformance, error) {
+func (s *Store) UpdateUserPerformance(ctx context.Context, userID string, userPerformance adminbus.UserPerformance) (*adminbus.UserPerformance, error) {
 	// Get the collection for user performances
 	userPerformanceCollection := s.ds.MGO.Collection("user_metrics")
 
@@ -236,7 +223,7 @@ func (s *Store) UpdateUserPerformance(userID string, userPerformance adminbus.Us
 	// Return the updated user performance
 	return &userPerformance, nil
 }
-func (s *Store) GetUserMetrics(userID, language string) (*adminbus.UserMetrics, error) {
+func (s *Store) GetUserMetrics(ctx context.Context, userID, language string) (*adminbus.UserMetrics, error) {
 	// Get the collection for user metrics
 	userMetricsCollection := s.ds.MGO.Collection("user_metrics")
 
@@ -323,7 +310,7 @@ func (s *Store) GetQuestionsByIDsDAO(ctx context.Context, ids []string) ([]admin
 }
 
 // TODO: get questions by dicfficulty level and languages
-func (s *Store) GetAvailableQuestions(user *adminbus.User, allQuestions []adminbus.Question) ([]adminbus.Question, error) {
+func (s *Store) GetAvailableQuestions(ctx context.Context, user *adminbus.User, allQuestions []adminbus.Question) ([]adminbus.Question, error) {
 	// var availableQuestions []Question
 	// var selectedQuestions []Question
 
@@ -349,7 +336,7 @@ func (s *Store) GetAvailableQuestions(user *adminbus.User, allQuestions []adminb
 }
 
 // CreateChallenge creates a new challenge for the user with 3 questions in their selected language
-func (s *Store) CreateChallenge(user *adminbus.User, allQuestions []adminbus.Question) (*Challenge, error) {
+func (s *Store) CreateChallenge(ctx context.Context, user *adminbus.User, allQuestions []adminbus.Question) (*Challenge, error) {
 	// Get 3 new questions for the user based on their selected language
 	// selectedQuestions, err := s.GetAvailableQuestions(user, allQuestions)
 	// if err != nil {
@@ -374,7 +361,7 @@ func (s *Store) CreateChallenge(user *adminbus.User, allQuestions []adminbus.Que
 }
 
 // TrackUserChallenge tracks user attempts and ensures they don't exceed 3 attempts per question
-func TrackUserChallenge(user *User, challenge *Challenge) error {
+func TrackUserChallenge(ctx context.Context, user *User, challenge *Challenge) error {
 	// Create a new UserChallenge entry
 	// userChallenge := &UserChallenge{
 	// 	UserID:        user.UserID,
@@ -392,7 +379,7 @@ func TrackUserChallenge(user *User, challenge *Challenge) error {
 func contains(src []string, id string) bool {
 	return false
 }
-func (s *Store) FetchUserMetricsData() ([]UserMetrics, error) {
+func (s *Store) FetchUserMetricsData(ctx context.Context) ([]UserMetrics, error) {
 	var result []UserMetrics
 	searchRequest := esapi.SearchRequest{
 		Index: []string{"user_performance"},
@@ -1026,4 +1013,304 @@ func (s *Store) GetRankByID(ctx context.Context, rnk int64) (adminbus.Rank, erro
 		return rank, err
 	}
 	return rank, nil
+}
+func (s *Store) GetAllRanks(ctx context.Context) ([]adminbus.Rank, error) {
+	var ranks []adminbus.Rank
+	cur, err := s.ds.MGO.Collection("ranks").Find(ctx, bson.M{})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return ranks, fmt.Errorf("rank not found")
+		}
+		return ranks, err
+	}
+	err = cur.All(ctx, &ranks)
+	if err != nil {
+		return nil, err
+	}
+	return ranks, nil
+}
+
+// :TODO create a getall ranks dao
+// add data to redis
+func (s *Store) Get(ctx context.Context, key string, res any) error {
+	_, span := otel.AddSpan(ctx, "adminbus.redis.GET")
+	defer span.End()
+	data, err := s.ds.RDB.Get(ctx, key).Result()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(data), res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) Set(ctx context.Context, key string, val any, ttl time.Duration) (string, error) {
+	_, span := otel.AddSpan(ctx, "adminbus.redis.SET")
+	defer span.End()
+	var data string
+	var err error
+	marshalledIn, err := s.MarshalBinary(val)
+	if err != nil {
+		return "", err
+	}
+	if ttl != 0 {
+		data, err = s.ds.RDB.Set(ctx, key, marshalledIn, ttl).Result()
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		data, err = s.ds.RDB.Set(ctx, key, marshalledIn, 0).Result()
+		if err != nil {
+			return "", err
+		}
+	}
+	s.logger.Errorc(ctx, fmt.Sprintf("redis entry created for %s", key), map[string]interface{}{
+		"message": data,
+	})
+	return data, nil
+}
+
+func (s *Store) MarshalBinary(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
+// UpdateUserStats(ctx context.Context, userID string, questionID string, correct bool) error
+// UpdateUserMetrics(ctx context.Context, userID string, correct bool, timeTaken float64, codeQualityScore float64) error
+// UpdateChallengeQuestion(ctx context.Context, challengeID string, questionID string, isCompleted bool, startedAt int64, endedAt int64) (*Question, error)
+func (s *Store) UpdateUserStats(ctx context.Context, userID, questionID, language string, correct bool) error {
+	// Prepare the update data
+	update := bson.M{
+		"$addToSet": bson.M{"attempted_questions": questionID}, // Add questionID to attempted_questions
+		"$inc": bson.M{
+			"no_attempted":      1, // Increment NoAttempted
+			"total_submissions": 1, // Increment TotalSubmissions
+		},
+	}
+	// Increment TotalCorrect or TotalWrong based on the answer
+	if correct {
+		update["$inc"].(bson.M)["total_correct"] = 1 // Increment TotalCorrect if the answer is correct
+	} else {
+		update["$inc"].(bson.M)["total_wrong"] = 1 // Increment TotalWrong if the answer is incorrect
+	}
+	_, span := otel.AddSpan(ctx, "ADMIN.UpdateUserStats", attribute.String("db.type", "mongo"), attribute.String("db.collection", "users"), attribute.String("db.UpdateOne", fmt.Sprintf("%v", update)))
+	defer span.End()
+
+	// Get the collection from the database
+	usersCollection := s.ds.MGO.Collection("users")
+
+	// Attempt to update the user in the collection
+	_, err := usersCollection.UpdateOne(
+		ctx,
+		bson.M{"user_id": userID, "selected_language": language}, // Filter by userID
+		update,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update user stats: %v", err)
+	}
+
+	return nil
+}
+func (s *Store) UpdateUserMetrics(ctx context.Context, userID, language string, correct bool, timeTaken, codeQualityScore float64, score int64) error {
+	// Get the collections from the database
+	userMetricsCollection := s.ds.MGO.Collection("user_metrics")
+	globalPerformanceCollection := s.ds.MGO.Collection("global_user_performance")
+
+	// Fetch current user metrics
+	var userMetrics adminbus.UserMetrics
+	var globalPerf adminbus.GlobalUserPerformance
+	if err := userMetricsCollection.FindOne(ctx, bson.M{"user_id": userID, "language": language}).Decode(&userMetrics); err != nil {
+		return fmt.Errorf("failed to retrieve user metrics: %v", err)
+	}
+
+	// Prepare updates
+	userMetrics.CorrectAnswers += 0 // This is for correct increment if correct is true
+	if correct {
+		userMetrics.CorrectAnswers++
+	}
+
+	userMetrics.TotalQuestions++
+	userMetrics.TotalTime += timeTaken
+	userMetrics.TotalSubmissions++
+	userMetrics.TotalScore += int(score)
+	userMetrics.CodeQualityScores = append(userMetrics.CodeQualityScores, codeQualityScore)
+	acc := userMetrics.CalculateAccuracy()
+	avg := userMetrics.CalculateSpeedAvg()
+	// Prepare the update for UserMetrics
+	userMetricsUpdate := bson.M{
+		"$set": bson.M{
+			"correct_answers":     userMetrics.CorrectAnswers,
+			"total_questions":     userMetrics.TotalQuestions,
+			"total_time":          userMetrics.TotalTime,
+			"total_submissions":   userMetrics.TotalSubmissions,
+			"total_score":         userMetrics.TotalScore,
+			"accuracy":            acc,
+			"speed_avg":           avg,
+			"code_quality_scores": userMetrics.CodeQualityScores,
+		},
+	}
+
+	// Update UserMetrics
+	_, span := otel.AddSpan(ctx, "ADMIN.userMetricsUpdate", attribute.String("db.type", "mongo"), attribute.String("db.collection", "user_metrics"), attribute.String("db.UpdateOne", fmt.Sprintf("%v", userMetricsUpdate)))
+	defer span.End()
+
+	_, err := userMetricsCollection.UpdateOne(
+		ctx,
+		bson.M{"user_id": userID}, // Filter by userID
+		userMetricsUpdate,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update user metrics: %v", err)
+	}
+	if err := globalPerformanceCollection.FindOne(ctx, bson.M{"user_id": userID}).Decode(&globalPerf); err != nil {
+		return fmt.Errorf("failed to retrieve user metrics: %v", err)
+	}
+	// Prepare the update for GlobalUserPerformance (same update logic)
+
+	globalPerf.CorrectAnswers += 0 // This is for correct increment if correct is true
+	if correct {
+		globalPerf.CorrectAnswers++
+	}
+
+	globalPerf.TotalQuestions++
+	globalPerf.TotalTime += timeTaken
+	globalPerf.TotalSubmissions++
+	globalPerf.TotalScore += int(score)
+	globalPerf.CodeQualityScores = append(globalPerf.CodeQualityScores, codeQualityScore)
+	globalacc := globalPerf.CalculateAccuracy()
+	globalavg := globalPerf.CalculateSpeedAvg()
+
+	globalPerformanceUpdate := bson.M{
+		"$set": bson.M{
+			"correct_answers":     globalPerf.CorrectAnswers,
+			"total_questions":     globalPerf.TotalQuestions,
+			"total_time":          globalPerf.TotalTime,
+			"total_submissions":   globalPerf.TotalSubmissions,
+			"total_score":         globalPerf.TotalScore,
+			"accuracy":            globalacc,
+			"speed_avg":           globalavg,
+			"code_quality_scores": globalPerf.CodeQualityScores,
+		},
+	}
+	// Update GlobalUserPerformance
+	_, err = globalPerformanceCollection.UpdateOne(
+		ctx,
+		bson.M{"user_id": userID}, // Filter by userID
+		globalPerformanceUpdate,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update global user performance: %v", err)
+	}
+
+	return nil
+}
+
+func (s *Store) UpdateChallengeQuestion(ctx context.Context, challengeID string, questionID string, isCompleted bool, endedAt int64, scored int64) (*adminbus.Question, error) {
+	// Add OpenTelemetry span
+
+	// Prepare the update data
+	update := bson.M{
+		"$set": bson.M{
+			"questions.$.is_completed": isCompleted, // Update IsCompleted
+			"questions.$.ended_at":     endedAt,     // Update EndedAt
+			"questions.$.score":        scored,
+		},
+	}
+
+	// Create the filter to find the specific challenge and question
+	filter := bson.M{
+		"challenge_id":          challengeID,
+		"questions.question_id": questionID, // Match the question by ID
+	}
+	_, span := otel.AddSpan(ctx, "ADMIN.UpdateChallengeQuestion", attribute.String("db.type", "mongo"),
+		attribute.String("db.collection", "challenges"),
+		attribute.String("db.FindOneAndUpdate", fmt.Sprintf("%v", update)),
+		attribute.String("filter", fmt.Sprintf("%v", filter)),
+	)
+	defer span.End()
+
+	// Get the collection from the database
+	challengesCollection := s.ds.MGO.Collection("challenges")
+
+	// Use FindOneAndUpdate to get the updated question
+	var updatedChallenge struct {
+		Questions []adminbus.Question `bson:"questions"`
+	}
+	err := challengesCollection.FindOneAndUpdate(
+		ctx,
+		filter,
+		update,
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updatedChallenge)
+
+	if err != nil {
+		// Log the error and return
+		span.RecordError(err) // Record error in the span
+		return nil, fmt.Errorf("failed to update question in challenge: %v", err)
+	}
+
+	// Find the updated question by ID in the updatedChallenge
+	for _, question := range updatedChallenge.Questions {
+		if question.QuestionID == questionID {
+			return &question, nil // Return the updated question
+		}
+	}
+
+	return nil, fmt.Errorf("question not found after update")
+}
+
+func (s *Store) GetQuestionByID(ctx context.Context, challengeID, questionID string) (*adminbus.Question, error) {
+	// Add OpenTelemetry span
+	_, span := otel.AddSpan(ctx, "GetQuestionByID",
+		attribute.String("db.type", "mongo"),
+		attribute.String("db.collection", "challenges"),
+		attribute.String("challenge_id", challengeID),
+		attribute.String("question_id", questionID),
+	)
+	defer span.End()
+
+	// Prepare the aggregation pipeline
+	pipeline := mongo.Pipeline{
+		{
+			{"$match", bson.M{"challenge_id": challengeID}},
+		},
+		{
+			{"$unwind", "$questions"},
+		},
+		{
+			{"$match", bson.M{"questions.question_id": questionID}},
+		},
+		{
+			{"$replaceRoot", bson.M{"newRoot": "$questions"}},
+		},
+	}
+
+	// Get the collection from the database
+	challengesCollection := s.ds.MGO.Collection("challenges")
+
+	// Execute the aggregation
+	var questions []adminbus.Question
+	cur, err := challengesCollection.Aggregate(ctx, pipeline)
+	if err != nil {
+		// Log the error and return
+		span.RecordError(err) // Record error in the span
+		return nil, fmt.Errorf("failed to find question in challenge: %v", err)
+	}
+	err = cur.All(ctx, &questions)
+	if err != nil {
+		// Log the error and return
+		span.RecordError(err) // Record error in the span
+		return nil, fmt.Errorf("failed to find question in challenge: %v", err)
+	}
+	var question adminbus.Question
+	if len(questions) > 0 {
+		question = questions[0]
+	}
+	if question.QuestionID == "" {
+		return nil, fmt.Errorf("question not found in the specified challenge")
+	}
+
+	return &question, nil
 }

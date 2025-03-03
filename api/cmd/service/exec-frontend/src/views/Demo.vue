@@ -25,6 +25,13 @@
         class="menu-icons mt-8 mb-5 flex h-20rem flex-column align-items-center justify-content-between"
       >
         <Button
+          icon="pi pi-home"
+          text
+          rounded
+          v-tooltip="'Creator'"
+          @click="$router.push('/creator')"
+        />
+        <Button
           @click="$router.push('/qc')"
           icon="pi pi-check"
           text
@@ -38,7 +45,8 @@
           aria-label="Bookmark"
           aria-haspopup="true"
           aria-controls="overlay_tmenu1"
-          @click="toggle1"
+          v-tooltip="'Set Exam'"
+          @click="$router.push('/setexam')"
         />
         <!-- <Button icon="pi pi-search" text rounded aria-label="Search" /> -->
         <Button

@@ -2,9 +2,18 @@ package rabbitproducer
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"math"
+	"time"
 
 	"github.com/streadway/amqp"
+)
+
+const (
+	maxRetries        = 5
+	initialBackoff    = 100 * time.Millisecond
+	backoffMultiplier = 2
 )
 
 // Producer struct holds the connection and channel
@@ -16,8 +25,23 @@ type Producer struct {
 
 // NewProducer establishes a connection and declares multiple queues
 func NewProducer(rabbitmqURL string, queueNames []string) (*Producer, error) {
-	// Establish connection to RabbitMQ server
-	conn, err := amqp.Dial(rabbitmqURL)
+	var conn *amqp.Connection
+	var err error
+
+	// Exponential backoff for connection retries
+	for i := 0; i < maxRetries; i++ {
+		conn, err = amqp.Dial(rabbitmqURL)
+		if err == nil {
+			break
+		}
+
+		// Calculate backoff time
+		backoffTime := time.Duration(math.Pow(float64(backoffMultiplier), float64(i))) * initialBackoff
+		// Log the error and retry
+		fmt.Printf("Failed to connect to RabbitMQ: %v. Retrying in %v...\n", err, backoffTime)
+		time.Sleep(backoffTime)
+	}
+
 	if err != nil {
 		return nil, err
 	}

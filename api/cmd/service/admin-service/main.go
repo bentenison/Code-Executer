@@ -26,19 +26,63 @@ import (
 )
 
 const apiType = "all"
-const userPerformanceMapping = `{
-	"mappings": {
-		"properties": {
-			"user_id": { "type": "keyword" },
-			"accuracy": { "type": "float" },
-			"speed_avg": { "type": "float" },
-			"penalty_points": { "type": "integer" },
-			"question_id": { "type": "keyword" },
-			"language": { "type": "keyword" },
-			"rank": { "type": "integer" },
-			"created_at": { "type": "date" }
-		}
-	}
+
+const codePerformanceMapping = `{
+  "mappings": {
+    "properties": {
+      "user_id": {
+        "type": "keyword"  // Unique identifier for the user
+      },
+      "question_id": {
+        "type": "keyword"  // Unique identifier for the question
+      },
+      "question_text": {
+        "type": "text"     // The text of the question
+      },
+      "language": {
+        "type": "keyword"  // Programming language used
+      },
+      "difficulty_level": {
+        "type": "keyword"  // Difficulty level of the question
+      },
+      "attempts": {
+        "type": "integer"  // Number of attempts made for the question
+      },
+      "event_type": {
+        "type": "keyword"  // Type of event (e.g., "submission", "attempt")
+      },
+      "correct": {
+        "type": "boolean"  // Whether the answer was correct or not
+      },
+      "submission_time": {
+        "type": "date"     // Time of submission
+      },
+      "time_taken": {
+        "type": "keyword"    // Time taken to solve the question (in seconds)
+      },
+      "score": {
+        "type": "float"    // Score for the submission
+      },
+      "code_quality": {
+        "type": "float"    // Score for code quality
+      },
+      "tags": {
+        "type": "keyword"   // Tags associated with the question
+      },
+      "session_id": {
+        "type": "keyword"   // Unique identifier for the user session
+      },
+      "created_at": {
+        "type": "date"      // Creation timestamp
+      },
+      "updated_at": {
+        "type": "date"      // Last updated timestamp
+      },
+      "timestamp": {
+        "type": "date"      // General timestamp of the event
+      }
+    }
+  }
 }`
 
 const challengeDataMapping = `{
@@ -111,6 +155,7 @@ func main() {
 		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
+		panic(err)
 	}
 }
 func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvider) error {
@@ -124,6 +169,9 @@ func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvide
 		MaxOpenConns: cfg.MaxOpenConns,
 	})
 	if err != nil {
+		log.Errorc(context.TODO(), "error connecting posgres", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 
@@ -140,20 +188,28 @@ func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvide
 		AllowDirect: cfg.AllowDirect,
 	})
 	if err != nil {
+		log.Errorc(context.TODO(), "error connecting mongo", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 	rdb, err := redisdb.OpenRDB(redisdb.Config{})
 	if err != nil {
+		log.Errorc(context.TODO(), "error connecting redis", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 	es, err := essearch.InitElasticsearch()
 	if err != nil {
+		log.Errorc(context.TODO(), "error creating elasticsearch client", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 	mappings := map[string]string{
-		"user_performance":     userPerformanceMapping,
-		"challenge_data":       challengeDataMapping,
-		"code_execution_stats": codeExecutionStatsMapping,
+		"programming_questions": codePerformanceMapping,
+		"code_execution_stats":  codeExecutionStatsMapping,
 	}
 	for k, v := range mappings {
 		err := createIndexIfNotExists(es, log, k, v)

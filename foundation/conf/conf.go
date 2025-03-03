@@ -81,7 +81,7 @@ func LoadConfig() (*Config, error) {
 		Language:        getEnv("CONTAINER_LANGUAGE", "python"),
 		JWTKey:          getEnv("JWT_KEY", "mysupersecret"),
 		TracerHost:      getEnv("TRACER_HOST", "http://localhost:14268/api/traces"),
-		RabbitQueues:    getEnv("RABBIT_QUEUES", "user_performance,challenge_data,code_execution_stats"),
+		RabbitQueues:    getEnv("RABBIT_QUEUES", "programming_questions,challenge_data,code_execution_stats"),
 		RabbitURL:       getEnv("RABBIT_URL", "amqp://guest:guest@localhost:5672/"),
 		// TracerProb:      getEnv("TRACER_PROB", "mysupersecret"),
 		// AllowDirect:   getEnv("ENV", "devlopment"),

@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-column justify-content-center" style="height: 100vh;margin-top:15rem ">
+  <div
+    class="flex flex-column justify-content-center"
+    style="height: 100vh; margin-top: 14rem"
+  >
     <div class="p-6 flex-1 w-100">
       <div class="flex align-items-center justify-content-between mb-6">
         <div class="text-2xl font-bold">EPIC.</div>
@@ -35,8 +38,10 @@
           </Card>
         </div>
         <div class="col-3">
-          <Card class="p-4 border-round-lg shadow-3"
-          style="background: var(--p-blue-100); color: var(--p-gray-600)">
+          <Card
+            class="p-4 border-round-lg shadow-3"
+            style="background: var(--p-blue-100); color: var(--p-gray-600)"
+          >
             <template #content>
               <div class="text-gray-600">Achieved goals</div>
               <div class="text-2xl font-bold">732+</div>
@@ -573,7 +578,6 @@ export default {
     getCustomers(data) {
       return [...(data || [])].map((d) => {
         d.date = new Date(d.date);
-
         return d;
       });
     },

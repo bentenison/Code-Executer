@@ -10,7 +10,7 @@ const router = createRouter({
       children: [
         {
           path: "",
-          name: "dashboard",
+          name: "create",
           component: () => import("../views/About.vue"),
         },
         {
@@ -18,12 +18,22 @@ const router = createRouter({
           name: "qc",
           component: () => import("../views/QcQuestion.vue"),
         },
+        {
+          path: "/setexam",
+          name: "setexam",
+          component: () => import("../views/CreateExam.vue"),
+        },
       ],
+    },
+    {
+      path: "/challengeViewer",
+      name: "challengeViewer",
+      component: () => import("../components/EditorLayout.vue"),
     },
     {
       path: "/examViewer",
       name: "examviewer",
-      component: () => import("../components/EditorLayout.vue"),
+      component: () => import("../views/examViewer.vue"),
     },
     {
       path: "/",
@@ -70,6 +80,11 @@ const router = createRouter({
         path: '/auth/signup',
         name: 'login',
         component: () => import('../views/signup.vue')
+    },
+    {
+        path: '/test',
+        name: 'test',
+        component: () => import('../views/QuestionTypes.vue')
     },
     // {
     //     path: '/auth/access',

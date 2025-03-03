@@ -23,7 +23,7 @@ const apiType = "all"
 
 func main() {
 	log := logger.NewCustomLogger(map[string]interface{}{
-		"service": "broker-service",
+		"service": "q-creator-service",
 		"env":     "production",
 		"build":   "1.0.0",
 	})
@@ -131,7 +131,7 @@ func run(log *logger.CustomLogger, cfg *conf.Config) error {
 	serverErrors := make(chan error, 1)
 	ctx := context.Background()
 	go func() {
-		log.Infoc(context.TODO(), "broker-api router started", map[string]interface{}{
+		log.Infoc(context.TODO(), "q-creator-api router started", map[string]interface{}{
 			"port": cfg.CreatorAPIPort,
 		})
 		serverErrors <- api.ListenAndServe()

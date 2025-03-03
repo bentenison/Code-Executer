@@ -369,11 +369,11 @@ func (s *Store) Get(ctx context.Context, key string, res any) error {
 	defer span.End()
 	data, err := s.ds.RDB.Get(ctx, key).Result()
 	if err != nil {
-		return nil
+		return err
 	}
 	err = json.Unmarshal([]byte(data), res)
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }

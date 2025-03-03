@@ -5,6 +5,7 @@ import { defineStore } from "pinia";
 export const useMainStore = defineStore("main", {
   state: () => ({
     isBlocked: false,
+    isDark: false,
   }),
 
   getters: {

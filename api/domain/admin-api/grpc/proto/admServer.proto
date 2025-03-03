@@ -84,6 +84,11 @@ message CompleteChallengeResponse {
 message CompleteQuestionRequest {
     string question_id = 1;
     string challenge_id = 2;
+    bool  is_correct =3;
+    bool is_challenge=4;
+    string language =5;
+    double code_quality =6;
+    string user_id=7;
 }
 
 message CompleteQuestionResponse {
@@ -91,7 +96,13 @@ message CompleteQuestionResponse {
 }
 
 message UpdateUserMetricsRequest {
-    UserMetrics user_metrics = 1;
+    string question_id = 1;
+    string challenge_id = 2;
+    bool  is_correct =3;
+    bool is_challenge=4;
+    string language =5;
+    double code_quality =6;
+    string user_id=7;
 }
 
 message UpdateUserMetricsResponse {
@@ -99,7 +110,13 @@ message UpdateUserMetricsResponse {
 }
 
 message UpdateUserPerformanceRequest {
-    GlobalUserPerformance performance = 1;
+    string question_id = 1;
+    string challenge_id = 2;
+    bool  is_correct =3;
+    bool is_challenge=4;
+    string language =5;
+    double code_quality =6;
+    string user_id=7;
 }
 
 message UpdateUserPerformanceResponse {

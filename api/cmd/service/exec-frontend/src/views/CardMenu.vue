@@ -91,7 +91,7 @@ export default {
           this.challengeStore
             .createChallenges(payload)
             .then((res) => {
-              this.$router.push("/examViewer")
+              this.$router.push("/challengeViewer")
             })
             .catch((err) => {
               this.$toast.add({

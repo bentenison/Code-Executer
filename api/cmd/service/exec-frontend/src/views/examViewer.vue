@@ -1,132 +1,12 @@
 <template>
-  <div :class="{ 'menu-on': isMenuDisplayed }">
-    <Dialog
-      v-model:visible="visible"
-      :style="{ width: '60rem' }"
-      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-      modal
-    >
-      <template #container="{}">
-        <div
-          class="grid flex align-items-center justify-content-center border-round-2xl"
-        >
-          <!-- style="width: 30rem; height: 20rem" -->
-          <div class="challenge col-12 text-center">
-            <p class="text-xl font-bold">Challenge Description</p>
-            <div class="flex gap-2 justify-content-center">
-              <Chip
-                :label="t"
-                v-for="t in challengeStore.challenges.tags.slice(0, 5)"
-                :key="t.id"
-                class="text-sm"
-                icon="pi pi-tag text-green-600"
-                style="
-                  background-color: var(--p-green-50);
-                  color: var(--p-green-600) !important;
-                  border: 1px solid var(--p-green-600);
-                "
-              />
-            </div>
-          </div>
-          <div
-            class="col-6 flex align-items-center justify-content-around flex-wrap"
-            style="width: 28rem"
-            v-for="q in challengeStore.challengeQuestions"
-            :key="q"
-          >
-            <Card class="h-full shadow-3">
-              <template #title>
-                <div class="flex flex-1 align-items-center gap-3">
-                  <div class="">
-                    <i
-                      class="pi pi-question-circle"
-                      style="font-size: 2rem"
-                    ></i>
-                  </div>
-                  <div class="text flex flex-column gap-2">
-                    <p
-                      class="p-0 m-0 text-lg align-self-start cursor-pointer"
-                      v-tooltip="{
-                        value: `${q.title}`,
-                        showDelay: 500,
-                        hideDelay: 300,
-                      }"
-                    >
-                      {{ truncatedTitle(q.title) }}
-                    </p>
-                    <div class="flex gap-3">
-                      <Chip
-                        :label="q.language.toUpperCase()"
-                        class="text-sm text-grey-300"
-                        icon="pi pi-language text-green-600"
-                        style="
-                          background-color: var(--p-green-100);
-                          color: var(--p-green-600) !important;
-                          border: 1px solid var(--p-green-600);
-                        "
-                      />
-                      <Chip
-                        :label="q.difficulty.toUpperCase()"
-                        class="text-sm py-0"
-                        icon="pi pi-thumbtack text-orange-600"
-                        style="
-                          background-color: var(--p-orange-100);
-                          color: var(--p-orange-600);
-                          border: 1px solid var(--p-orange-600);
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-              </template>
-              <template #content>
-                <p class="m-0 mt-2">
-                  {{ q.description }}
-                </p>
-              </template>
-              <template #footer> </template>
-            </Card>
-          </div>
-        </div>
-        <ConfirmPopup group="info"></ConfirmPopup>
-        <div
-          class="flex align-items-center justify-content-center gap-4 mt-1 mb-2 p-2"
-        >
-          <Button
-            label="Cancel"
-            @click="goBack($event)"
-            severity="danger"
-            outlined
-            class="text-lg"
-            icon="pi pi-times"
-          />
-          <Button
-            label="Proceed"
-            severity="success"
-            class="text-lg"
-            outlined
-            @click="proceed($event)"
-            icon="pi pi-check"
-          />
-        </div>
-      </template>
-    </Dialog>
-    <!-- demo -->
-    <div class="grid flex justify-content-between">
-      <!-- <CodeEditor
-          :autofocus="true"
-          :theme="theme"
-          v-model="animationCode"
-          width="100%"
-          :languages="[
-            ['html', 'HTML'],
-            ['javascript', 'JS'],
-            ['scss', 'SCSS'],
-          ]"
-        ></CodeEditor> -->
+  <div
+    class="grid flex align-items-center justify-content-center mt-5"
+    style="min-height: 100vh"
+  >
+    <div class="col-12 grid">
       <div class="col-8 flex flex-column mt-2">
         <CodeEditor
-          v-if="currQuestion"
+          v-if="currQuestion && editorStore.langArr"
           :line-nums="true"
           :key="currQuestion.id"
           :theme="theme"
@@ -139,50 +19,17 @@
           @lang="getLanguage"
           :languages="editorStore.langArr"
         ></CodeEditor>
-        <terminal :isSingle="true"/>
-        <div class="flex align-items-center justify-content-end">
-          <p class="w-full p-0 m-0">
+        <terminal :key="$route.name" :isSingle="true" />
+        <div class="flex align-items-center justify-content-end p-0 m-0">
+          <p class="w-full">
             code executed by <strong>{{ executedBy }}</strong>
           </p>
-          <!-- <div class="flex gap-5">
-            <Button
-              type="button"
-              label="Previous"
-              icon="pi pi-arrow-circle-left text-lg"
-              severity="secondary"
-              raised
-              class="text-lg px-2"
-              :loading="loading"
-              @click="previous"
-            />
-            <Button
-              type="button"
-              label="Next "
-              icon="pi pi-arrow-circle-right text-lg"
-              severity="secondary"
-              raised
-              class="text-lg px-2"
-              :loading="loading"
-              @click="next"
-            />
-          </div> -->
         </div>
       </div>
-      <div class="col-4">
-        <!-- <div class="w-30rem flex"> -->
+      <div class="col-4 flex flex-column mt-2">
         <div
-          class="w-100 gap-5 mb-2 flex align-items-center justify-content-end"
+          class="gap-4 flex align-items-center justify-content-end mr-2"
         >
-          <Button
-            v-for="(dt, index) in challengeStore.challenges.questions"
-            :key="index"
-            raised
-            rounded
-            :outlined="dt.is_completed"
-            @click="gotoQuest(index)"
-            :disabled="dt.is_completed"
-            >{{ index + 1 }}</Button
-          >
           <Button
             type="button"
             label="Run"
@@ -190,8 +37,8 @@
             icon="pi pi-play"
             :loading="runBtnLoading"
             @click="handlecodeRun"
-            severity="success"
-            outlined
+            severity="primary"
+            raised
           />
           <Button
             type="button"
@@ -201,10 +48,9 @@
             :loading="loading"
             @click="submitQuestion"
             severity="info"
-            outlined
+            raised
           />
         </div>
-        <!-- </div> -->
         <Tabs
           value="0"
           class="w-full"
@@ -216,10 +62,6 @@
               <i class="pi pi-info-circle" style="font-size: 1.5rem"></i>
               <span class="font-bold whitespace-nowrap">Instructions</span>
             </Tab>
-            <Tab value="1" as="div" class="flex align-items-center gap-2">
-              <i class="pi pi-clipboard" style="font-size: 1.5rem"></i>
-              <span class="font-bold whitespace-nowrap">Notes</span>
-            </Tab>
             <Tab v-slot="slotProps" value="2" asChild>
               <div
                 :class="['flex align-items-center gap-2', slotProps.class]"
@@ -227,9 +69,13 @@
                 v-bind="slotProps.a11yAttrs"
               >
                 <i class="pi pi-question-circle" style="font-size: 1.5rem"></i>
-                <span class="font-bold whitespace-nowrap">IDE help</span>
+                <span class="font-bold whitespace-nowrap">Questions</span>
                 <Badge value="2" />
               </div>
+            </Tab>
+            <Tab value="1" as="div" class="flex align-items-center gap-2">
+              <i class="pi pi-clipboard" style="font-size: 1.5rem"></i>
+              <span class="font-bold whitespace-nowrap">Notes</span>
             </Tab>
           </TabList>
           <TabPanels>
@@ -323,51 +169,26 @@
                 <div class="note"></div>
               </div>
             </TabPanel>
-            <TabPanel value="1" as="div" class="m-0 px-2 tab-height">
-              <notes />
-            </TabPanel>
+            
             <TabPanel value="2" class="m-0 tab-height px-2" as="div">
-              <!-- <div
-                v-show="slotProps.active"
-                :class="slotProps.class"
-                v-bind="slotProps.a11yAttrs"
-                class="h-full"
-              > -->
-              <h2 class="text-center m-0 mb-2">Challange IDE</h2>
-              <p class="m-0">
-                The code challenge IDE provides an in-browser IDE for editing,
-                testing, and running assessments.
-              </p>
-              <h2 class="text-center m-0 my-3">Quick Intro</h2>
-              <hr />
-              <ul class="flex flex-column gap-2">
-                <li class="text-lg">Read through the provided Instructions.</li>
-                <li class="text-lg">
-                  Edit the provided files, and optionally add your own, to solve
-                  the given problem.
-                </li>
-                <li class="text-lg">
-                  Run your solution against the provided tests using
-                  <strong>RUN TESTS</strong>, unless this is a web-only
-                  challenge without tests.
-                </li>
-                <li class="text-lg">
-                  Results will be shown in the Run Output pane.
-                </li>
-              </ul>
-              <!-- </div> -->
+              <div class="grid flex">
+                <div
+                  class="col-6 flex flex-wrap"
+                >
+                  <div class="box" v-for="i in 50" :key="i">
+                    <Button text raised class="p-3"
+                      ><strong>{{formatNumber(i)}}</strong></Button
+                    >
+                  </div>
+                </div>
+              </div>
+            </TabPanel>
+            <TabPanel value="1" as="div" class="m-0 px-1 tab-height">
+              <notes />
             </TabPanel>
           </TabPanels>
         </Tabs>
       </div>
-      <ConfirmDialog></ConfirmDialog>
-      <!-- <CodeEditor
-          :read-only="true"
-          v-model="themeDemo"
-          theme="atom-one-dark"
-          width="100%"
-          :languages="[['html', 'HTML']]"
-        ></CodeEditor> -->
     </div>
   </div>
 </template>
@@ -458,6 +279,10 @@ class TestCase:
     // },
   },
   methods: {
+    formatNumber(num) {
+      // Add a non-displayable character (e.g., a space) for single-digit numbers
+      return num < 10 ? `0${num}  ` : num; // \u200B is a zero-width space
+    },
     confirm(event) {
       this.$confirm.require({
         message: "Do you want to end this challenge?",
@@ -698,7 +523,7 @@ class TestCase:
               this.currIndex = index;
             }
           });
-          // console.log(res[this.currIndex])
+          console.log(res[this.currIndex])
           this.currQuestion = res[this.currIndex];
           const index = this.challengeStore.challenges.questions.findIndex(
             (item) => item.question_id === this.currQuestion.id
@@ -829,4 +654,9 @@ class TestCase:
 // .tab-height{
 //   min-height: 100% !important;
 // }
+.box {
+  flex: 0 0 18%; /* Make each box take up about 18% of the width */
+  margin: 1%; /* Margin for spacing */
+  height: 50px; /* Set a height for visibility */
+}
 </style>

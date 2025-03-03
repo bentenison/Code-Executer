@@ -3,7 +3,6 @@ package adminapi
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/bentenison/microservice/api/domain/admin-api/grpc/proto/admin"
@@ -120,20 +119,42 @@ func saveAndShareSnippet(c *gin.Context) {
 	// when user loads the url then get that code and load it to editor with language
 }
 
-func (api *api) CompleteChallenge(context.Context, *admin.CompleteChallengeRequest) (*admin.CompleteChallengeResponse, error) {
-	api.logger.Errorc(context.TODO(), "completechallenge called", map[string]interface{}{})
+func (api *api) CompleteChallenge(ctx context.Context, req *admin.CompleteChallengeRequest) (*admin.CompleteChallengeResponse, error) {
+
 	return nil, nil
 }
-func (api *api) CompleteQuestion(context.Context, *admin.CompleteQuestionRequest) (*admin.CompleteQuestionResponse, error) {
-	log.Println("completeQuestion Called by RPC")
-	return nil, nil
+func (api *api) CompleteQuestion(ctx context.Context, req *admin.CompleteQuestionRequest) (*admin.CompleteQuestionResponse, error) {
+	res, err := api.adminapp.CompleteQuestion(ctx, req)
+	if err != nil {
+		api.logger.Errorc(ctx, "error while updating question completion", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	return res, nil
 }
-func (api *api) UpdateUserMetrics(context.Context, *admin.UpdateUserMetricsRequest) (*admin.UpdateUserMetricsResponse, error) {
-	return nil, nil
+func (api *api) UpdateUserMetrics(ctx context.Context, req *admin.UpdateUserMetricsRequest) (*admin.UpdateUserMetricsResponse, error) {
+	res, err := api.adminapp.UpdateUserMetrics(ctx, req)
+	if err != nil {
+		api.logger.Errorc(ctx, "error while updating question completion", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	return res, nil
+	// return nil, nil
 }
-func (api *api) UpdateUserPerformance(context.Context, *admin.UpdateUserPerformanceRequest) (*admin.UpdateUserPerformanceResponse, error) {
-	return nil, nil
+func (api *api) UpdateUserPerformance(ctx context.Context, req *admin.UpdateUserPerformanceRequest) (*admin.UpdateUserPerformanceResponse, error) {
+	res, err := api.adminapp.UpdateUserPerformance(ctx, req)
+	if err != nil {
+		api.logger.Errorc(ctx, "error while updating question completion", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return nil, err
+	}
+	return res, nil
+	// return nil, nil
 }
-func (api *api) AddSubmissionStats(context.Context, *admin.AddSubmissionStatsRequest) (*admin.AddSubmissionStatsResponse, error) {
+func (api *api) AddSubmissionStats(ctx context.Context, req *admin.AddSubmissionStatsRequest) (*admin.AddSubmissionStatsResponse, error) {
 	return nil, nil
 }

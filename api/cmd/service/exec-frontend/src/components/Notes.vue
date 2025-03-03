@@ -18,7 +18,7 @@ export default {
 <style lang="scss" scoped>
 .notes-panel{
   min-height: 44rem;
-  width: 49rem;
+  // width: 49rem;
   border-radius: 10px;
 }
 </style>

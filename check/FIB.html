@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill in the Blanks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-family: monospace;
+            position: relative;
+            white-space: pre-wrap;
+            overflow: auto;
+            margin-bottom: 20px;
+        }
+        .blank {
+            border-bottom: 1px dashed #000;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .options {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            z-index: 10;
+        }
+        .options div {
+            padding: 5px;
+            cursor: pointer;
+        }
+        .options div:hover {
+            background-color: #f0f0f0;
+        }
+        .navigation {
+            margin-bottom: 10px;
+        }
+        .navigation button {
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navigation">
+    <button id="prevButton" onclick="navigate(-1)">Previous</button>
+    <button id="nextButton" onclick="navigate(1)">Next</button>
+</div>
+
+<div class="code-editor" id="editor"></div>
+<div class="options" id="options"></div>
+<div class="result" id="result"></div>
+
+<script>
+    const questions = [
+        {
+            question: "Fill in the blanks in the following code.",
+            codeTemplate: `public class Example {
+    public static void main(String[] args) {
+        System.out.println("Hello, {{BLANK_1}} and {{BLANK_2}}!");
+    }
+}`,
+            blanks: [
+                {
+                    id: "BLANK_1",
+                    options: ["World", "Java", "Everyone"],
+                    correct: "World"
+                },
+                {
+                    id: "BLANK_2",
+                    options: ["Students", "Developers", "Coders"],
+                    correct: "Students"
+                }
+            ]
+        },
+        {
+            question: "Fill in the blanks in the following code.",
+            codeTemplate: `public class Test {
+    public static void main(String[] args) {
+        int a = {{BLANK_1}};
+        int b = {{BLANK_2}};
+        System.out.println(a + b);
+    }
+}`,
+            blanks: [
+                {
+                    id: "BLANK_1",
+                    options: ["5", "10", "15"],
+                    correct: "5"
+                },
+                {
+                    id: "BLANK_2",
+                    options: ["5", "10", "20"],
+                    correct: "10"
+                }
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+
+    function loadProgress() {
+        const progress = JSON.parse(localStorage.getItem('progress')) || {};
+        return progress[currentQuestionIndex] || {};
+    }
+
+    function saveProgress(blankId, value) {
+        const progress = JSON.parse(localStorage.getItem('progress')) || {};
+        if (!progress[currentQuestionIndex]) {
+            progress[currentQuestionIndex] = {};
+        }
+        progress[currentQuestionIndex][blankId] = value;
+        localStorage.setItem('progress', JSON.stringify(progress));
+    }
+
+    function renderCode() {
+        const question = questions[currentQuestionIndex];
+        let codeWithBlanks = question.codeTemplate;
+
+        question.blanks.forEach(blank => {
+            const placeholder = `{{${blank.id}}}`;
+            const userInput = loadProgress()[blank.id] || "______";
+            codeWithBlanks = codeWithBlanks.replace(placeholder, `<span class="blank" onclick="showOptions(event, '${blank.id}')">${userInput}</span>`);
+        });
+
+        document.getElementById('editor').innerHTML = codeWithBlanks;
+    }
+
+    function showOptions(event, blankId) {
+        const rect = event.target.getBoundingClientRect();
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.style.display = 'block';
+        optionsContainer.style.top = `${rect.bottom + window.scrollY}px`;
+        optionsContainer.style.left = `${rect.left}px`;
+
+        const options = questions[currentQuestionIndex].blanks.find(b => b.id === blankId).options;
+        optionsContainer.innerHTML = '';
+        options.forEach(option => {
+            const optionDiv = document.createElement('div');
+            optionDiv.innerText = option;
+            optionDiv.onclick = () => {
+                fillBlank(blankId, option); // Fill in the blank with the selected option
+            };
+            optionsContainer.appendChild(optionDiv);
+        });
+    }
+
+    function fillBlank(blankId, value) {
+        // Replace the blank in the editor with the selected value
+        const blank = Array.from(document.querySelectorAll('.blank')).find(b => b.innerText.includes("______"));
+        if (blank) {
+            blank.innerText = value; // Fill in the blank
+            saveProgress(blankId, value); // Save progress
+        }
+        document.getElementById('options').style.display = 'none'; // Hide options
+        validateAnswers();
+    }
+
+    function validateAnswers() {
+        const question = questions[currentQuestionIndex];
+        const userAnswers = loadProgress();
+        const resultDiv = document.getElementById('result');
+        const allCorrect = question.blanks.every(blank => userAnswers[blank.id] === blank.correct);
+
+        resultDiv.innerText = allCorrect ? "All answers are correct!" : "Some answers are incorrect.";
+    }
+
+    function navigate(direction) {
+        currentQuestionIndex += direction;
+        if (currentQuestionIndex < 0) currentQuestionIndex = 0;
+        if (currentQuestionIndex >= questions.length) currentQuestionIndex = questions.length - 1;
+        renderCode();
+        validateAnswers();
+        updateNavigationButtons();
+    }
+
+    function updateNavigationButtons() {
+        document.getElementById('prevButton').disabled = currentQuestionIndex === 0;
+        document.getElementById('nextButton').disabled = currentQuestionIndex === questions.length - 1;
+    }
+
+    // Initial rendering of the first question
+    renderCode();
+    validateAnswers();
+    updateNavigationButtons();
+
+    // Hide options if clicking outside
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('options').contains(e.target) && !document.getElementById('editor').contains(e.target)) {
+            document.getElementById('options').style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>

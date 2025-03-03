@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Fill in the Blanks Questions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .question-form {
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .blanks {
+            margin-bottom: 10px;
+        }
+        .blanks input {
+            width: calc(70% - 10px);
+            margin-right: 5px;
+        }
+        .blanks button {
+            padding: 5px 10px;
+        }
+        button {
+            padding: 5px 10px;
+            margin-top: 10px;
+        }
+        .questions-list {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Create Fill in the Blanks Questions</h1>
+<div class="question-form">
+    <div class="form-group">
+        <label for="question">Question:</label>
+        <input type="text" id="question" placeholder="Enter the question here">
+    </div>
+    <div class="form-group">
+        <label for="codeTemplate">Code Template:</label>
+        <textarea id="codeTemplate" rows="5" placeholder="Enter the code template here"></textarea>
+    </div>
+    <div class="form-group blanks">
+        <label for="blankId">Blank ID:</label>
+        <input type="text" id="blankId" placeholder="Enter blank ID (e.g., BLANK_1)">
+        <label for="options">Options (comma-separated):</label>
+        <input type="text" id="options" placeholder="Enter options (e.g., World,Java,Everyone)">
+        <label for="correctAnswer">Correct Answer:</label>
+        <input type="text" id="correctAnswer" placeholder="Enter the correct answer">
+        <button onclick="addBlank()">Add Blank</button>
+    </div>
+    <button onclick="saveQuestion()">Save Question</button>
+</div>
+
+<div class="questions-list">
+    <h2>Questions Created</h2>
+    <ul id="questionsDisplay"></ul>
+</div>
+
+<script>
+    const questions = [];
+
+    function addBlank() {
+        const blankId = document.getElementById('blankId').value;
+        const options = document.getElementById('options').value.split(',').map(opt => opt.trim());
+        const correctAnswer = document.getElementById('correctAnswer').value;
+
+        if (!blankId || options.length === 0 || !correctAnswer) {
+            alert("Please fill all fields for the blank.");
+            return;
+        }
+
+        const blank = {
+            id: blankId,
+            options: options,
+            correct: correctAnswer
+        };
+
+        const questionDisplay = document.getElementById('questionsDisplay');
+        const listItem = document.createElement('li');
+        listItem.innerText = `${blankId}: Options(${options.join(', ')}) Correct Answer: ${correctAnswer}`;
+        questionDisplay.appendChild(listItem);
+
+        // Clear inputs
+        document.getElementById('blankId').value = '';
+        document.getElementById('options').value = '';
+        document.getElementById('correctAnswer').value = '';
+    }
+
+    function saveQuestion() {
+        const questionText = document.getElementById('question').value;
+        const codeTemplate = document.getElementById('codeTemplate').value;
+
+        if (!questionText || !codeTemplate) {
+            alert("Please fill in the question and code template.");
+            return;
+        }
+
+        const blanks = Array.from(document.querySelectorAll('.questions-list li')).map(li => {
+            const parts = li.innerText.split(': ');
+            const id = parts[0];
+            const rest = parts[1].split(' Correct Answer: ');
+            const options = rest[0].match(/Options\(([^)]+)\)/)[1].split(', ').map(opt => opt.trim());
+            const correct = rest[1];
+
+            return { id, options, correct };
+        });
+
+        const newQuestion = {
+            question: questionText,
+            codeTemplate: codeTemplate,
+            blanks: blanks
+        };
+
+        questions.push(newQuestion);
+        console.log('Questions:', JSON.stringify(questions, null, 2));
+
+        // Clear form
+        document.getElementById('question').value = '';
+        document.getElementById('codeTemplate').value = '';
+        document.getElementById('questionsDisplay').innerHTML = '';
+    }
+</script>
+
+</body>
+</html>

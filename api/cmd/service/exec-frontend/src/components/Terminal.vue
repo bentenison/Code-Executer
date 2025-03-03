@@ -1,16 +1,18 @@
 <template>
-  <exec-term
-    class="hljs"
-    :theme="currentTheme"
-    name="my-terminal"
-    ref="execTerm"
-    :context="context"
-    @exec-cmd="onExecCmd"
-    :drag-conf="dragConf"
-    :title="title"
-    :show-header="false"
-    :commands="commands"
-  />
+  <div :class="isSingle ? 'single' : 'challenge'">
+    <exec-term
+      class="hljs"
+      :theme="currentTheme"
+      name="my-terminal"
+      ref="execTerm"
+      :context="context"
+      @exec-cmd="onExecCmd"
+      :drag-conf="dragConf"
+      :title="title"
+      :show-header="false"
+      :commands="commands"
+    />
+  </div>
   <!-- :init-log="Messages" -->
 </template>
 <script>
@@ -20,6 +22,7 @@ import "vue-web-terminal/lib/theme/dark.css";
 
 export default {
   name: "Terminal",
+  props: ["isSingle"],
   components: {
     execTerm,
   },
@@ -240,7 +243,7 @@ export default {
       // }, 100);
     },
     showMessage(data) {
-      console.log("terminal refs ", data);
+      // console.log("terminal refs ", data);
       let msg = data.toLowerCase();
       if (msg.includes("error") || msg.includes("exception")) {
         this.$refs.execTerm.pushMessage({
@@ -264,6 +267,7 @@ export default {
     // document.documentElement.style.setProperty("--t-main-background-color", "red");
     // },
     // console.log(doc2.attributes);
+    // console.log(this.$refs)
     this.emitter.on("changeTerminalTheme", this.changeTheme);
     this.emitter.on("showMessage", this.showMessage);
   },
@@ -288,9 +292,16 @@ export default {
   margin-top: 10px !important;
   height: 280px !important;
   border-radius: 12px;
+  // width: 80rem;
   // width: 100%;
   transition: background 0.5s ease-in-out;
   // background: #0d1117;
+}
+.single {
+  width: 100%;
+}
+.challenge {
+  width: 80rem !important;
 }
 .t-cmd-help {
   // all: unset !important;

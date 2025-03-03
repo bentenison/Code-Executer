@@ -79,21 +79,23 @@ type Answer struct {
 
 // Submission struct for returning a submission result
 type Submission struct {
-	ID              string    `json:"id,omitempty" db:"id"`
-	UserID          string    `json:"user_id,omitempty" db:"user_id"`
-	LanguageID      string    `json:"language_id,omitempty" db:"language_id"`
-	CodeSnippet     string    `json:"code_snippet,omitempty" db:"code_snippet"`
-	SubmissionTime  time.Time `json:"submission_time,omitempty" db:"submission_time"`
-	ExecutionStatus string    `json:"execution_status,omitempty" db:"execution_status"`
-	ResultID        string    `json:"result_id,omitempty" db:"result_id"`
-	IsPublic        bool      `json:"is_public,omitempty" db:"is_public"`
-	CreatedAt       time.Time `json:"created_at,omitempty" db:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at,omitempty" db:"updated_at"`
-	QuestionId      string    `json:"question_id,omitempty" db:"question_id"`
-	FileExtension   string    `json:"file_extension,omitempty" db:"file_extension"`
-	RunCount        int       `json:"run_count,omitempty" db:"run_count"`
-	IsChallenge     bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
-	ChallengeID     string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	ID               string    `json:"id,omitempty" db:"id" bson:"id"`
+	UserID           string    `json:"user_id,omitempty" db:"user_id" bson:"user_id"`
+	LanguageID       string    `json:"language_id,omitempty" db:"language_id" bson:"language_id"`
+	CodeSnippet      string    `json:"code_snippet,omitempty" db:"code_snippet" bson:"code_snippet"`
+	ExecutionStatus  string    `json:"execution_status,omitempty" db:"execution_status" bson:"execution_status"`
+	ResultID         string    `json:"result_id,omitempty" db:"result_id" bson:"result_id"`
+	QuestionId       string    `json:"question_id,omitempty" db:"question_id" bson:"question_id"`
+	FileExtension    string    `json:"file_extension,omitempty" db:"file_extension" bson:"file_extension"`
+	ChallengeID      string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	RunCount         int       `json:"run_count,omitempty" db:"run_count" bson:"run_count"`
+	SubmissionTime   time.Time `json:"submission_time,omitempty" db:"submission_time" bson:"submission_time"`
+	CreatedAt        time.Time `json:"created_at,omitempty" db:"created_at" bson:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at,omitempty" db:"updated_at" bson:"updated_at"`
+	IsPublic         bool      `json:"is_public,omitempty" db:"is_public" bson:"is_public"`
+	IsChallenge      bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
+	HintUsed         bool      `json:"hint_used,omitempty" db:"hint_used" bson:"hint_used"`
+	IsQuestionChange bool      `json:"is_question_change,omitempty" db:"is_question_change" bson:"is_question_change"`
 }
 
 // PerformanceMetrics struct for returning performance metrics
@@ -283,4 +285,106 @@ func ConvertToMilliseconds(input string) (float64, error) {
 	}
 
 	return number * factor, nil
+}
+
+type OverAllUser struct {
+	UserID             string    `json:"user_id,omitempty" db:"user_id" bson:"user_id"`
+	Username           string    `json:"username,omitempty" db:"username" bson:"username"`
+	Rank               int       `json:"rank,omitempty" db:"rank" bson:"rank"`
+	CreatedAt          time.Time `json:"created_at,omitempty" db:"created_at" bson:"created_at"`
+	AttemptedQuestions []string  `json:"attempted_questions,omitempty" db:"attempted_questions" bson:"attempted_questions"` // List of question IDs user has faced
+	SelectedLanguage   string    `json:"selected_language,omitempty" db:"selected_language" bson:"selected_language"`       // User's selected programming language
+	NoAttempted        int64     `json:"no_attempted,omitempty" db:"no_attempted" bson:"no_attempted"`
+	TotalCorrect       int64     `json:"total_correct,omitempty" db:"total_correct" bson:"total_correct"`
+	TotalWrong         int64     `json:"total_wrong,omitempty" db:"total_wrong" bson:"total_wrong"`
+	TotalSubmissions   int64     `json:"total_submissions,omitempty" db:"total_submissions" bson:"total_submissions"`
+}
+
+// UserMetrics represents metrics for a user per language
+type UserMetrics struct {
+	UserID        string    `json:"user_id,omitempty" bson:"user_id" db:"user_id"`
+	Username      string    `json:"username,omitempty" bson:"username" db:"username"`
+	Level         int       `json:"level,omitempty" bson:"level" db:"level"` // 1 = Easy, 2 = Medium, 3 = Hard
+	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	Rank          int       `json:"rank,omitempty" bson:"rank" db:"rank"`
+	Language      string    `json:"language,omitempty" db:"language" bson:"language"`
+	CreatedAt     time.Time `json:"created_at,omitempty" bson:"created_at" db:"created_at"`
+
+	// New fields
+	CorrectAnswers    int       `json:"correct_answers,omitempty" bson:"correct_answers" db:"correct_answers"`             // Total correct answers
+	TotalQuestions    int       `json:"total_questions,omitempty" bson:"total_questions" db:"total_questions"`             // Total questions attempted
+	TotalTime         float64   `json:"total_time,omitempty" bson:"total_time" db:"total_time"`                            // Total time taken in seconds
+	TotalSubmissions  int       `json:"total_submissions,omitempty" bson:"total_submissions" db:"total_submissions"`       // Number of submissions
+	CodeQualityScores []float64 `json:"code_quality_scores,omitempty" bson:"code_quality_scores" db:"code_quality_scores"` // Code quality scores for each submission
+}
+
+// GlobalUserPerformance represents overall metrics for a user
+type GlobalUserPerformance struct {
+	UserID        string    `json:"user_id,omitempty" bson:"user_id" db:"user_id"`
+	Username      string    `json:"username,omitempty" bson:"username" db:"username"`
+	Level         int       `json:"level,omitempty" bson:"level" db:"level"` // 1 = Easy, 2 = Medium, 3 = Hard
+	TotalScore    int       `json:"total_score,omitempty" bson:"total_score" db:"total_score"`
+	Accuracy      float64   `json:"accuracy,omitempty" bson:"accuracy" db:"accuracy"`    // Percentage of correct answers
+	SpeedAvg      float64   `json:"speed_avg,omitempty" bson:"speed_avg" db:"speed_avg"` // Average time (in seconds)
+	PenaltyPoints int       `json:"penalty_points,omitempty" bson:"penalty_points" db:"penalty_points"`
+	Rank          int       `json:"rank,omitempty" bson:"rank" db:"rank"`
+	CreatedAt     time.Time `json:"created_at,omitempty" bson:"created_at" db:"created_at"`
+
+	// New fields
+	CorrectAnswers    int       `json:"correct_answers,omitempty" bson:"correct_answers" db:"correct_answers"`
+	TotalQuestions    int       `json:"total_questions,omitempty" bson:"total_questions" db:"total_questions"`
+	TotalTime         float64   `json:"total_time,omitempty" bson:"total_time" db:"total_time"`
+	TotalSubmissions  int       `json:"total_submissions,omitempty" bson:"total_submissions" db:"total_submissions"`
+	CodeQualityScores []float64 `json:"code_quality_scores,omitempty" bson:"code_quality_scores" db:"code_quality_scores"`
+}
+
+// CalculateSpeedAvg calculates the average speed based on total time and submissions
+func (um *UserMetrics) CalculateSpeedAvg() float64 {
+	if um.TotalSubmissions == 0 {
+		return 0
+	}
+	return um.TotalTime / float64(um.TotalSubmissions)
+}
+
+// CalculateAccuracy calculates the accuracy based on correct answers and total questions
+func (um *UserMetrics) CalculateAccuracy() float64 {
+	if um.TotalQuestions == 0 {
+		return 0
+	}
+	return (float64(um.CorrectAnswers) / float64(um.TotalQuestions)) * 100
+}
+
+// CalculateCodeQuality calculates the average code quality score
+func (um *UserMetrics) CalculateCodeQuality() float64 {
+	if len(um.CodeQualityScores) == 0 {
+		return 0
+	}
+	total := 0.0
+	for _, score := range um.CodeQualityScores {
+		total += score
+	}
+	return total / float64(len(um.CodeQualityScores))
+}
+
+type UserProgrammingAnalytics struct {
+	UserID          string   `json:"user_id"`          // Unique identifier for the user
+	QuestionID      string   `json:"question_id"`      // Unique identifier for the question
+	QuestionText    string   `json:"question_text"`    // The text of the question
+	Language        string   `json:"language"`         // Programming language used
+	DifficultyLevel string   `json:"difficulty_level"` // Difficulty level of the question
+	Attempts        int      `json:"attempts"`         // Number of attempts made for the question
+	EventType       string   `json:"event_type"`       // Type of event (e.g., "submission", "attempt")
+	Correct         bool     `json:"correct"`          // Whether the answer was correct or not
+	SubmissionTime  string   `json:"submission_time"`  // Time of submission
+	TimeTaken       string   `json:"time_taken"`       // Time taken to solve the question (in seconds)
+	Score           float64  `json:"score"`            // Score for the submission
+	CodeQuality     float64  `json:"code_quality"`     // Score for code quality
+	Tags            []string `json:"tags"`             // Tags associated with the question
+	SessionID       string   `json:"session_id"`       // Unique identifier for the user session
+	CreatedAt       string   `json:"created_at"`       // Creation timestamp
+	UpdatedAt       string   `json:"updated_at"`       // Last updated timestamp
+	Timestamp       string   `json:"timestamp"`        // Timestamp of the event
 }

@@ -59,6 +59,7 @@ func main() {
 		log.Errorc(context.TODO(), "error while running server", map[string]interface{}{
 			"error": err.Error(),
 		})
+		panic(err)
 	}
 }
 func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvider) error {
@@ -72,6 +73,9 @@ func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvide
 		MaxOpenConns: cfg.MaxOpenConns,
 	})
 	if err != nil {
+		log.Errorc(context.TODO(), "error while connecting postgres", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 
@@ -88,10 +92,16 @@ func run(log *logger.CustomLogger, cfg *conf.Config, tracer *trace.TracerProvide
 		AllowDirect: cfg.AllowDirect,
 	})
 	if err != nil {
+		log.Errorc(context.TODO(), "error while connecting mongo", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 	rdb, err := redisdb.OpenRDB(redisdb.Config{})
 	if err != nil {
+		log.Errorc(context.TODO(), "error while connecting redis", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return err
 	}
 	ds := mux.DataSource{

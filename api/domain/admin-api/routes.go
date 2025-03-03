@@ -89,6 +89,8 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("POST", "/prepare-challenge", api.prepareChallenge)
 	app.Handle("POST", "/fetch-questions", api.fetchChallengeQuestions)
 	app.Handle("POST", "/change-question", api.fetchChallengeQuestions)
+	app.Handle("POST", "/start-challenge", api.createChallenge)
+	app.Handle("POST", "/end-challenge", api.createChallenge)
 
 }
 func RunGRPCServer(GRPCPort string, log *logger.CustomLogger, api *api, tp *trace.TracerProvider) {

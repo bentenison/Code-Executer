@@ -20,4 +20,6 @@ message ExecutionResponse {
     string totalRAM =5;
     string percetRAMUsage=6;
     string containerID = 7;
+    bool isCorrect =8;
+    bool isRunOnly =9;
 }

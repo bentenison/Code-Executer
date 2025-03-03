@@ -1,9 +1,6 @@
 package brokerapi
 
 import (
-	"context"
-	"log"
-
 	"github.com/bentenison/microservice/api/domain/broker-api/grpc/adminclient/proto/admClient"
 	"github.com/bentenison/microservice/api/domain/broker-api/grpc/authclient/proto/authCli"
 	"github.com/bentenison/microservice/api/domain/broker-api/grpc/executorclient/proto/execClient"
@@ -58,11 +55,11 @@ func Routes(app *web.App, cfg Config) {
 	app.Handle("GET", "/broker/getAllsnippets", api.getAllSnippetsByUser)
 	app.Handle("POST", "/broker/formatCode", api.formatCode)
 	app.Handle("GET", "/broker/loaddbQuest/:id", api.loadDbQuestion)
-	app.Handle("GET", "/text-rpc", func(ctx *gin.Context) {
-		res, err := api.admincli.CompleteQuestion(context.TODO(), &admClient.CompleteQuestionRequest{})
-		if err != nil {
-			log.Println(err)
-		}
-		_ = res
-	})
+	// app.Handle("GET", "/text-rpc", func(ctx *gin.Context) {
+	// 	res, err := api.admincli.CompleteQuestion(context.TODO(), &admClient.CompleteQuestionRequest{})
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+	// 	_ = res
+	// })
 }

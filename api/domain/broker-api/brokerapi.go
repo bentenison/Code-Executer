@@ -446,9 +446,7 @@ func (api *api) updateUserPerformance(c *gin.Context) {
 		c.Error(err).SetMeta(http.StatusExpectationFailed)
 		return
 	}
-	res, err := api.admincli.UpdateUserPerformance(c.Request.Context(), &admClient.UpdateUserPerformanceRequest{
-		Performance: &admClient.GlobalUserPerformance{},
-	})
+	res, err := api.admincli.UpdateUserPerformance(c.Request.Context(), &admClient.UpdateUserPerformanceRequest{})
 	if err != nil {
 		api.logger.Errorc(c.Request.Context(), "error in loading db question:", map[string]interface{}{
 			"error": err.Error(),

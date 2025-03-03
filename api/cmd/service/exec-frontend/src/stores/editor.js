@@ -152,6 +152,19 @@ export const useEditorStore = defineStore("editor", {
           });
       });
     },
+    submitCode(data) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post("/broker/submission", data)
+          .then((res) => {
+            resolve(res);
+            // console.log("results:::::", res);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      });
+    },
     formatCode(data) {
       return new Promise((resolve, reject) => {
         axios

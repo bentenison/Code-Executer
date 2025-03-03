@@ -7,21 +7,23 @@ import (
 )
 
 type Submission struct {
-	ID              string    `json:"id"`
-	UserID          string    `json:"user_id"`
-	LanguageID      string    `json:"language_id"`
-	CodeSnippet     string    `json:"code_snippet"`
-	SubmissionTime  time.Time `json:"submission_time"`
-	ExecutionStatus string    `json:"execution_status"`
-	ResultID        string    `json:"result_id,omitempty"`
-	IsPublic        bool      `json:"is_public"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	QuestionId      string    `json:"question_id"`
-	FileExtension   string    `json:"file_extension,omitempty"`
-	RunCount        int       `json:"run_count,omitempty" db:"run_count"`
-	IsChallenge     bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
-	ChallengeID     string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	ID               string    `json:"id"`
+	UserID           string    `json:"user_id"`
+	LanguageID       string    `json:"language_id"`
+	CodeSnippet      string    `json:"code_snippet"`
+	ExecutionStatus  string    `json:"execution_status"`
+	ResultID         string    `json:"result_id,omitempty"`
+	QuestionId       string    `json:"question_id"`
+	FileExtension    string    `json:"file_extension,omitempty"`
+	ChallengeID      string    `json:"challenge_id,omitempty" db:"challenge_id" bson:"challenge_id"`
+	RunCount         int       `json:"run_count,omitempty" db:"run_count"`
+	SubmissionTime   time.Time `json:"submission_time"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	IsPublic         bool      `json:"is_public"`
+	IsChallenge      bool      `json:"is_challenge,omitempty" db:"is_challenge" bson:"is_challenge"`
+	HintUsed         bool      `json:"hint_used,omitempty" db:"hint_used" bson:"hint_used"`
+	IsQuestionChange bool      `json:"is_question_change,omitempty" db:"is_question_change" bson:"is_question_change"`
 }
 type Credentials struct {
 	Username string `json:"username"`

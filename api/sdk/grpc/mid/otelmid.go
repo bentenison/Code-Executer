@@ -17,7 +17,7 @@ func UnaryOtelInterceptor(tracer trace.Tracer) grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		// Retrieve request ID from incoming metadata or create a new on
 		// fmt.Println("I am getting the requestId here", ctx.Value("tracectx"))
-		otel.InjectTracing(ctx, tracer)
+		ctx = otel.InjectTracing(ctx, tracer)
 		// Add the request ID to the context
 
 		// Proceed with the request

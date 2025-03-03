@@ -4,11 +4,19 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/bentenison/microservice/foundation/logger"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/streadway/amqp"
+)
+
+const (
+	maxRetries        = 5
+	initialBackoff    = 100 * time.Millisecond
+	backoffMultiplier = 2
 )
 
 type DataDAO interface {
@@ -26,10 +34,23 @@ type Consumer struct {
 	log        *logger.CustomLogger
 }
 
-// NewConsumer establishes a connection and declares multiple queues
 func NewConsumer(rabbitmqURL string, queueNames []string, logger *logger.CustomLogger, es *elasticsearch.Client) (*Consumer, error) {
-	// Establish connection to RabbitMQ server
-	conn, err := amqp.Dial(rabbitmqURL)
+	var conn *amqp.Connection
+	var err error
+
+	// Exponential backoff for connection retries
+	for i := 0; i < maxRetries; i++ {
+		conn, err = amqp.Dial(rabbitmqURL)
+		if err == nil {
+			break
+		}
+
+		// Calculate backoff time
+		backoffTime := time.Duration(math.Pow(float64(backoffMultiplier), float64(i))) * initialBackoff
+		logger.Errorc(context.TODO(), fmt.Sprintf("Failed to connect to RabbitMQ: %v. Retrying in %v...", err, backoffTime), map[string]interface{}{})
+		time.Sleep(backoffTime)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +137,17 @@ func (c *Consumer) consumeQueue(queueName string) {
 			c.log.Infoc(context.TODO(), fmt.Sprintf("Received message from %s: %s", queueName, msg.Body), map[string]interface{}{
 				"queueName": queueName,
 			})
+			return
 		}
-	case "user_performance":
+	case "programming_questions":
 		for msg := range msgs {
+			err := storeProgrammingQuestionES(context.TODO(), msg.Body, c.es)
+			if err != nil {
+				c.log.Errorc(context.TODO(), "error while storing msg in ES", map[string]interface{}{
+					"error": err.Error(),
+				})
+				return
+			}
 			c.log.Infoc(context.TODO(), fmt.Sprintf("Received message from %s: %s", queueName, msg.Body), map[string]interface{}{
 				"queueName": queueName,
 			})
@@ -137,24 +166,23 @@ func (c *Consumer) Close() {
 	}
 }
 
-func storePerformanceDataES(ctx context.Context, performanceData []byte, es *elasticsearch.Client) error {
+func storeProgrammingQuestionES(ctx context.Context, questionData []byte, es *elasticsearch.Client) error {
 	req := esapi.IndexRequest{
-		Index:   "user_performance",
-		Body:    bytes.NewReader(performanceData),
+		Index:   "programming_questions",
+		Body:    bytes.NewReader(questionData),
 		Refresh: "true", // To make the document searchable immediately
 	}
 
 	resp, err := req.Do(ctx, es)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to store programming question: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.IsError() {
-		return fmt.Errorf("error storing performance data: %s", resp.String())
+		return fmt.Errorf("error storing programming question: %s", resp.String())
 	}
 
-	// fmt.Printf("Stored performance data for user %s\n", performanceData.UserID)
 	return nil
 }
 
